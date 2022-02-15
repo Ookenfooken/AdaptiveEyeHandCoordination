@@ -15,17 +15,6 @@ if ismember(trialNo, droppedTrials)
 else
     trialInfo.dropped = 0;
 end
-% cued and used slot (always the same?)
-if currentTrial(1,25) < 5
-    trialInfo.cueCondition = 1;
-    trialInfo.cueConditionName = 'audio cue';
-elseif currentTrial(1,25) > 8
-    trialInfo.cueCondition = 3;
-    trialInfo.cueConditionName = 'visual cue';
-else
-    trialInfo.cueCondition = 2;
-    trialInfo.cueConditionName = 'memory cue';
-end
 trialInfo.cuedSlot = currentTrial(1,22);
 trialInfo.usedSlot = currentTrial(1,23);
 % get phase info

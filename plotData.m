@@ -99,7 +99,7 @@ legend('ball', 'top', 'middle', 'bottom', 'display')
 xPosition = 20;
 yPosition = 700;
 verticalDistance = 20;
-width = 120;
+width = 130;
 height = 20;
 textblock = 0;
 

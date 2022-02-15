@@ -8,7 +8,8 @@ allResults = dir(resultActionPath);
 
 % loop over participants and read out measures
 numResults = length(allResults)-2;
-pulledData = cell(numResults,12);
+numBlocks = 4;
+pulledData = cell(numResults,numBlocks);
 criticalRadius = 2.5;
 dropList = csvread('dropList.csv');
 vigilanceBlocks = [3 4];
