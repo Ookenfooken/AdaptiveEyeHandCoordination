@@ -21,7 +21,3 @@ Requires prepareData.m, plotData.m, createBallVector.m, and gazePositionRaw.m
 - pullExperimentInfo.m
 Saves relevant trial information into more descriptive data format (pulledData.mat) that is used for further analysis
 Requires pullDataTrial.m, readoutTrialInfo.m, readoutGaze.m, readoutEffector.m, readoutVigilanceTask
-
-- plotIndividualTrials.m
-Contains info of which individual trials were used for single trial examples.
-
