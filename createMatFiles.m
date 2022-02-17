@@ -3,8 +3,7 @@ analysisPath = pwd;
 dataPath = [pwd '\RAW'];
 resultPath = fullfile(pwd,'matFiles\');
 
-% read in subject data that were (presumably) used in the paper
-% That seems to be test 1-4 (check in column 25)
+% read in participant data that were 
 numSubjects = 11;
 numBlocks = 4;
  

@@ -1,6 +1,7 @@
 function [trialInfo] = readoutTrialInfo(currentTrial, startTime, blockNo, trialNo, droppedTrials)
 % read out some trial info
 trialInfo.subject = currentTrial(1,24);
+trialInfo.blockID = currentTrial(1,25);
 if blockNo < 3
     trialInfo.taskCondition = 1;
     trialInfo.taskConditionName = 'single';
@@ -36,7 +37,7 @@ trialInfo.phaseDuration.ballApproach = phaseChangeIdx(4)-phaseChangeIdx(3);
 trialInfo.phaseDuration.ballGrasp = phaseChangeIdx(5)-phaseChangeIdx(4);
 trialInfo.phaseDuration.transport = phaseChangeIdx(6)-phaseChangeIdx(5);
 trialInfo.phaseDuration.slotApproach = phaseChangeIdx(7)-phaseChangeIdx(6);
-trialInfo.phaseDuration.ballInSlot = phaseChangeIdx(8)-phaseChangeIdx(7);
+trialInfo.phaseDuration.ballInSlot = phaseChangeIdx(9)-phaseChangeIdx(7);
 if numel(phaseChangeIdx) < 10
     stopFrame = length(currentTrial);
 else
