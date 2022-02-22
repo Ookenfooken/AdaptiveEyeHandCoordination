@@ -28,6 +28,7 @@ Contains info of which individual trials were used for single trial examples.
 
 - analyzePhaseDurations.m
 Creates matrix with durations of different phase durations. Creates structure to compare movement duration in different task conditions
-(comparePhaseDurations.R) and to plot normalized probabilities.
+(comparePhaseDurations.R) and to use for normalized fixation probabilities plot (Figure 2).
 
-- 
+- plotFigure2.m
+Generates matlab plots of fixation probabilities and tool speed in a normalized time frame. Requires normalizeMovementsPhases.m
