@@ -28,7 +28,7 @@ for j = 1:numSubjects % loop over subjects
         else
             tool = zeros(numTrials,1);
         end
-        subject = currentSubject*ones(numTrials, 1);
+        participant = currentSubject*ones(numTrials, 1);
         testID = i*ones(numTrials,1);
         reachDuration = NaN(numTrials,1);
         ballPhaseDuration = NaN(numTrials,1);
@@ -38,9 +38,9 @@ for j = 1:numSubjects % loop over subjects
         graspRelLift = NaN(numTrials,1);
         entryRelLift = NaN(numTrials,1);
         for n = 1:numTrials % loop over trials for current subject & block
-%             if currentResult(n).info.dropped
-%                 continue
-%             end
+            if currentResult(n).info.dropped
+                continue
+            end
             % duration
             reachDuration(n) = currentResult(n).info.phaseDuration.primaryReach; % in secs
             ballPhaseDuration(n) = currentResult(n).info.phaseDuration.ballApproach + ...
@@ -54,7 +54,7 @@ for j = 1:numSubjects % loop over subjects
             entryRelLift(n) = currentResult(n).info.phaseStart.ballInSlot - ...
                 currentResult(n).info.phaseStart.transport;
         end
-        currentVariable = [subject testID tool dual ...
+        currentVariable = [participant testID tool dual ...
             reachDuration ballPhaseDuration transportDuration slotPhaseDuration ...
             returnDuration graspRelLift entryRelLift];
         
@@ -89,7 +89,7 @@ save('phaseDurationNorm', 'phaseDurationNorm')
 cd(analysisPath)
 %% second save data for stats analysis
 sampleRate = 200;
-phaseDurations = phaseTiming(:,1:end-2)./sampleRate;
+phaseDurations = [phaseTiming(:,1:4) phaseTiming(:,5:end-2)./sampleRate];
 cd(savePath)
 save('phaseDurations', 'phaseDurations')
 cd(analysisPath)

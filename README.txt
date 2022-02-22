@@ -1,5 +1,6 @@
 This repository contains script to view and process data collected in a project on 
 adaptive eye-hand coordination when manipulating and monitoring the environment in parallel
+All data-related analyses were performed in Matlab. All statistics were done in R.
 
 - ExperimentInfo.xlsx
 Contains relevant information about variables in the raw data, coordinates of the landmarks, and how kinematic phases were classified
@@ -25,3 +26,8 @@ Requires pullDataTrial.m, readoutTrialInfo.m, readoutGaze.m, readoutEffector.m, 
 - plotIndividualTrials.m
 Contains info of which individual trials were used for single trial examples.
 
+- analyzePhaseDurations.m
+Creates matrix with durations of different phase durations. Creates structure to compare movement duration in different task conditions
+(comparePhaseDurations.R) and to plot normalized probabilities.
+
+- 
