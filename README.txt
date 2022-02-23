@@ -32,3 +32,7 @@ Creates matrix with durations of different phase durations. Creates structure to
 
 - plotFigure2.m
 Generates matlab plots of fixation probabilities and tool speed in a normalized time frame. Requires normalizeMovementsPhases.m
+
+- analyzeFixationSubGoals.m
+Reads out ball and slot fixation onsets relative to reach onset and saves matlab structure for the general linear model (GLM)
+GLM can then be run in R (GLMmovementPhases.R)
