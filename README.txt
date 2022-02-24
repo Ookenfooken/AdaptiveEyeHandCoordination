@@ -31,6 +31,10 @@ Contains info of which individual trials were used for single trial examples.
 Creates matrix with durations of different phase durations. Creates structure to compare movement duration in different task conditions
 (comparePhaseDurations.R) and to use for normalized fixation probabilities plot (Figure 2).
 
+-analyzeSpatioTemporalCoordination.m
+Analyzes gaze shifts from ball to slot in single task and from the slot back to the display in dual task.
+Stats are then calculated in R (compareGazeShifts.R).
+
 - createPlotFigure2.m
 Generates matlab plots of fixation probabilities and tool speed in a normalized time frame. Requires normalizeMovementsPhases.m
 
