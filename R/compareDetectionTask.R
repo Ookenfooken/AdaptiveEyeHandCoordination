@@ -10,3 +10,6 @@ detectionTask$testID <- as.factor(detectionTask$testID)
 detection_mean <- mean(detectionTask$letterDetected) 
 detection_sd <- sd(detectionTask$letterDetected) 
 t.test(detectionTask[detectionTask$testID == 3,]$letterDetected, detectionTask[detectionTask$testID == 4,]$letterDetected, paired = TRUE)
+# correlation between detection task and display viewing time
+summary(lm(detectionTask$letterDetected~detectionTask$displayViewTime))
+cor(detectionTask$letterDetected,detectionTask$displayViewTime)

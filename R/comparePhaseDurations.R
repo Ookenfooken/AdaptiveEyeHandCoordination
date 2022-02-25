@@ -16,10 +16,11 @@ phases_aov <- cbind(phases_aov[,1:3], rowSums(phases_aov[,c(4:8)]))
 colnames(phases_aov) <-  c("participant", "tool", "dual", "duration")
 aov_all <- ezANOVA(data = phases_aov, dv=duration, wid=participant, within=.(tool, dual), type = 2)
 # Anova Result
-## Effect DFn DFd         F            p p<.05        ges
-## 2      tool   1  10 45.329386 5.151229e-05     * 0.48909259
-## 3      dual   1  10  3.352839 9.700496e-02       0.10092009
-## 4 tool:dual   1  10  4.120279 6.982244e-02       0.03919357
+## $ANOVA
+## Effect DFn DFd        F            p p<.05        ges
+## 2      tool   1  10 41.94082 7.107147e-05     * 0.48344931
+## 3      dual   1  10  3.63231 8.578884e-02       0.10452427
+## 4 tool:dual   1  10  3.53465 8.951391e-02       0.03457213
 # Because there is no effect of task load, we will compare phase duration for grasp modes separately
 phases_compare <- aggregate(duration ~ participant + tool, mean, na.rm = TRUE, na.action = NULL, data = phases_aov)
 duration_fingertips <- mean(phases_compare[phases_compare$tool == 0,]$duration)

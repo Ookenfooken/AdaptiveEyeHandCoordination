@@ -50,8 +50,10 @@ for i = 1:numBlocks % plot per block aka experimental condition
         if ismember(i, vigilanceBlocks)
             gazeToDisplay = NaN(numTrials, averageLength+1);
         end
-        for n = 1:numTrials
+        stopTrial = min([numTrials 30]);
+        for n = 1:stopTrial
             if currentBlock(n).info.dropped
+                stopTrial = min([stopTrial+1 numTrials]);
                 continue
             end
             effector = currentBlock(n).effector;

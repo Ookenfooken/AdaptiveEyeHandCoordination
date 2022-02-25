@@ -37,8 +37,10 @@ for j = 1:numSubjects % loop over subjects
         returnDuration = NaN(numTrials,1);
         graspRelLift = NaN(numTrials,1);
         entryRelLift = NaN(numTrials,1);
-        for n = 1:numTrials % loop over trials for current subject & block
+        stopTrial = min([numTrials 30]);
+        for n = 1:stopTrial % loop over trials for current subject & block
             if currentResult(n).info.dropped
+                stopTrial = min([stopTrial+1 numTrials]);
                 continue
             end
             % duration

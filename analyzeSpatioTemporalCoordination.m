@@ -14,6 +14,7 @@ for j = 1:numSubjects % loop over subjects
         currentResult = pulledData{j,i};
         currentParticipant = currentResult(i).info.subject;
         numTrials = length(currentResult);
+        stopTrial = min([numTrials 30]);
         % open variable matrices that we want to pull
         participant = currentParticipant*ones(numTrials, 1);
         testID = i*ones(numTrials,1);
@@ -24,10 +25,10 @@ for j = 1:numSubjects % loop over subjects
             tool = zeros(numTrials,1); % no tool in fingertip condition
         elseif testID(1) == 2 || testID(1) == 4
             tool = ones(numTrials,1); %tweezers
-        end
-        
+        end        
         for n = 1:numTrials % loop over trials for current subject & block
             if currentResult(n).info.dropped
+                stopTrial = min([stopTrial+1 numTrials]);
                 continue
             end
             if i < 3 % single task condition
