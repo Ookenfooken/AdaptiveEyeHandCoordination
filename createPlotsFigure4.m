@@ -22,8 +22,10 @@ for j = 1:numParticipants % loop over subjects
         numLetterChange = NaN(numTrials,1);
         reachOnset = NaN(numTrials,1);
         displayFixationTime = NaN(numTrials,1);
-        for n = 1:numTrials % loop over trials for current subject & block
+        stopTrial = min([numTrials 30]);
+        for n = 1:stopTrial % loop over trials for current subject & block
             if currentResult(n).info.dropped
+                stopTrial = min([stopTrial+1 numTrials]);
                 continue
             end
             startTime = currentResult(n).info.trialStart;
@@ -33,9 +35,9 @@ for j = 1:numParticipants % loop over subjects
             else
                 numLetterChange(n) = numel(currentResult(n).dualTask.sampleLetterChange);
             end
-            reachOnset(n) = currentResult(n).info.phaseStart.primaryReach;           
+            reachOnset(n) = currentResult(n).info.phaseStart.primaryReach;  
             displayFixationTime(n) = sum(currentResult(n).gaze.fixation.durationDisplay)./...
-                                    (sum(currentResult(n).gaze.fixation.durationBall) + ...
+                                     (sum(currentResult(n).gaze.fixation.durationBall) + ...
                                      sum(currentResult(n).gaze.fixation.durationSlot) + ...
                                      sum(currentResult(n).gaze.fixation.durationDisplay));          
         end
@@ -43,7 +45,7 @@ for j = 1:numParticipants % loop over subjects
                            reachOnset displayFixationTime];
         
         letterChanges = [letterChanges; currentVariable];
-        clear startTime
+        clear startTime trialLength
     end
 end
 
@@ -51,6 +53,7 @@ end
 letterChangeNo = NaN(2, 4);
 for j = 1:2 % hand and tweezer
     currentData = letterChanges(letterChanges(:,2) == j+2, :);
+    currentData = currentData(~isnan(currentData(:,3)),:);
     allTrials = size(currentData,1);
     for numBlock = 1:4
         letterChangeNo(j,numBlock) = length(currentData(currentData(:,3) == numBlock-1,:))/allTrials;
@@ -84,9 +87,11 @@ for j = 1:numParticipants % loop over subjects
         c = 1;
         currentResult = pulledData{j,numBlock};
         currentParticipant = currentResult(numBlock).info.subject;
+        stopTrial = min([numTrials 30]);
         numTrials = length(currentResult);
-        for n = 1:numTrials % loop over trials for current subject & block
+        for n = 1:stopTrial % loop over trials for current subject & block
             if currentResult(n).info.dropped
+                stopTrial = min([stopTrial+1 numTrials]);
                 continue
             end
             if isnan(currentResult(n).dualTask.tLetterChanges)
@@ -174,8 +179,10 @@ for j = 1:numParticipants % loop over subjects
         currentResult = pulledData{j,i};
         numTrials = length(currentResult);
         fixationVectorDisplay = NaN(numTrials,preLetterChange+postLetterChange);
-        for n = 1:numTrials % loop over trials for current subject & block
+        stopTrial = min([numTrials 30]);
+        for n = 1:stopTrial % loop over trials for current subject & block
             if currentResult(n).info.dropped
+                stopTrial = min([stopTrial+1 numTrials]);
                 continue
             end
             if currentResult(n).info.cuedSlot == 1

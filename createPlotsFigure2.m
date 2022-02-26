@@ -144,5 +144,6 @@ for i = 1:numBlocks % plot per block aka experimental condition
         plot(mean(averagedGazeToDisplay(averagedGazeToDisplay(:,1) == 2, 2:end)), 'Color', blue2, 'LineWidth', 2)
         plot(mean(averagedGazeToDisplay(averagedGazeToDisplay(:,1) == 3, 2:end)), 'Color', blue3, 'LineWidth', 2)
     end
+    clear yMax liftoff
 end
 
