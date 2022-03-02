@@ -48,3 +48,6 @@ Generates matlab plots of fixation timing and duration in dual task condition. H
 - createPlotsFigure4.m
 Generates matlab plots of letter detection task performance and eye and hand movement adaptation relative to letter change. 
 Saves matlab structure to compare detection task performance in R (compareDetectionTask.R).
+
+- createPlotsFigure5.m
+Generates matlab plots of different fixation types in grasp modes and relative to the time of letter change. 

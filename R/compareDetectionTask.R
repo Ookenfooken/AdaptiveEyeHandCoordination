@@ -11,5 +11,11 @@ detection_mean <- mean(detectionTask$letterDetected)
 detection_sd <- sd(detectionTask$letterDetected) 
 t.test(detectionTask[detectionTask$testID == 3,]$letterDetected, detectionTask[detectionTask$testID == 4,]$letterDetected, paired = TRUE)
 # correlation between detection task and display viewing time
-summary(lm(detectionTask$letterDetected~detectionTask$displayViewTime))
-cor(detectionTask$letterDetected,detectionTask$displayViewTime)
+# for fingertips
+detection_FT <- detectionTask[detectionTask$testID == 3,]
+summary(lm(detection_FT$letterDetected~detection_FT$displayViewTime))
+cor(detection_FT$letterDetected,detection_FT$displayViewTime)
+# for tweezers
+detection_TW <- detectionTask[detectionTask$testID == 4,]
+summary(lm(detection_TW$letterDetected~detection_TW$displayViewTime))
+cor(detection_TW$letterDetected,detection_TW$displayViewTime)

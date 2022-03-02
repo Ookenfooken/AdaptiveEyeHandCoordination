@@ -113,6 +113,18 @@ for j = 1:numParticipants % loop over subjects
 end
 clear c cAll
 %% plot vigilance performance vs. relative time on display (Panel B)
+letterDetectViewTime = NaN(numParticipants,3);
+for i = 1:numParticipants
+    currentDataset = letterChanges(letterChanges(:,1) == i, :);
+    relativeTime = currentDataset(:,6);
+    letterDetectViewTime(i,:) = [i nanmean(relativeTime) ...
+        sum(dualTaskPerformance(dualTaskPerformance(:,1) == i,4))/sum(dualTaskPerformance(dualTaskPerformance(:,1) == i,3))];
+end
+figure(5)
+hold on
+plot(letterDetectViewTime(:,2), letterDetectViewTime(:, 3),...
+    'o', 'MarkerFaceColor', 'k','MarkerEdgeColor', 'k')
+%%
 letterDetectViewTime = NaN(numParticipants*2,4);
 count = 1;
 for j= 3:4
@@ -121,32 +133,35 @@ for j= 3:4
     for i = 1:numParticipants
         currentDataset = currentTool(currentTool(:,1) == i, :);
         relativeTime = currentDataset(:,6);
-        letterDetectViewTime(count,:) = [i j nanmedian(relativeTime) ...
+        letterDetectViewTime(count,:) = [i j nanmean(relativeTime) ...
             currentVigilance(currentVigilance(:,1) == i,4)/currentVigilance(currentVigilance(:,1) == i,3)];
         count = count+1;
     end
 end
 clear count
-
 figure(5)
 hold on
 plot(letterDetectViewTime(letterDetectViewTime(:,2) == 3, 3), letterDetectViewTime(letterDetectViewTime(:,2) == 3, 4),...
     'o', 'MarkerFaceColor', 'k','MarkerEdgeColor', 'k')
+% remove outlier
+p_FT = polyfit(letterDetectViewTime(letterDetectViewTime(:,2) == 3, 3),letterDetectViewTime(letterDetectViewTime(:,2) == 3, 4),1);
+y_FT = polyval(p_FT,letterDetectViewTime(letterDetectViewTime(:,2) == 3, 3));
+plot(letterDetectViewTime(letterDetectViewTime(:,2) == 3, 3), y_FT, 'k-')
 plot(letterDetectViewTime(letterDetectViewTime(:,2) == 4, 3), letterDetectViewTime(letterDetectViewTime(:,2) == 4, 4),...
     'o', 'MarkerFaceColor', 'none','MarkerEdgeColor', 'k')
+p_TW = polyfit(letterDetectViewTime(letterDetectViewTime(:,2) == 4, 3),letterDetectViewTime(letterDetectViewTime(:,2) == 4, 4),1);
+y_TW = polyval(p_TW,letterDetectViewTime(letterDetectViewTime(:,2) == 4, 3));
+plot(letterDetectViewTime(letterDetectViewTime(:,2) == 4, 3), y_TW, 'k--')
 
 ylim([0.5 1])
 set(gca, 'Ytick', [.5 .75 1])
 xlim([0.5 1])
 set(gca, 'Xtick', [.5 .75 1])
-p = polyfit(letterDetectViewTime(:,3),letterDetectViewTime(:,4),1);
-y_est = polyval(p,letterDetectViewTime(:,3));
-plot(letterDetectViewTime(:,3), y_est, 'k-')
 
 cd(savePath)
 save('letterDetectViewTime', 'letterDetectViewTime')
 cd(analysisPath)
-
+clear p_FT y_FT p_TW y_TW
 %% plot frequency of first letter change relative to reach onset (Panel C)
 figure(13)
 set(gcf,'renderer','Painters')
