@@ -13,13 +13,13 @@ blue = [55,126,184]./255;
 numParticipants = 11;
 %% First create plots for fingertip trials (Panels A & B)
 sortedIndices = [];
-currentID = 3; % fingertips
+blockID = 3; % fingertips
 % first read out the order of ball and slot phases. Then plot each fixation
 % in each trial
 for j = 1:numParticipants % loop over subjects
-    currentResult = pulledData{j,currentID};
+    currentResult = pulledData{j,blockID};
     numTrials = length(currentResult);
-    currentParticipant = currentResult(currentID).info.subject*ones(numTrials,1);
+    currentParticipant = currentResult(1).info.subject*ones(numTrials,1);
     ballPhase = NaN(numTrials,1);
     slotPhase = NaN(numTrials,1);
     stopTrial = min([numTrials 30]);
@@ -55,8 +55,8 @@ figure(33) % trial order effect
 set(gcf,'renderer','Painters', 'Position', [20 50 400 600])
 hold on
 for j = 1:numParticipants % loop over subjects
-    currentResult = pulledData{j,currentID};
-    currentParticipant = currentResult(currentID).info.subject;
+    currentResult = pulledData{j,blockID};
+    currentParticipant = currentResult(1).info.subject;
     numTrials = length(currentResult);
     currentBallIndices = sortedBalls(sortedBalls(:,1) == currentParticipant, 2:end); %last column in matrix indicates position
     currentSlotIndices = sortedSlots(sortedSlots(:,1) == currentParticipant, 2:end);
@@ -137,13 +137,13 @@ end
 
 %% Second create plots for tweezer trials (Panels D & E)
 sortedIndices = [];
-currentID = 4; % tweezers
+blockID = 4; % tweezers
 % first read out the order of ball and slot phases. Then plot each fixation
 % in each trial
 for j = 1:numParticipants % loop over subjects
-    currentResult = pulledData{j,currentID};
+    currentResult = pulledData{j,blockID};
     numTrials = length(currentResult);
-    currentParticipant = currentResult(currentID).info.subject*ones(numTrials,1);
+    currentParticipant = currentResult(1).info.subject*ones(numTrials,1);
     ballPhase = NaN(numTrials,1);
     slotPhase = NaN(numTrials,1);
     stopTrial = min([numTrials 30]);
@@ -179,8 +179,8 @@ figure(333) % trial order effect
 set(gcf,'renderer','Painters', 'Position', [20 50 400 600])
 hold on
 for j = 1:numParticipants % loop over subjects
-    currentResult = pulledData{j,currentID};
-    currentParticipant = currentResult(currentID).info.subject;
+    currentResult = pulledData{j,blockID};
+    currentParticipant = currentResult(1).info.subject;
     numTrials = length(currentResult);
     currentBallIndices = sortedBalls(sortedBalls(:,1) == currentParticipant, 2:end); %last column in matrix indicates position
     currentSlotIndices = sortedSlots(sortedSlots(:,1) == currentParticipant, 2:end);
@@ -263,12 +263,12 @@ end
 fixationsBall = [];
 fixationsSlot = [];
 for j = 1:numParticipants% loop over subjects
-    for currentID = 3:4 % two dual task blocks
-        currentResult = pulledData{j,currentID};
-        currentParticipant = currentResult(currentID).info.subject;
+    for blockID = 3:4 % two dual task blocks
+        currentResult = pulledData{j,blockID};
+        currentParticipant = currentResult(1).info.subject;
         numTrials = length(currentResult);
         % open variable matrices that we want to pull
-        testID = currentID;
+        testID = blockID;
         counterBall = 1;
         counterSlot = 1;
         trialLength = NaN(numTrials,2);

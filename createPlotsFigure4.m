@@ -11,13 +11,13 @@ numParticipants = 11;
 letterChanges = [];
 
 for j = 1:numParticipants % loop over subjects
-    for numBlock = 3:4 % loop over dual task conditions
-        currentResult = pulledData{j,numBlock};
-        currentParticipant = currentResult(numBlock).info.subject;
+    for blockID = 3:4 % loop over dual task conditions
+        currentResult = pulledData{j,blockID};
+        currentParticipant = currentResult(1).info.subject;
         numTrials = length(currentResult);
         % open variable matrices that we want to pull
         subject = currentParticipant*ones(numTrials, 1);
-        testID = numBlock*ones(numTrials,1);
+        testID = blockID*ones(numTrials,1);
         letterChange = NaN(numTrials,1);
         numLetterChange = NaN(numTrials,1);
         reachOnset = NaN(numTrials,1);
@@ -55,8 +55,8 @@ for j = 1:2 % hand and tweezer
     currentData = letterChanges(letterChanges(:,2) == j+2, :);
     currentData = currentData(~isnan(currentData(:,3)),:);
     allTrials = size(currentData,1);
-    for numBlock = 1:4
-        letterChangeNo(j,numBlock) = length(currentData(currentData(:,3) == numBlock-1,:))/allTrials;
+    for blockID = 1:4
+        letterChangeNo(j,blockID) = length(currentData(currentData(:,3) == blockID-1,:))/allTrials;
     end
     clear allTrials    
 end
@@ -67,9 +67,9 @@ set(gca, 'Xtick', [1 2 3 4], 'XtickLabel', {'0 letter changes', '1 letter change
 ylim([0 .75])
 set(gca, 'Ytick', [0 .25 .5 .75])
 
-for numBlock = 1:4
-    plot(numBlock, letterChangeNo(1,numBlock), 'o', 'MarkerFaceColor', 'k','MarkerEdgeColor', 'k')
-    plot(numBlock, letterChangeNo(2,numBlock), 'o', 'MarkerFaceColor', 'none','MarkerEdgeColor', 'k')
+for blockID = 1:4
+    plot(blockID, letterChangeNo(1,blockID), 'o', 'MarkerFaceColor', 'k','MarkerEdgeColor', 'k')
+    plot(blockID, letterChangeNo(2,blockID), 'o', 'MarkerFaceColor', 'none','MarkerEdgeColor', 'k')
 end
 line([1 2], [letterChangeNo(1,1) letterChangeNo(1,2)], 'Color', 'k')
 line([2 3], [letterChangeNo(1,2) letterChangeNo(1,3)], 'Color', 'k')
@@ -83,10 +83,10 @@ dualTaskPerformance = [];
 dualTaskSamples = [];
 cAll = 1;
 for j = 1:numParticipants % loop over subjects
-    for numBlock = 3:4 % loop over blocks/experimental conditions
+    for blockID = 3:4 % loop over blocks/experimental conditions
         c = 1;
-        currentResult = pulledData{j,numBlock};
-        currentParticipant = currentResult(numBlock).info.subject;
+        currentResult = pulledData{j,blockID};
+        currentParticipant = currentResult(1).info.subject;
         stopTrial = min([numTrials 30]);
         numTrials = length(currentResult);
         for n = 1:stopTrial % loop over trials for current subject & block
@@ -105,7 +105,7 @@ for j = 1:numParticipants % loop over subjects
             c = c(end) + 1;
             cAll = cAll(end) + 1;
         end
-        currentPerformance = [currentParticipant numBlock c-1 sum(changeDetected) sum(changeMissed)];
+        currentPerformance = [currentParticipant blockID c-1 sum(changeDetected) sum(changeMissed)];
         
         dualTaskPerformance = [dualTaskPerformance; currentPerformance];
         clear letterChangePhase changeDetected changeMissed currentPerformance

@@ -4,6 +4,13 @@ cd(resultPath)
 % load in data
 load('pulledData.mat')
 cd(analysisPath)
+%% define some colours
+fixationPatternColors = [[55,126,184]./255;
+    [255,127,0]./255;
+    [77,175,74]./255
+    [158,154,200]./255
+    [77,0,75]./255];
+gray = [99,99,99]./255;
 %%
 numParticipants = 11;
 eyeShift = 20; % samples between fixations determined by visual inspection; works with longer value as well
@@ -11,7 +18,7 @@ gazeSequence = [];
 for blockID = 3:4
     for i = 1:numParticipants % loop over subjects
         currentResult = pulledData{i,blockID};
-        currentParticipant = currentResult(blockID).info.subject;
+        currentParticipant = currentResult(1).info.subject;
         numTrials = length(currentResult);
         stopTrial = min([numTrials 30]);
         currentGazeSequence = NaN(numTrials,5);
@@ -51,13 +58,6 @@ clear ballIdx ballOffset slotIdx slotOnset ballFixType
 clear letterChange graspDifference dropDifference
 
 %% Plot fixation pattern for each grasp mode (Panel B)
-% colours
-fixationTypeColors = [[55,126,184]./255;
-    [255,127,0]./255;
-    [77,175,74]./255
-    [158,154,200]./255
-    [77,0,75]./255];
-gray = [99,99,99]./255;
 % initiate variable to plot mean
 fixationPatternAverage = NaN(numParticipants*2,6);
 figure(9)
@@ -76,7 +76,7 @@ for blockID = 3:4
         end
         for n = 1:5
             plot(x(n), sum(currentParticipant(:,1) == n-1)/length(currentParticipant), ...
-                'o', 'MarkerEdgeColor', fixationTypeColors(n,:), 'MarkerFaceColor', fixationTypeColors(n,:))
+                'o', 'MarkerEdgeColor', fixationPatternColors(n,:), 'MarkerFaceColor', fixationPatternColors(n,:))
         end
         fixationPatternAverage(count,:) = [blockID sum(currentParticipant == 0)/length(currentParticipant) ...
             sum(currentParticipant == 1)/length(currentParticipant) sum(currentParticipant == 2)/length(currentParticipant)...
@@ -94,12 +94,12 @@ for blockID = 3:4
         currentBarData = fixationPatternAverage(fixationPatternAverage(:,1) == blockID,2:end);
         b = bar(x(n),mean(currentBarData(:,n)), .3);
         if blockID < 4
-            b.FaceColor = fixationTypeColors(n,:);
-            b.EdgeColor = fixationTypeColors(n,:);
+            b.FaceColor = fixationPatternColors(n,:);
+            b.EdgeColor = fixationPatternColors(n,:);
             b.FaceAlpha = 0.5;
         else
             b.FaceColor = 'none';
-            b.EdgeColor = fixationTypeColors(n,:);
+            b.EdgeColor = fixationPatternColors(n,:);
         end
     end
 end
@@ -122,10 +122,10 @@ for timePoint = lowerBound:.5:upperBound
         currentTool(:,selectedColumn) < timePoint+.25, 3); 
     for n = 1:5
        plot(timePoint, sum(currentTimeWindow == n-1)/length(currentTimeWindow), ...
-           '-o','MarkerEdgeColor', 'none', 'MarkerFaceColor', fixationTypeColors(n,:))
+           '-o','MarkerEdgeColor', 'none', 'MarkerFaceColor', fixationPatternColors(n,:))
        if timePoint > lowerBound
           line([timePoint-.5 timePoint],[storedMeans(n) sum(currentTimeWindow == n-1)/length(currentTimeWindow)],...
-              'Color', fixationTypeColors(n,:), 'LineWidth', 2) 
+              'Color', fixationPatternColors(n,:), 'LineWidth', 2) 
        end
        storedMeans(n) = sum(currentTimeWindow == n-1)/length(currentTimeWindow);
     end
@@ -148,10 +148,10 @@ for timePoint = lowerBound:.5:upperBound
         currentTool(:,selectedColumn) < timePoint+.25, 3); 
     for n = 1:5
        plot(timePoint, sum(currentTimeWindow == n-1)/length(currentTimeWindow), ...
-           '-o','MarkerEdgeColor', 'none', 'MarkerFaceColor', fixationTypeColors(n,:))
+           '-o','MarkerEdgeColor', 'none', 'MarkerFaceColor', fixationPatternColors(n,:))
        if timePoint > lowerBound
           line([timePoint-.5 timePoint],[storedMeans(n) sum(currentTimeWindow == n-1)/length(currentTimeWindow)],...
-              'Color', fixationTypeColors(n,:), 'LineWidth', 2) 
+              'Color', fixationPatternColors(n,:), 'LineWidth', 2) 
        end
        storedMeans(n) = sum(currentTimeWindow == n-1)/length(currentTimeWindow);
     end
@@ -174,10 +174,10 @@ for timePoint = lowerBound:.5:upperBound
         currentTool(:,selectedColumn) < timePoint+.25, 3); 
     for n = 1:5
        plot(timePoint, sum(currentTimeWindow == n-1)/length(currentTimeWindow), ...
-           '-o','MarkerEdgeColor', 'none', 'MarkerFaceColor', fixationTypeColors(n,:))
+           '-o','MarkerEdgeColor', 'none', 'MarkerFaceColor', fixationPatternColors(n,:))
        if timePoint > lowerBound
           line([timePoint-.5 timePoint],[storedMeans(n) sum(currentTimeWindow == n-1)/length(currentTimeWindow)],...
-              'Color', fixationTypeColors(n,:), 'LineWidth', 2) 
+              'Color', fixationPatternColors(n,:), 'LineWidth', 2) 
        end
        storedMeans(n) = sum(currentTimeWindow == n-1)/length(currentTimeWindow);
     end
@@ -200,10 +200,10 @@ for timePoint = lowerBound:.5:upperBound
         currentTool(:,selectedColumn) < timePoint+.25, 3); 
     for n = 1:5
        plot(timePoint, sum(currentTimeWindow == n-1)/length(currentTimeWindow), ...
-           '-o','MarkerEdgeColor', 'none', 'MarkerFaceColor', fixationTypeColors(n,:))
+           '-o','MarkerEdgeColor', 'none', 'MarkerFaceColor', fixationPatternColors(n,:))
        if timePoint > lowerBound
           line([timePoint-.5 timePoint],[storedMeans(n) sum(currentTimeWindow == n-1)/length(currentTimeWindow)],...
-              'Color', fixationTypeColors(n,:), 'LineWidth', 2) 
+              'Color', fixationPatternColors(n,:), 'LineWidth', 2) 
        end
        storedMeans(n) = sum(currentTimeWindow == n-1)/length(currentTimeWindow);
     end
