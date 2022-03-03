@@ -55,3 +55,7 @@ Generates matlab plots of different fixation types in grasp modes and relative t
 - createPlotsFigure6.m
 Generates matlab plots of phase durations and cumulative fixation probabilites for most common fixation patterns.
 Saves matlab structure to compare phase durations for fixation patterns in R (comparePhasesFixationPatterns.R). 
+
+- createPlotsFigure7.m
+Generates matlab plots of phase durations for early (before approach phase onsets) and late (after onset pproach phase onsets) fixations.
+Saves matlab structure to compare phase durations in R (comparePhasesFixationTiming.R). 
