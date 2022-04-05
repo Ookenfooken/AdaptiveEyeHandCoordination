@@ -7,13 +7,13 @@ load('pulledData.mat')
 cd(analysisPath)
 %%
 % define some specs
-numSubjects = 11;
+numParticipants = 11;
 numBlocks = size(pulledData,2);
 vigilanceBlocks = [3 4];
 tweezersBlocks = [2 4];
 phaseTiming = [];
 
-for j = 1:numSubjects % loop over subjects
+for j = 1:numParticipants % loop over subjects
     for i = 1:numBlocks % loop over blocks/experimental conditions
         currentResult = pulledData{j,i};
         currentSubject = currentResult(i).info.subject;
@@ -68,10 +68,10 @@ end
 %% save data 
 % first save norms for normalization plot
 numColumns = 9;
-phasesParticipants = NaN(numSubjects*numBlocks,numColumns);
+phasesParticipants = NaN(numParticipants*numBlocks,numColumns);
 count = 1;
 % calculate averate duration for each phase
-for j = 1:numSubjects
+for j = 1:numParticipants
     currentSubject = phaseTiming(phaseTiming(:,1) == j, :);
     
     for i = 1:numBlocks

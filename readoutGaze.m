@@ -142,7 +142,7 @@ if ~isempty(gazeData.fixation.onsetsBall) && ~isempty(gazeData.fixation.offsetsB
             gazeData.fixation.onsetsBall(c))/200;  % in seconds
         gazeData.fixation.positionXYball(c,:) = [mean(gazeXinterpolated(gazeData.fixation.onsetsBall(c):gazeData.fixation.offsetsBall(c))) ...
             mean(gazeYinterpolated(gazeData.fixation.onsetsBall(c):gazeData.fixation.offsetsBall(c)))];
-        if gazeData.fixation.durationBall(c) < minFixationDuration;
+        if gazeData.fixation.durationBall(c) < minFixationDuration
             gazeData.fixation.onsetsBall(c) = [];
             gazeData.fixation.offsetsBall(c) = [];
             gazeData.fixation.durationBall(c) = [];
