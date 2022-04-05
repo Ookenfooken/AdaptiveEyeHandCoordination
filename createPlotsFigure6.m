@@ -229,8 +229,8 @@ clear slotFixOnsets slotFixOffsets currentOnset offsetFixSlot onsetPhase
 clear phaseOffset onsetFixSlot fixOn shiftTransport shiftApproach
 clear vectorTransport vectorApproach fixOff slotFixOnset_sum slotFixOffset_sum
 
-%% plot cumulative ball fixations relative to ball aproach and
-% cumulative slot fixations relative to trannsport & slot approach (Panels E-G)
+%% plot cumulative ball fixations relative to reach onset and ball aproach 
+% cumulative slot fixations relative to trannsport & slot approach (Panels E-H)
 lightPurple = fixationPatternColors(4,:);
 darkPurple = fixationPatternColors(5,:);
 blockID = 4;
