@@ -234,6 +234,8 @@ clear vectorTransport vectorApproach fixOff slotFixOnset_sum slotFixOffset_sum
 lightPurple = fixationPatternColors(4,:);
 darkPurple = fixationPatternColors(5,:);
 blockID = 4;
+ballFixOnsetsReach = [];
+ballFixOffsetsReach = [];
 ballFixOnsetsApproach = [];
 ballFixOffsetsApproach = [];
 slotFixOnsetsTransport = [];
@@ -250,8 +252,10 @@ for i = 1:numParticipants % loop over subjects
     numTrials = length(currentResult);
     stopTrial = min([numTrials 30]);
     % open variable matrices that we want to pull
-    cumulativeOnsetBall = NaN(numTrials,vectorTransport+1); % same shift & length as transport
-    cumulativeOffsetBall = NaN(numTrials,vectorTransport+1);
+    cumulativeOnsetReach = NaN(numTrials,vectorTransport+1); % same shift & length as transport
+    cumulativeOffsetReach = NaN(numTrials,vectorTransport+1);
+    cumulativeOnsetBall = NaN(numTrials,vectorApproach+1); % same shift & length as approach
+    cumulativeOffsetBall = NaN(numTrials,vectorApproach+1);
     cumulativeOnsetTransport = NaN(numTrials,vectorTransport+1);
     cumulativeOffsetTransport = NaN(numTrials,vectorTransport+1);
     cumulativeOnsetsApproach = NaN(numTrials,vectorApproach+1);
@@ -278,7 +282,7 @@ for i = 1:numParticipants % loop over subjects
         onsetFixSlot = currentResult(n).gaze.fixation.onsetsSlot(1);
         offsetFixSlot = currentResult(n).gaze.fixation.offsetsSlot(1);
         
-        onsetPhase = currentResult(n).info.phaseStart.ballApproach - currentResult(n).info.trialStart+1;
+        onsetPhase = currentResult(n).info.phaseStart.primaryReach - currentResult(n).info.trialStart+1;
         phaseOffset = onsetPhase - shiftTransport;
         fixOn = onsetFixBall - phaseOffset;
         if fixOn > vectorTransport-1
@@ -286,14 +290,31 @@ for i = 1:numParticipants % loop over subjects
         elseif fixOn < 1
             fixOn = 1;
         end
-        cumulativeOnsetBall(n,:) = [ballFixPattern zeros(1,fixOn) ones(1,vectorTransport-fixOn)];
+        cumulativeOnsetReach(n,:) = [ballFixPattern zeros(1,fixOn) ones(1,vectorTransport-fixOn)];
         fixOff = offsetFixBall - phaseOffset;
         if fixOff > vectorTransport-1
             continue
         elseif fixOff < 1
             fixOff = 1;
         end
-        cumulativeOffsetBall(n,:) = [ballFixPattern zeros(1,fixOff) ones(1,vectorTransport-fixOff)];
+        cumulativeOffsetReach(n,:) = [ballFixPattern zeros(1,fixOff) ones(1,vectorTransport-fixOff)];
+        
+        onsetPhase = currentResult(n).info.phaseStart.ballApproach - currentResult(n).info.trialStart+1;
+        phaseOffset = onsetPhase - shiftApproach;
+        fixOn = onsetFixBall - phaseOffset;
+        if fixOn > vectorApproach-1
+            continue
+        elseif fixOn < 1
+            fixOn = 1;
+        end
+        cumulativeOnsetBall(n,:) = [ballFixPattern zeros(1,fixOn) ones(1,vectorApproach-fixOn)];
+        fixOff = offsetFixBall - phaseOffset;
+        if fixOff > vectorApproach-1
+            continue
+        elseif fixOff < 1
+            fixOff = 1;
+        end
+        cumulativeOffsetBall(n,:) = [ballFixPattern zeros(1,fixOff) ones(1,vectorApproach-fixOff)];
         
         onsetPhase = currentResult(n).info.phaseStart.transport - currentResult(n).info.trialStart+1;
         phaseOffset = onsetPhase - shiftTransport;
@@ -331,6 +352,8 @@ for i = 1:numParticipants % loop over subjects
         cumulativeOffsetApproach(n,:) = [ballFixPattern zeros(1,fixOff) ones(1,vectorApproach-fixOff)];       
         
     end
+    currentOnsetReach = [3 nansum(cumulativeOnsetReach(cumulativeOnsetReach(:,1) == 3, 2:end), 1); ...
+        4 nansum(cumulativeOnsetReach(cumulativeOnsetReach(:,1) == 4, 2:end), 1)];
     currentOnsetBall = [3 nansum(cumulativeOnsetBall(cumulativeOnsetBall(:,1) == 3, 2:end), 1); ...
         4 nansum(cumulativeOnsetBall(cumulativeOnsetBall(:,1) == 4, 2:end), 1)];
     currentOnsetTransport = [3 nansum(cumulativeOnsetTransport(cumulativeOnsetTransport(:,1) == 3,2:end),1); ...
@@ -338,10 +361,13 @@ for i = 1:numParticipants % loop over subjects
     currentOnsetApproach = [3 nansum(cumulativeOnsetsApproach(cumulativeOnsetsApproach(:,1) == 3,2:end),1); ...
         4 nansum(cumulativeOnsetsApproach(cumulativeOnsetsApproach(:,1) == 4, 2:end), 1)];
     
+    ballFixOnsetsReach = [ballFixOnsetsReach; currentOnsetReach];
     ballFixOnsetsApproach = [ballFixOnsetsApproach; currentOnsetBall];
     slotFixOnsetsTransport = [slotFixOnsetsTransport; currentOnsetTransport];
     slotFixOnsetsApproach = [slotFixOnsetsApproach; currentOnsetApproach];
     
+    currentOffsetReach = [3 nansum(cumulativeOffsetReach(cumulativeOffsetReach(:,1) == 3, 2:end), 1); ...
+        4 nansum(cumulativeOffsetReach(cumulativeOffsetReach(:,1) == 4, 2:end), 1)];
     currentOffsetBall = [3 nansum(cumulativeOffsetBall(cumulativeOffsetBall(:,1) == 3, 2:end), 1); ...
         4 nansum(cumulativeOffsetBall(cumulativeOffsetBall(:,1) == 4, 2:end), 1)];
     currentOffsetTransport = [3 nansum(cumulativeOffsetTransport(cumulativeOffsetTransport(:,1) == 3, 2:end), 1); ...
@@ -349,6 +375,7 @@ for i = 1:numParticipants % loop over subjects
     currentOffsetApproach = [3 nansum(cumulativeOffsetApproach(cumulativeOffsetApproach(:,1) == 3, 2:end), 1); ...
         4 nansum(cumulativeOffsetApproach(cumulativeOffsetApproach(:,1) == 4, 2:end), 1)];
     
+    ballFixOffsetsReach = [ballFixOffsetsReach; currentOffsetReach];
     ballFixOffsetsApproach = [ballFixOffsetsApproach; currentOffsetBall];
     slotFixOffsetsTransport = [slotFixOffsetsTransport; currentOffsetTransport];
     slotFixOffsetsApproach = [slotFixOffsetsApproach; currentOffsetApproach];
@@ -356,6 +383,26 @@ for i = 1:numParticipants % loop over subjects
 end
 
 figure(13)
+hold on
+slotFixOnset_ballSlot = nansum(ballFixOnsetsReach(ballFixOnsetsReach(:,1) == 3, 2:end))/ ...
+    max(nansum(ballFixOnsetsReach(ballFixOnsetsReach(:,1) == 3, 2:end)));
+slotFixOnset_ballDisplaySlot = nansum(ballFixOnsetsReach(ballFixOnsetsReach(:,1) == 4, 2:end))/ ...
+    max(nansum(ballFixOnsetsReach(ballFixOnsetsReach(:,1) == 4, 2:end)));
+slotFixOffset_ballSlot = nansum(ballFixOffsetsReach(ballFixOffsetsReach(:,1) == 3, 2:end))/...
+    max(nansum(ballFixOffsetsReach(ballFixOffsetsReach(:,1) == 3, 2:end)));
+slotFixOffset_ballDisplaySlot = nansum(ballFixOffsetsReach(ballFixOffsetsReach(:,1) == 4, 2:end))/...
+    max(nansum(ballFixOffsetsReach(ballFixOffsetsReach(:,1) == 4, 2:end)));
+plot(slotFixOnset_ballSlot, 'Color', lightPurple, 'LineWidth', 2)
+plot(slotFixOnset_ballDisplaySlot, 'Color', darkPurple, 'LineWidth', 2)
+plot(slotFixOffset_ballSlot, '--', 'Color', lightPurple, 'LineWidth',2)
+plot(slotFixOffset_ballDisplaySlot, '--', 'Color', darkPurple, 'LineWidth',2)
+line([shiftTransport shiftTransport], [0 1], 'Color', gray)
+xlim([0 900])
+set(gca, 'Xtick', [100 300 500 700 900], 'XtickLabel', [-1 0 1 2 3])
+ylim([0 1])
+set(gca, 'Ytick', [0 .25 .5 .75 1])
+
+figure(14)
 hold on
 slotFixOnset_ballSlot = nansum(ballFixOnsetsApproach(ballFixOnsetsApproach(:,1) == 3, 2:end))/ ...
     max(nansum(ballFixOnsetsApproach(ballFixOnsetsApproach(:,1) == 3, 2:end)));
@@ -369,13 +416,13 @@ plot(slotFixOnset_ballSlot, 'Color', lightPurple, 'LineWidth', 2)
 plot(slotFixOnset_ballDisplaySlot, 'Color', darkPurple, 'LineWidth', 2)
 plot(slotFixOffset_ballSlot, '--', 'Color', lightPurple, 'LineWidth',2)
 plot(slotFixOffset_ballDisplaySlot, '--', 'Color', darkPurple, 'LineWidth',2)
-line([shiftTransport shiftTransport], [0 1], 'Color', gray)
-xlim([0 900])
-set(gca, 'Xtick', [100 300 500 700 900], 'XtickLabel', [-1 0 1 2 3])
+line([shiftApproach shiftApproach], [0 1], 'Color', gray)
+xlim([0 800])
+set(gca, 'Xtick', [0 200 400 600 800], 'XtickLabel', [-2 -1 0 1 2])
 ylim([0 1])
 set(gca, 'Ytick', [0 .25 .5 .75 1])
 
-figure(14)
+figure(15)
 hold on
 slotFixOnset_ballSlot = nansum(slotFixOnsetsTransport(slotFixOnsetsTransport(:,1) == 3, 2:end))/ ...
     max(nansum(slotFixOnsetsTransport(slotFixOnsetsTransport(:,1) == 3, 2:end)));
@@ -395,7 +442,7 @@ set(gca, 'Xtick', [100 300 500 700 900], 'XtickLabel', [-1 0 1 2 3])
 ylim([0 1])
 set(gca, 'Ytick', [0 .25 .5 .75 1])
 
-figure(15)
+figure(16)
 hold on
 slotFixOnset_ballSlot = nansum(slotFixOnsetsApproach(slotFixOnsetsApproach(:,1) == 3, 2:end))/ ...
     max(nansum(slotFixOnsetsApproach(slotFixOnsetsApproach(:,1) == 3, 2:end)));
