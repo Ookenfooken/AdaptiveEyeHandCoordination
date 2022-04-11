@@ -240,6 +240,9 @@ for j = 1:numParticipants % loop over subjects
                 if fixations(1) == 1
                     fixationOnsets = [1; fixationOnsets];
                 end
+                if fixations(end) == 1
+                    fixationOffsets = [fixationOffsets length(fixations)];
+                end
                 if fixationOffsets(1) < fixationOnsets(1)
                     fixationOnsets(1) = [];
                     fixationOffsets(1) = [];
@@ -259,7 +262,7 @@ for j = 1:numParticipants % loop over subjects
                     end
                 end
             end
-            % determine 50 ms before and after reach onset
+            % dreach onset to offset
             reachOnset = currentResult(n).info.phaseStart.primaryReach - startTime;
             reachOffset = currentResult(n).info.phaseStart.ballApproach - startTime -1;
             reachOn = max([1 preLetterChange+(reachOnset-letterChange)]);
@@ -284,6 +287,7 @@ for j = 1:numParticipants % loop over subjects
         clear criticalLocations fixationDetect fixationOnsets fixationOffsets 
         clear minimalDistance gazeVelocity gazeXinterpolated gazeYinterpolated
         clear distanceGaze fixationOn startTime slotPosition reachOn reachOff
+        clear currentFixationRateBall currentFixationRateDisplay currentReachOnset
     end
 end
 
@@ -291,15 +295,26 @@ end
 blue = [49,130,189]./255;
 orange = [255,127,0]./255;
 
+% plot display abd ball fixation rate and reach probability for fingertips
 figure(11)
 hold on
 xlim([0 600])
 set(gca, 'Xtick', [0 100 200 300 400 500 600], 'XtickLabel', [-1 -.5 0 .5 1 1.5 2])
 ylim([0 .75])
 set(gca, 'Ytick', [0 .25 .5 .75])
+line([preLetterChange preLetterChange], [0 .75], 'Color', gray, 'LineStyle', '--')
 plot(mean(fixationRateDisplay(fixationRateDisplay(:,2) == 3, 3:end-4)),'Color', blue, 'LineWidth', 2)
-plot(mean(fixationRateDisplay(fixationRateDisplay(:,2) == 4, 3:end-4)),'Color', blue, 'LineStyle', '--',  'LineWidth', 2)
 plot(mean(fixationRateBall(fixationRateBall(:,2) == 3, 3:end-4)),'Color', orange, 'LineWidth', 2)
-plot(mean(fixationRateBall(fixationRateBall(:,2) == 4, 3:end-4)),'Color', orange, 'LineStyle', '--',  'LineWidth', 2)
-plot(nanmean(reachRate(reachRate(:,2) == 3, 3:end-4)),'Color', 'k', 'LineWidth', 2)
-plot(mean(reachRate(reachRate(:,2) == 4, 3:end-4)),'Color', 'k', 'LineStyle', '--',  'LineWidth', 2)
+plot(mean(reachRate(reachRate(:,2) == 3, 3:end-4)),'Color', 'k', 'LineWidth', 2)
+
+% plot display abd ball fixation rate and reach probability for tweezers
+figure(12)
+hold on
+xlim([0 600])
+set(gca, 'Xtick', [0 100 200 300 400 500 600], 'XtickLabel', [-1 -.5 0 .5 1 1.5 2])
+ylim([0 .75])
+set(gca, 'Ytick', [0 .25 .5 .75])
+line([preLetterChange preLetterChange], [0 .75], 'Color', gray, 'LineStyle', '--')
+plot(mean(fixationRateDisplay(fixationRateDisplay(:,2) == 4, 3:end-4)),'Color', blue, 'LineWidth', 2)
+plot(mean(fixationRateBall(fixationRateBall(:,2) == 4, 3:end-4)),'Color', orange, 'LineWidth', 2)
+plot(mean(reachRate(reachRate(:,2) == 4, 3:end-4)),'Color', 'k', 'LineWidth', 2)
