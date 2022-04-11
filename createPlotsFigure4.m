@@ -186,14 +186,18 @@ for j= 3:4
 end
 
 %% plot display fixation probability relative to letter change (Panel D)
-preLetterChange = 50;
-postLetterChange = 200;
+preLetterChange = 200;
+postLetterChange = 400;
 fixationRateDisplay = [];
+fixationRateBall = [];
+reachRate = [];
 for j = 1:numParticipants % loop over subjects
     for i = 3:4 % loop over dual task conditions
         currentResult = pulledData{j,i};
         numTrials = length(currentResult);
         fixationVectorDisplay = NaN(numTrials,preLetterChange+postLetterChange);
+        fixationVectorBall= NaN(numTrials,preLetterChange+postLetterChange);
+        vectorReachOnset= NaN(numTrials,preLetterChange+postLetterChange);
         stopTrial = min([numTrials 30]);
         for n = 1:stopTrial % loop over trials for current subject & block
             if currentResult(n).info.dropped
@@ -212,13 +216,14 @@ for j = 1:numParticipants % loop over subjects
                 13.63 16.68]; % visual display
             startTime = currentResult(n).info.trialStart;
             letterChange = currentResult(n).dualTask.sampleLetterChange(1)-startTime;           
-            if isnan(letterChange) || letterChange < preLetterChange || letterChange+postLetterChange > length(currentResult(n).gaze.VelXYinterpolated)
+            if isnan(letterChange) 
                 continue
             end
             % determine fixation vector
             fixationVectorDisplay(n,:) = zeros(1,preLetterChange+postLetterChange);
-            gazeXinterpolated = currentResult(n).gaze.Xinterpolated(letterChange-(preLetterChange-1):letterChange+postLetterChange);
-            gazeYinterpolated = currentResult(n).gaze.Yinterpolated(letterChange-(preLetterChange-1):letterChange+postLetterChange);
+            fixationVectorBall(n,:) = zeros(1,preLetterChange+postLetterChange);
+            gazeXinterpolated = currentResult(n).gaze.Xinterpolated;
+            gazeYinterpolated = currentResult(n).gaze.Yinterpolated;
             distancesGaze = NaN(length(criticalLocations), length(gazeXinterpolated));
             for m = 1:length(criticalLocations)
                 for sample = 1:length(gazeXinterpolated)
@@ -240,34 +245,61 @@ for j = 1:numParticipants % loop over subjects
                     fixationOffsets(1) = [];
                 end
                 for fix = 1:length(fixationOnsets)
-                    if fixationOffsets(fix) - fixationOnsets(fix) < 20
+                   if fixationOffsets(fix) - fixationOnsets(fix) < 20
                         continue
-                    end
+                   end
+                    fixOnset = max([1 preLetterChange+(fixationOnsets(fix)-letterChange)]);
+                    fixOffset = min([preLetterChange+(fixationOffsets(fix)-letterChange) length(fixationVectorBall)]);
                     minimalDistance = min(mean(distancesGaze(:,fixationOnsets(fix):fixationOffsets(fix)),2));
                     fixationOn = find(mean(distancesGaze(:,fixationOnsets(fix):fixationOffsets(fix)),2) == minimalDistance);
-                    if fixationOn == 3
-                        fixationVectorDisplay(n,fixationOnsets(fix):fixationOffsets(fix)) = 1;
+                    if fixationOn == 3 % indicates fixation on display
+                        fixationVectorDisplay(n,fixOnset:fixOffset) = 1;
+                    elseif fixationOn == 1 % indicates fixation on ball
+                        fixationVectorBall(n,fixOnset:fixOffset) = 1;
                     end
                 end
             end
-            
+            % determine 50 ms before and after reach onset
+            reachOnset = currentResult(n).info.phaseStart.primaryReach - startTime;
+            reachOffset = currentResult(n).info.phaseStart.ballApproach - startTime -1;
+            reachOn = max([1 preLetterChange+(reachOnset-letterChange)]);
+            reachOff = min([preLetterChange+(reachOffset-letterChange) length(vectorReachOnset)]);
+            if reachOff < 1
+                continue
+            end
+            vectorReachOnset(n,:) = zeros(1,preLetterChange+postLetterChange);
+            vectorReachOnset(n,reachOn:reachOff) = 1;
         end
-        currentFixationRateDisplay = [j i nanmean(fixationVectorDisplay)];
+        nanIdxFix = isnan(fixationVectorDisplay(:,1));
+        fixationVectorDisplay(nanIdxFix,:) = [];
+        fixationVectorBall(nanIdxFix,:) = [];
+        nanIdxReach = isnan(vectorReachOnset(:,1));
+        vectorReachOnset(nanIdxReach,:) = [];
+        currentFixationRateDisplay = [j i mean(fixationVectorDisplay)];
+        currentFixationRateBall = [j i mean(fixationVectorBall)];
+        currentReachOnset = [j i mean(vectorReachOnset)];
         fixationRateDisplay= [fixationRateDisplay; currentFixationRateDisplay];
+        fixationRateBall = [fixationRateBall; currentFixationRateBall];
+        reachRate = [reachRate; currentReachOnset];
         clear criticalLocations fixationDetect fixationOnsets fixationOffsets 
         clear minimalDistance gazeVelocity gazeXinterpolated gazeYinterpolated
-        clear distanceGaze fixationOn startTime slotPosition
+        clear distanceGaze fixationOn startTime slotPosition reachOn reachOff
     end
 end
 
 %%
 blue = [49,130,189]./255;
+orange = [255,127,0]./255;
 
 figure(11)
 hold on
-xlim([0 250])
-set(gca, 'Xtick', [0 50 100 150 200 250], 'XtickLabel', [-.25 0 .25 .5 .75 1])
+xlim([0 600])
+set(gca, 'Xtick', [0 100 200 300 400 500 600], 'XtickLabel', [-1 -.5 0 .5 1 1.5 2])
 ylim([0 .75])
 set(gca, 'Ytick', [0 .25 .5 .75])
 plot(mean(fixationRateDisplay(fixationRateDisplay(:,2) == 3, 3:end-4)),'Color', blue, 'LineWidth', 2)
 plot(mean(fixationRateDisplay(fixationRateDisplay(:,2) == 4, 3:end-4)),'Color', blue, 'LineStyle', '--',  'LineWidth', 2)
+plot(mean(fixationRateBall(fixationRateBall(:,2) == 3, 3:end-4)),'Color', orange, 'LineWidth', 2)
+plot(mean(fixationRateBall(fixationRateBall(:,2) == 4, 3:end-4)),'Color', orange, 'LineStyle', '--',  'LineWidth', 2)
+plot(nanmean(reachRate(reachRate(:,2) == 3, 3:end-4)),'Color', 'k', 'LineWidth', 2)
+plot(mean(reachRate(reachRate(:,2) == 4, 3:end-4)),'Color', 'k', 'LineStyle', '--',  'LineWidth', 2)
