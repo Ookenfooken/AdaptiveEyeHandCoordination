@@ -162,42 +162,24 @@ cd(savePath)
 save('letterDetectViewTime', 'letterDetectViewTime')
 cd(analysisPath)
 clear p_FT y_FT p_TW y_TW
-%% plot frequency of first letter change relative to reach onset (Panel C)
-figure(13)
-set(gcf,'renderer','Painters')
-gray = [189,189,189]./255;
-hold on
-box off
-xlim([-2 4])
-ylim([0 80])
-for j= 3:4
-    letterChangeRelativeReach = (letterChanges(letterChanges(:,2) == j,4) - ...
-        letterChanges(letterChanges(:,2) == j,5))/200; % in seconds
-    lowerBound = nanmean(letterChangeRelativeReach) - 3*nanstd(letterChangeRelativeReach);
-    upperBound = nanmean(letterChangeRelativeReach) + 3*nanstd(letterChangeRelativeReach);
-    letterChangeRelativeReach(letterChangeRelativeReach < lowerBound) = [];
-    letterChangeRelativeReach(letterChangeRelativeReach > upperBound) = [];
-    if j == 3
-        histogram(letterChangeRelativeReach, 'facecolor', 'k', 'edgecolor', 'none')
-    else
-        histogram(letterChangeRelativeReach, 'facecolor', 'none', 'edgecolor', 'k')
-    end
-    clear lowerBound upperBound
-end
 
 %% plot display fixation probability relative to letter change (Panel D)
-preLetterChange = 200;
-postLetterChange = 400;
+preLetterChange = 100;
+postLetterChange = 300;
 fixationRateDisplay = [];
 fixationRateBall = [];
+fixationRateSlot = [];
 reachRate = [];
+transportRate = [];
 for j = 1:numParticipants % loop over subjects
     for i = 3:4 % loop over dual task conditions
         currentResult = pulledData{j,i};
         numTrials = length(currentResult);
         fixationVectorDisplay = NaN(numTrials,preLetterChange+postLetterChange);
         fixationVectorBall= NaN(numTrials,preLetterChange+postLetterChange);
-        vectorReachOnset= NaN(numTrials,preLetterChange+postLetterChange);
+        fixationVectorSlot = NaN(numTrials,preLetterChange+postLetterChange);
+        vectorReach = NaN(numTrials,preLetterChange+postLetterChange);
+        vectorTrasnport = NaN(numTrials,preLetterChange+postLetterChange);
         stopTrial = min([numTrials 30]);
         for n = 1:stopTrial % loop over trials for current subject & block
             if currentResult(n).info.dropped
@@ -216,12 +198,21 @@ for j = 1:numParticipants % loop over subjects
                 13.63 16.68]; % visual display
             startTime = currentResult(n).info.trialStart;
             letterChange = currentResult(n).dualTask.sampleLetterChange(1)-startTime;           
-            if isnan(letterChange) 
+            if isnan(letterChange) || currentResult(n).dualTask.sampleLetterChange(1) > currentResult(n).info.trialEnd 
                 continue
             end
             % determine fixation vector
-            fixationVectorDisplay(n,:) = zeros(1,preLetterChange+postLetterChange);
-            fixationVectorBall(n,:) = zeros(1,preLetterChange+postLetterChange);
+            relativeOnset = 1;
+            if letterChange < preLetterChange
+                relativeOnset = preLetterChange - letterChange;
+            end
+            relativeOffset = preLetterChange+postLetterChange;
+            if relativeOffset > length(currentResult(n).gaze.Xinterpolated)
+                relativeOffset = length(currentResult(n).gaze.Xinterpolated);
+            end
+            fixationVectorDisplay(n,relativeOnset:relativeOffset) = zeros(1,relativeOffset-relativeOnset+1);
+            fixationVectorBall(n,relativeOnset:relativeOffset) = zeros(1,relativeOffset-relativeOnset+1);
+            fixationVectorSlot(n,relativeOnset:relativeOffset) = zeros(1,relativeOffset-relativeOnset+1);
             gazeXinterpolated = currentResult(n).gaze.Xinterpolated;
             gazeYinterpolated = currentResult(n).gaze.Yinterpolated;
             distancesGaze = NaN(length(criticalLocations), length(gazeXinterpolated));
@@ -259,50 +250,66 @@ for j = 1:numParticipants % loop over subjects
                         fixationVectorDisplay(n,fixOnset:fixOffset) = 1;
                     elseif fixationOn == 1 % indicates fixation on ball
                         fixationVectorBall(n,fixOnset:fixOffset) = 1;
+                    elseif fixationOn == 2 % indicates fixation on slot
+                        fixationVectorSlot(n,fixOnset:fixOffset) = 1;
                     end
                 end
             end
-            % dreach onset to offset
+            % reach onset to offset
             reachOnset = currentResult(n).info.phaseStart.primaryReach - startTime;
             reachOffset = currentResult(n).info.phaseStart.ballApproach - startTime -1;
             reachOn = max([1 preLetterChange+(reachOnset-letterChange)]);
-            reachOff = min([preLetterChange+(reachOffset-letterChange) length(vectorReachOnset)]);
+            reachOff = min([preLetterChange+(reachOffset-letterChange) length(vectorReach)]);
             if reachOff < 1
                 continue
             end
-            vectorReachOnset(n,:) = zeros(1,preLetterChange+postLetterChange);
-            vectorReachOnset(n,reachOn:reachOff) = 1;
+            vectorReach(n,relativeOnset:relativeOffset) = zeros(1,relativeOffset-relativeOnset+1);
+            vectorReach(n,reachOn:reachOff) = 1;
+            % transport onset to offset
+            transportOnset = currentResult(n).info.phaseStart.transport - startTime;
+            transportOffset = currentResult(n).info.phaseStart.slotApproach - startTime -1;
+            transportOn = max([1 preLetterChange+(transportOnset-letterChange)]);
+            transportOff = min([preLetterChange+(transportOffset-letterChange) length(vectorTrasnport)]);
+            if transportOff < 1 || transportOn > transportOff
+                continue
+            end
+            vectorTrasnport(n,relativeOnset:relativeOffset) = zeros(1,relativeOffset-relativeOnset+1);
+            vectorTrasnport(n,transportOn:transportOff) = 1;
         end
-        nanIdxFix = isnan(fixationVectorDisplay(:,1));
-        fixationVectorDisplay(nanIdxFix,:) = [];
-        fixationVectorBall(nanIdxFix,:) = [];
-        nanIdxReach = isnan(vectorReachOnset(:,1));
-        vectorReachOnset(nanIdxReach,:) = [];
-        currentFixationRateDisplay = [j i mean(fixationVectorDisplay)];
-        currentFixationRateBall = [j i mean(fixationVectorBall)];
-        currentReachOnset = [j i mean(vectorReachOnset)];
+        currentFixationRateDisplay = [j i nanmean(fixationVectorDisplay)];
+        currentFixationRateBall = [j i nanmean(fixationVectorBall)];
+        currentFixationRateSlot = [j i nanmean(fixationVectorSlot)];
+        currentReachOnset = [j i nanmean(vectorReach)];
+        currentTransportOnset = [j i nanmean(vectorTrasnport)];
         fixationRateDisplay= [fixationRateDisplay; currentFixationRateDisplay];
         fixationRateBall = [fixationRateBall; currentFixationRateBall];
+        fixationRateSlot = [fixationRateSlot; currentFixationRateSlot];
         reachRate = [reachRate; currentReachOnset];
+        transportRate = [transportRate; currentTransportOnset];
         clear criticalLocations fixationDetect fixationOnsets fixationOffsets 
         clear minimalDistance gazeVelocity gazeXinterpolated gazeYinterpolated
         clear distanceGaze fixationOn startTime slotPosition reachOn reachOff
         clear currentFixationRateBall currentFixationRateDisplay currentReachOnset
+        clear transportOn transportOff transportOnset transportOffset
+        clear currentTransportOnset reachOnset reachOffset currentFixationRateSlot
     end
 end
 
 %%
 blue = [49,130,189]./255;
 orange = [255,127,0]./255;
+green = [77,175,74]./255;
+gray = [150,150,150]./255;
+xLength = 400;
 
 % plot display abd ball fixation rate and reach probability for fingertips
 figure(11)
 hold on
-xlim([0 600])
-set(gca, 'Xtick', [0 100 200 300 400 500 600], 'XtickLabel', [-1 -.5 0 .5 1 1.5 2])
-ylim([0 .75])
-set(gca, 'Ytick', [0 .25 .5 .75])
-line([preLetterChange preLetterChange], [0 .75], 'Color', gray, 'LineStyle', '--')
+xlim([0 xLength])
+set(gca, 'Xtick', [0 100 200 300 400 ], 'XtickLabel', [-.5 0 .5 1 1.5])
+ylim([0 1])
+set(gca, 'Ytick', [0 .25 .5 .75 1])
+line([preLetterChange preLetterChange], [0 1], 'Color', gray, 'LineStyle', '--')
 plot(mean(fixationRateDisplay(fixationRateDisplay(:,2) == 3, 3:end-4)),'Color', blue, 'LineWidth', 2)
 plot(mean(fixationRateBall(fixationRateBall(:,2) == 3, 3:end-4)),'Color', orange, 'LineWidth', 2)
 plot(mean(reachRate(reachRate(:,2) == 3, 3:end-4)),'Color', 'k', 'LineWidth', 2)
@@ -310,11 +317,35 @@ plot(mean(reachRate(reachRate(:,2) == 3, 3:end-4)),'Color', 'k', 'LineWidth', 2)
 % plot display abd ball fixation rate and reach probability for tweezers
 figure(12)
 hold on
-xlim([0 600])
-set(gca, 'Xtick', [0 100 200 300 400 500 600], 'XtickLabel', [-1 -.5 0 .5 1 1.5 2])
-ylim([0 .75])
-set(gca, 'Ytick', [0 .25 .5 .75])
-line([preLetterChange preLetterChange], [0 .75], 'Color', gray, 'LineStyle', '--')
+xlim([0 xLength])
+set(gca, 'Xtick', [0 100 200 300 400], 'XtickLabel', [-.5 0 .5 1 1.5])
+ylim([0 1])
+set(gca, 'Ytick', [0 .25 .5 .75 1])
+line([preLetterChange preLetterChange], [0 1], 'Color', gray, 'LineStyle', '--')
 plot(mean(fixationRateDisplay(fixationRateDisplay(:,2) == 4, 3:end-4)),'Color', blue, 'LineWidth', 2)
 plot(mean(fixationRateBall(fixationRateBall(:,2) == 4, 3:end-4)),'Color', orange, 'LineWidth', 2)
 plot(mean(reachRate(reachRate(:,2) == 4, 3:end-4)),'Color', 'k', 'LineWidth', 2)
+
+% plot display abd slot fixation rate and transport probability for fingertips
+figure(13)
+hold on
+xlim([0 xLength])
+set(gca, 'Xtick', [0 100 200 300 400], 'XtickLabel', [-.5 0 .5 1 1.5])
+ylim([0 1])
+set(gca, 'Ytick', [0 .25 .5 .75 1])
+line([preLetterChange preLetterChange], [0 1], 'Color', gray, 'LineStyle', '--')
+plot(mean(fixationRateDisplay(fixationRateDisplay(:,2) == 3, 3:end-4)),'Color', blue, 'LineWidth', 2)
+plot(mean(fixationRateSlot(fixationRateSlot(:,2) == 3, 3:end-4)),'Color', green, 'LineWidth', 2)
+plot(mean(transportRate(transportRate(:,2) == 3, 3:end-4)),'Color', 'k', 'LineWidth', 2)
+
+% plot display abd ball fixation rate and reach probability for tweezers
+figure(14)
+hold on
+xlim([0 xLength])
+set(gca, 'Xtick', [0 100 200 300 400], 'XtickLabel', [-.5 0 .5 1 1.5])
+ylim([0 1])
+set(gca, 'Ytick', [0 .25 .5 .75 1])
+line([preLetterChange preLetterChange], [0 1], 'Color', gray, 'LineStyle', '--')
+plot(mean(fixationRateDisplay(fixationRateDisplay(:,2) == 4, 3:end-4)),'Color', blue, 'LineWidth', 2)
+plot(mean(fixationRateSlot(fixationRateSlot(:,2) == 4, 3:end-4)),'Color', green, 'LineWidth', 2)
+plot(mean(transportRate(transportRate(:,2) == 4, 3:end-4)),'Color', 'k', 'LineWidth', 2)
