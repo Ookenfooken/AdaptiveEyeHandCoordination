@@ -250,7 +250,7 @@ cumFirstLetterChange = [];
 cumSecondLetterChange = [];
 cumGoSignal = [];
 cumReachOnsetEarly = [];
-cumReachOnsetLate = [];
+cumReachOnsetL= [];
 cumGraspOnset = [];
 cumTrialEnd = [];
 twoChangeTrials = [];
@@ -263,8 +263,7 @@ for j = 1:numParticipants % loop over subjects
         firstLetterChangeVector = NaN(numTrials,lengthVector);
         secondLetterChangeVector = NaN(numTrials,lengthVector);
         goSignalVector = NaN(numTrials,lengthVector);
-        reachOnsetEarlyVector = NaN(numTrials,lengthVector);
-        reachOnsetLateVector = NaN(numTrials,lengthVector);
+        reachOnsetVector = NaN(numTrials,lengthVector);
         graspOnsetVector = NaN(numTrials,lengthVector);
         trialEndVector = NaN(numTrials,lengthVector);
         twoChangeNo = 0;
@@ -288,13 +287,8 @@ for j = 1:numParticipants % loop over subjects
                         ones(1,lengthVector-currentResult(n).dualTask.sampleLetterChange(2)+1)];
                 end
             end
-            if currentResult(n).dualTask.sampleLetterChange(1) < currentResult(n).info.trialStart+1
-                reachOnsetEarlyVector(n,:) = [zeros(1,currentResult(n).info.phaseStart.primaryReach-1)...
-                    ones(1,lengthVector-currentResult(n).info.phaseStart.primaryReach+1)];
-            else
-                reachOnsetLateVector(n,:) = [zeros(1,currentResult(n).info.phaseStart.primaryReach-1)...
-                    ones(1,lengthVector-currentResult(n).info.phaseStart.primaryReach+1)];
-            end
+            reachOnsetVector(n,:) = [zeros(1,currentResult(n).info.phaseStart.primaryReach-1)...
+                ones(1,lengthVector-currentResult(n).info.phaseStart.primaryReach+1)];
             graspOnsetVector(n,:) = [zeros(1,currentResult(n).info.phaseStart.ballGrasp-1)...
                 ones(1,lengthVector-currentResult(n).info.phaseStart.ballGrasp+1)];
             if currentResult(n).info.trialEnd < lengthVector
@@ -305,8 +299,7 @@ for j = 1:numParticipants % loop over subjects
         cumFirstLetterChange = [cumFirstLetterChange; i nansum(firstLetterChangeVector)];
         cumSecondLetterChange = [cumSecondLetterChange; i nansum(secondLetterChangeVector)];
         cumGoSignal = [cumGoSignal; i nansum(goSignalVector)];
-        cumReachOnsetEarly = [cumReachOnsetEarly; i nansum(reachOnsetEarlyVector)];
-        cumReachOnsetLate = [cumReachOnsetLate; i nansum(reachOnsetLateVector)];
+        cumReachOnsetEarly = [cumReachOnsetEarly; i nansum(reachOnsetVector)];
         cumGraspOnset = [cumGraspOnset; i nansum(graspOnsetVector)];
         cumTrialEnd = [cumTrialEnd; i nansum(trialEndVector)];
         twoChangeTrials = [twoChangeTrials; i twoChangeNo];
@@ -338,20 +331,6 @@ for j = 3:4
         'Color', gray, 'LineWidth', 1.5)
     set(gca, 'Xtick', [0 200 400 600 800 1000 1200 1400], 'XtickLabel', [0 1 2 3 4 5 6 7])
     lgd = legend('first letter change', 'second letter change', 'go signal', 'reach onset', 'ball grasp', 'trial end');
-    lgd.Location = 'southeast';
-end
-
-%%
-for j = 3:4
-    figure(40 + j)
-    hold on    
-    plot(sum(cumReachOnsetEarly(cumReachOnsetEarly(:,1) == j, 2:end))/sum(cumReachOnsetEarly(cumReachOnsetEarly(:,1) == j, end)), ...
-        'Color', 'k', 'LineWidth', 1.5)
-    plot(sum(cumReachOnsetLate(cumReachOnsetLate(:,1) == j, 2:end))/sum(cumReachOnsetLate(cumReachOnsetLate(:,1) == j, end)), ...
-        'Color', gray, 'LineWidth', 1.5)
-    xlim([0 800])
-    set(gca, 'Xtick', [0 200 400 600 800], 'XtickLabel', [0 1 2 3 4])
-    lgd = legend('letter change before go signal', 'letter change after go signal');
     lgd.Location = 'southeast';
 end
 
