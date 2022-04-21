@@ -35,7 +35,8 @@ for j = 1:numParticipants % loop over subjects
             else
                 numLetterChange(n) = numel(currentResult(n).dualTask.sampleLetterChange);
             end
-            reachOnset(n) = currentResult(n).info.phaseStart.primaryReach;  
+            reachOnset(n) = currentResult(n).info.phaseStart.primaryReach; 
+            ballOnset(n)
             displayFixationTime(n) = sum(currentResult(n).gaze.fixation.durationDisplay)./...
                                      (sum(currentResult(n).gaze.fixation.durationBall) + ...
                                      sum(currentResult(n).gaze.fixation.durationSlot) + ...

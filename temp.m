@@ -95,9 +95,9 @@ for j = 1:numParticipants % loop over subjects
                     end
                 end
                 % reach onset to offset
-                reachOnset = currentResult(n).info.phaseStart.primaryReach - startTime;
+                ballGrasp = currentResult(n).info.phaseStart.primaryReach - startTime;
                 reachOffset = length(vectorReach); %currentResult(n).info.phaseStart.ballApproach - startTime -1;
-                reachOn = max([1 preLetterChange+(reachOnset-letterChange)]);
+                reachOn = max([1 preLetterChange+(ballGrasp-letterChange)]);
                 reachOff = reachOffset; %min([preLetterChange+(reachOffset-letterChange) length(vectorReach)]);
                 if reachOff < 1
                     continue
@@ -186,7 +186,7 @@ for j = 1:numParticipants % loop over subjects
         clear distanceGaze fixationOn startTime slotPosition reachOn reachOff
         clear currentFixationRateBall currentFixationRateDisplay currentReachOnset
         clear transportOn transportOff transportOnset transportOffset
-        clear currentTransportOnset reachOnset reachOffset currentFixationRateSlot
+        clear currentTransportOnset ballGrasp reachOffset currentFixationRateSlot
     end
 end
 
@@ -432,7 +432,7 @@ for j = 1:numParticipants % loop over subjects
         clear distanceGaze fixationOn startTime slotPosition reachOn reachOff
         clear currentFixationRateBall currentFixationRateDisplay currentReachOnset
         clear transportOn transportOff transportOnset transportOffset
-        clear currentTransportOnset reachOnset reachOffset currentFixationRateSlot
+        clear currentTransportOnset ballGrasp reachOffset currentFixationRateSlot
     end
 end
 
@@ -490,3 +490,96 @@ line([preLetterChange preLetterChange], [0 1], 'Color', gray, 'LineStyle', '--')
 plot(mean(fixationRateDisplayLate(fixationRateDisplayLate(:,2) == 4, 3:end-4)),'Color', blue, 'LineWidth', 2)
 plot(mean(fixationRateSlot(fixationRateSlot(:,2) == 4, 3:end-4)),'Color', green, 'LineWidth', 2)
 plot(mean(transportRate(transportRate(:,2) == 4, 3:end-4)),'Color', 'k', 'LineWidth', 2)
+
+%% plot frequency of first letter change relative to stuff
+%%
+numParticipants = 11;
+letterChanges = [];
+
+for j = 1:numParticipants % loop over subjects
+    for blockID = 3:4 % loop over dual task conditions
+        currentResult = pulledData{j,blockID};
+        currentParticipant = currentResult(1).info.subject;
+        numTrials = length(currentResult);
+        % open variable matrices that we want to pull
+        subject = currentParticipant*ones(numTrials, 1);
+        testID = blockID*ones(numTrials,1);
+        letterChange = NaN(numTrials,1);
+        numLetterChange = NaN(numTrials,1);
+        ballGrasp = NaN(numTrials,1);
+        displayFixationTime = NaN(numTrials,1);
+        ballOnset = NaN(numTrials,1);
+        slotOnset = NaN(numTrials,1);
+        stopTrial = min([numTrials 30]);
+        for n = 1:stopTrial % loop over trials for current subject & block
+            if currentResult(n).info.dropped
+                stopTrial = min([stopTrial+1 numTrials]);
+                continue
+            end
+            startTime = currentResult(n).info.trialStart;
+            letterChange(n) = currentResult(n).dualTask.sampleLetterChange(1);
+            if isnan(currentResult(n).dualTask.sampleLetterChange)
+                numLetterChange(n) = 0;
+            else
+                numLetterChange(n) = numel(currentResult(n).dualTask.sampleLetterChange);
+            end
+            ballGrasp(n) = currentResult(n).info.phaseStart.ballGrasp; 
+            if ~isempty(currentResult(n).gaze.fixation.onsetsBall)
+                ballOnset(n) = currentResult(n).gaze.fixation.onsetsBall(1) + currentResult(n).info.trialStart;
+            end
+            if ~isempty(currentResult(n).gaze.fixation.onsetsSlot)
+                slotOnset(n) = currentResult(n).gaze.fixation.onsetsSlot(1) + currentResult(n).info.trialStart;
+            end         
+        end
+        currentVariable = [subject testID numLetterChange letterChange ...
+                           ballGrasp ballOnset slotOnset];
+        
+        letterChanges = [letterChanges; currentVariable];
+        clear startTime trialLength
+    end
+end
+%%
+figure(13)
+set(gcf,'renderer','Painters')
+hold on
+box off
+xlim([-3 3])
+ylim([0 180])
+figure(14)
+set(gcf,'renderer','Painters')
+hold on
+box off
+xlim([-4 4])
+ylim([0 180])
+for j= 3:4
+    letterChangeRelativeGrasp = (letterChanges(letterChanges(:,2) == j,4) - ...
+        letterChanges(letterChanges(:,2) == j,5))/200; % in seconds
+    lowerBound = nanmean(letterChangeRelativeGrasp) - 3*nanstd(letterChangeRelativeGrasp);
+    upperBound = nanmean(letterChangeRelativeGrasp) + 3*nanstd(letterChangeRelativeGrasp);
+    letterChangeRelativeGrasp(letterChangeRelativeGrasp < lowerBound) = [];
+    letterChangeRelativeGrasp(letterChangeRelativeGrasp > upperBound) = [];
+    letterChangeRelativeBall = (letterChanges(letterChanges(:,2) == j,6) - ...
+        letterChanges(letterChanges(:,2) == j,5))/200; % in seconds
+    lowerBound = nanmean(letterChangeRelativeBall) - 3*nanstd(letterChangeRelativeBall);
+    upperBound = nanmean(letterChangeRelativeBall) + 3*nanstd(letterChangeRelativeBall);
+    letterChangeRelativeBall(letterChangeRelativeBall < lowerBound) = [];
+    letterChangeRelativeBall(letterChangeRelativeBall > upperBound) = [];
+    letterChangeRelativeSlot = (letterChanges(letterChanges(:,2) == j,7) - ...
+        letterChanges(letterChanges(:,2) == j,5))/200; % in seconds
+    lowerBound = nanmean(letterChangeRelativeSlot) - 3*nanstd(letterChangeRelativeSlot);
+    upperBound = nanmean(letterChangeRelativeSlot) + 3*nanstd(letterChangeRelativeSlot);
+    letterChangeRelativeSlot(letterChangeRelativeSlot < lowerBound) = [];
+    letterChangeRelativeSlot(letterChangeRelativeSlot > upperBound) = [];
+    if j == 3
+        figure(13)
+        histogram(letterChangeRelativeGrasp, 'BinWidth', .5, 'facecolor', 'k', 'edgecolor', 'none')
+        histogram(letterChangeRelativeBall, 'BinWidth', .5, 'facecolor', orange, 'edgecolor', 'none')
+        histogram(letterChangeRelativeSlot, 'BinWidth', .5, 'facecolor', green, 'edgecolor', 'none')
+    else
+        figure(14)
+        histogram(letterChangeRelativeGrasp, 'BinWidth', .5, 'facecolor', 'k', 'edgecolor', 'none')
+        histogram(letterChangeRelativeBall, 'BinWidth', .5, 'facecolor', orange, 'edgecolor', 'none')
+        histogram(letterChangeRelativeSlot, 'BinWidth', .5, 'facecolor', green, 'edgecolor', 'none')
+    end
+    clear lowerBound upperBound
+end
