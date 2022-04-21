@@ -355,87 +355,6 @@ for j = 3:4
     lgd.Location = 'southeast';
 end
 
-%% cumulative rates
-
-preLetterChange = 200;
-postLetterChange = 300;
-fixationRateDisplay = [];
-fixationRateBall = [];
-fixationRateSlot = [];
-reachRate = [];
-cumTrialCount = [];
-for j = 1:numParticipants % loop over subjects
-    for i = 3:4 % loop over dual task conditions
-        currentResult = pulledData{j,i};
-        numTrials = length(currentResult);
-        fixationVectorDisplay = NaN(numTrials,preLetterChange+postLetterChange);
-        fixationVectorBall= NaN(numTrials,preLetterChange+postLetterChange);
-        fixationVectorSlot = NaN(numTrials,preLetterChange+postLetterChange);
-        vectorReach = NaN(numTrials,preLetterChange+postLetterChange);
-        vectorTrasnport = NaN(numTrials,preLetterChange+postLetterChange);
-        trialCount = 0;
-        stopTrial = min([numTrials 30]);
-        for n = 1:stopTrial % loop over trials for current subject & block
-            if currentResult(n).info.dropped
-                stopTrial = min([stopTrial+1 numTrials]);
-                continue
-            end
-            
-            startTime = currentResult(n).info.trialStart;
-            letterChange = currentResult(n).dualTask.sampleLetterChange(1)-startTime;
-            if isnan(letterChange) || currentResult(n).dualTask.sampleLetterChange(1) > currentResult(n).info.trialEnd
-                continue
-            end
-            % if letter change before grasp plot ball fixations
-            if currentResult(n).dualTask.sampleLetterChange(1) < currentResult(n).info.phaseStart.ballGrasp
-                % determine fixation vector
-                trialCount = trialCount + 1;
-                relativeOnset = 1;
-                if letterChange < preLetterChange
-                    relativeOnset = preLetterChange - letterChange;
-                end
-                relativeOffset = preLetterChange+postLetterChange;
-                if relativeOffset > length(currentResult(n).gaze.Xinterpolated)
-                    relativeOffset = length(currentResult(n).gaze.Xinterpolated);
-                end
-                fixationVectorDisplay(n,relativeOnset:relativeOffset) = zeros(1,relativeOffset-relativeOnset+1);
-                dispOff = max([1 preLetterChange+(currentResult(n).gaze.fixation.offsetsDisplay(1)-letterChange)]);
-                if dispOff > length(fixationVectorDisplay)
-                    dispOff = length(fixationVectorDisplay);
-                end
-                fixationVectorDisplay(n,1:dispOff) = 1;
-                if isempty(currentResult(n).gaze.fixation.onsetsBall)
-                    fixationVectorBall(n,relativeOnset:relativeOffset) = zeros(1,relativeOffset-relativeOnset+1);
-                else
-                    ballOn = max([1 preLetterChange+(currentResult(n).gaze.fixation.onsetsBall(1)-letterChange)]);
-                    fixationVectorBall(n,relativeOnset:relativeOffset) = zeros(1,relativeOffset-relativeOnset+1);
-                end
-                fixationVectorSlot(n,relativeOnset:relativeOffset) = zeros(1,relativeOffset-relativeOnset+1);
-                
-            end
-        end
-        currentFixationRateDisplayEarly = [j i nanmean(fixationVectorDisplay)];
-        currentFixationRateDisplayLate = [j i nanmean(fixationVectorDisplayLate)];
-        currentFixationRateBall = [j i nanmean(fixationVectorBall)];
-        currentFixationRateSlot = [j i nanmean(fixationVectorSlot)];
-        currentReachOnset = [j i nansum(vectorReach)];
-        currentTransportOnset = [j i nanmean(vectorTrasnport)];
-        fixationRateDisplay= [fixationRateDisplay; currentFixationRateDisplayEarly];
-        fixationRateDisplayLate= [fixationRateDisplayLate; currentFixationRateDisplayLate];
-        fixationRateBall = [fixationRateBall; currentFixationRateBall];
-        fixationRateSlot = [fixationRateSlot; currentFixationRateSlot];
-        reachRate = [reachRate; currentReachOnset];
-        transportRate = [transportRate; currentTransportOnset];
-        cumTrialCount = [cumTrialCount; j i trialCount];
-        clear criticalLocations fixationDetect fixationOnsets fixationOffsets
-        clear minimalDistance gazeVelocity gazeXinterpolated gazeYinterpolated
-        clear distanceGaze fixationOn startTime slotPosition reachOn reachOff
-        clear currentFixationRateBall currentFixationRateDisplay currentReachOnset
-        clear transportOn transportOff transportOnset transportOffset
-        clear currentTransportOnset ballGrasp reachOffset currentFixationRateSlot
-    end
-end
-
 %%
 blue = [49,130,189]./255;
 orange = [255,127,0]./255;
@@ -494,8 +413,9 @@ plot(mean(transportRate(transportRate(:,2) == 4, 3:end-4)),'Color', 'k', 'LineWi
 %% plot frequency of first letter change relative to stuff
 %%
 numParticipants = 11;
-letterChanges = [];
-
+histogramData = [];
+cumulativeReach = [];
+vectorLength = 600;
 for j = 1:numParticipants % loop over subjects
     for blockID = 3:4 % loop over dual task conditions
         currentResult = pulledData{j,blockID};
@@ -507,9 +427,9 @@ for j = 1:numParticipants % loop over subjects
         letterChange = NaN(numTrials,1);
         numLetterChange = NaN(numTrials,1);
         ballGrasp = NaN(numTrials,1);
-        displayFixationTime = NaN(numTrials,1);
         ballOnset = NaN(numTrials,1);
         slotOnset = NaN(numTrials,1);
+        reachOnset = NaN(numTrials,vectorLength);
         stopTrial = min([numTrials 30]);
         for n = 1:stopTrial % loop over trials for current subject & block
             if currentResult(n).info.dropped
@@ -529,57 +449,68 @@ for j = 1:numParticipants % loop over subjects
             end
             if ~isempty(currentResult(n).gaze.fixation.onsetsSlot)
                 slotOnset(n) = currentResult(n).gaze.fixation.onsetsSlot(1) + currentResult(n).info.trialStart;
-            end         
+            end  
+            reachToGrasp = currentResult(n).info.phaseStart.ballGrasp-currentResult(n).info.phaseStart.primaryReach;
+            if reachToGrasp > vectorLength
+                continue
+            end
+            reachOnset(n,:) = [zeros(1,vectorLength-reachToGrasp) ones(1,reachToGrasp)];
         end
         currentVariable = [subject testID numLetterChange letterChange ...
                            ballGrasp ballOnset slotOnset];
-        
-        letterChanges = [letterChanges; currentVariable];
+        cumulativeReach = [cumulativeReach; [blockID nansum(reachOnset)]];
+        histogramData = [histogramData; currentVariable];
         clear startTime trialLength
     end
 end
 %%
 figure(13)
-set(gcf,'renderer','Painters')
+set(gcf,'renderer','Painters', 'Position', [250 300 400 500])
 hold on
 box off
-xlim([-3 3])
+xlim([-2 2])
 ylim([0 180])
 figure(14)
-set(gcf,'renderer','Painters')
+set(gcf,'renderer','Painters', 'Position', [700 300 500 500])
 hold on
 box off
-xlim([-4 4])
+xlim([-2.5 2.5])
+set(gca, 'Xtick', [-2 -1 0 1 2])
 ylim([0 180])
 for j= 3:4
-    letterChangeRelativeGrasp = (letterChanges(letterChanges(:,2) == j,4) - ...
-        letterChanges(letterChanges(:,2) == j,5))/200; % in seconds
+    letterChangeRelativeGrasp = (histogramData(histogramData(:,2) == j,4) - ...
+        histogramData(histogramData(:,2) == j,5))/200; % in seconds
     lowerBound = nanmean(letterChangeRelativeGrasp) - 3*nanstd(letterChangeRelativeGrasp);
     upperBound = nanmean(letterChangeRelativeGrasp) + 3*nanstd(letterChangeRelativeGrasp);
     letterChangeRelativeGrasp(letterChangeRelativeGrasp < lowerBound) = [];
     letterChangeRelativeGrasp(letterChangeRelativeGrasp > upperBound) = [];
-    letterChangeRelativeBall = (letterChanges(letterChanges(:,2) == j,6) - ...
-        letterChanges(letterChanges(:,2) == j,5))/200; % in seconds
-    lowerBound = nanmean(letterChangeRelativeBall) - 3*nanstd(letterChangeRelativeBall);
-    upperBound = nanmean(letterChangeRelativeBall) + 3*nanstd(letterChangeRelativeBall);
-    letterChangeRelativeBall(letterChangeRelativeBall < lowerBound) = [];
-    letterChangeRelativeBall(letterChangeRelativeBall > upperBound) = [];
-    letterChangeRelativeSlot = (letterChanges(letterChanges(:,2) == j,7) - ...
-        letterChanges(letterChanges(:,2) == j,5))/200; % in seconds
-    lowerBound = nanmean(letterChangeRelativeSlot) - 3*nanstd(letterChangeRelativeSlot);
-    upperBound = nanmean(letterChangeRelativeSlot) + 3*nanstd(letterChangeRelativeSlot);
-    letterChangeRelativeSlot(letterChangeRelativeSlot < lowerBound) = [];
-    letterChangeRelativeSlot(letterChangeRelativeSlot > upperBound) = [];
+    ballOnsetRelativelGrasp = (histogramData(histogramData(:,2) == j,6) - ...
+        histogramData(histogramData(:,2) == j,5))/200; % in seconds
+    lowerBound = nanmean(ballOnsetRelativelGrasp) - 3*nanstd(ballOnsetRelativelGrasp);
+    upperBound = nanmean(ballOnsetRelativelGrasp) + 3*nanstd(ballOnsetRelativelGrasp);
+    ballOnsetRelativelGrasp(ballOnsetRelativelGrasp < lowerBound) = [];
+    ballOnsetRelativelGrasp(ballOnsetRelativelGrasp > upperBound) = [];
+    slotOnsetRelativeGrasp = (histogramData(histogramData(:,2) == j,7) - ...
+        histogramData(histogramData(:,2) == j,5))/200; % in seconds
+    lowerBound = nanmean(slotOnsetRelativeGrasp) - 3*nanstd(slotOnsetRelativeGrasp);
+    upperBound = nanmean(slotOnsetRelativeGrasp) + 3*nanstd(slotOnsetRelativeGrasp);
+    slotOnsetRelativeGrasp(slotOnsetRelativeGrasp < lowerBound) = [];
+    slotOnsetRelativeGrasp(slotOnsetRelativeGrasp > upperBound) = [];
+    xVector = -3:.005:-0.0009;
     if j == 3
         figure(13)
-        histogram(letterChangeRelativeGrasp, 'BinWidth', .5, 'facecolor', 'k', 'edgecolor', 'none')
-        histogram(letterChangeRelativeBall, 'BinWidth', .5, 'facecolor', orange, 'edgecolor', 'none')
-        histogram(letterChangeRelativeSlot, 'BinWidth', .5, 'facecolor', green, 'edgecolor', 'none')
+        histogram(letterChangeRelativeGrasp, 'BinWidth', .5, 'facecolor', gray, 'edgecolor', 'none')
+        histogram(ballOnsetRelativelGrasp, 'BinWidth', .5, 'facecolor', orange, 'edgecolor', 'none')
+        histogram(slotOnsetRelativeGrasp, 'BinWidth', .5, 'facecolor', green, 'edgecolor', 'none')
+        plot(xVector,(sum(cumulativeReach(cumulativeReach(:,1) == j, 2:end))/...
+            sum(cumulativeReach(cumulativeReach(:,1) == j,end))*100), 'k', 'LineWidth', 1.5)
     else
         figure(14)
-        histogram(letterChangeRelativeGrasp, 'BinWidth', .5, 'facecolor', 'k', 'edgecolor', 'none')
-        histogram(letterChangeRelativeBall, 'BinWidth', .5, 'facecolor', orange, 'edgecolor', 'none')
-        histogram(letterChangeRelativeSlot, 'BinWidth', .5, 'facecolor', green, 'edgecolor', 'none')
+        histogram(letterChangeRelativeGrasp, 'BinWidth', .5, 'facecolor', gray, 'edgecolor', 'none')
+        histogram(ballOnsetRelativelGrasp, 'BinWidth', .5, 'facecolor', orange, 'edgecolor', 'none')
+        histogram(slotOnsetRelativeGrasp, 'BinWidth', .5, 'facecolor', green, 'edgecolor', 'none')
+        plot(xVector,(sum(cumulativeReach(cumulativeReach(:,1) == j, 2:end))/...
+            sum(cumulativeReach(cumulativeReach(:,1) == j,end))*100), 'k', 'LineWidth', 1.5)
     end
     clear lowerBound upperBound
 end
