@@ -255,6 +255,7 @@ cumGraspOnset = [];
 cumTrialEnd = [];
 twoChangeTrials = [];
 trialEndCount = [];
+letterToReach = [];
 for j = 1:numParticipants % loop over subjects
     for i = 3:4 % loop over dual task conditions
         currentResult = pulledData{j,i};
@@ -267,6 +268,7 @@ for j = 1:numParticipants % loop over subjects
         reachOnsetLateVector = NaN(numTrials,lengthVector);
         graspOnsetVector = NaN(numTrials,lengthVector);
         trialEndVector = NaN(numTrials,lengthVector);
+        letterToReachCor = NaN(numTrials,5);
         twoChangeNo = 0;
         trialCount = 0;
         for n = 1:stopTrial % loop over trials for current subject & block
@@ -289,9 +291,11 @@ for j = 1:numParticipants % loop over subjects
                 end
             end
             if currentResult(n).dualTask.sampleLetterChange(1) < currentResult(n).info.trialStart+1
+                letterToReachCor(n,:) = [i j 1 currentResult(n).info.phaseStart.primaryReach currentResult(n).dualTask.sampleLetterChange(1)];
                 reachOnsetEarlyVector(n,:) = [zeros(1,currentResult(n).info.phaseStart.primaryReach-1)...
                     ones(1,lengthVector-currentResult(n).info.phaseStart.primaryReach+1)];
             else
+                letterToReachCor(n,:) = [i j 2 currentResult(n).info.phaseStart.primaryReach currentResult(n).dualTask.sampleLetterChange(1)];
                 reachOnsetLateVector(n,:) = [zeros(1,currentResult(n).info.phaseStart.primaryReach-1)...
                     ones(1,lengthVector-currentResult(n).info.phaseStart.primaryReach+1)];
             end
@@ -311,6 +315,7 @@ for j = 1:numParticipants % loop over subjects
         cumTrialEnd = [cumTrialEnd; i nansum(trialEndVector)];
         twoChangeTrials = [twoChangeTrials; i twoChangeNo];
         trialEndCount = [trialEndCount; i trialCount];
+        letterToReach = [letterToReach; letterToReachCor];
     end
 end
 
@@ -463,15 +468,39 @@ for j = 1:numParticipants % loop over subjects
         clear startTime trialLength
     end
 end
+
+randomGrasp = [];
+for j = 1:numParticipants % loop over subjects
+    for blockID = 3:4 % loop over dual task conditions
+        currentResult = pulledData{j,blockID};
+        currentParticipant = currentResult(1).info.subject;
+        numTrials = length(currentResult);
+        % open variable matrices that we want to pull
+        testID = blockID*ones(numTrials,1);
+        letterChange = NaN(numTrials,1);
+        currentGrasp = NaN(numTrials,1);
+        stopTrial = min([numTrials 30]);
+        for n = 1:stopTrial % loop over trials for current subject & block
+            if currentResult(n).info.dropped
+                stopTrial = min([stopTrial+1 numTrials]);
+                continue
+            end
+            letterChange(n) = currentResult(n).dualTask.sampleLetterChange(1);
+            currentGrasp(n) = normrnd(nanmean(histogramData(:,5)),nanstd(histogramData(:,5)));
+        end
+        randomGrasp = [randomGrasp; [testID letterChange currentGrasp]];
+    end
+end
+            
 %%
 figure(13)
-set(gcf,'renderer','Painters', 'Position', [250 300 400 500])
+set(gcf,'renderer','Painters', 'Position', [250 200 400 500])
 hold on
 box off
 xlim([-2 2])
 ylim([0 180])
 figure(14)
-set(gcf,'renderer','Painters', 'Position', [700 300 500 500])
+set(gcf,'renderer','Painters', 'Position', [700 200 500 500])
 hold on
 box off
 xlim([-2.5 2.5])
@@ -484,6 +513,12 @@ for j= 3:4
     upperBound = nanmean(letterChangeRelativeGrasp) + 3*nanstd(letterChangeRelativeGrasp);
     letterChangeRelativeGrasp(letterChangeRelativeGrasp < lowerBound) = [];
     letterChangeRelativeGrasp(letterChangeRelativeGrasp > upperBound) = [];
+    letterChangeRelativeRandomGrasp = (randomGrasp(randomGrasp(:,1) == j,2) - ...
+        randomGrasp(randomGrasp(:,1) == j,3))/200; % in seconds
+    lowerBound = nanmean(letterChangeRelativeRandomGrasp) - 3*nanstd(letterChangeRelativeRandomGrasp);
+    upperBound = nanmean(letterChangeRelativeRandomGrasp) + 3*nanstd(letterChangeRelativeRandomGrasp);
+    letterChangeRelativeRandomGrasp(letterChangeRelativeRandomGrasp < lowerBound) = [];
+    letterChangeRelativeRandomGrasp(letterChangeRelativeRandomGrasp > upperBound) = [];
     ballOnsetRelativelGrasp = (histogramData(histogramData(:,2) == j,6) - ...
         histogramData(histogramData(:,2) == j,5))/200; % in seconds
     lowerBound = nanmean(ballOnsetRelativelGrasp) - 3*nanstd(ballOnsetRelativelGrasp);
@@ -504,6 +539,8 @@ for j= 3:4
         histogram(slotOnsetRelativeGrasp, 'BinWidth', .5, 'facecolor', green, 'edgecolor', 'none')
         plot(xVector,(sum(cumulativeReach(cumulativeReach(:,1) == j, 2:end))/...
             sum(cumulativeReach(cumulativeReach(:,1) == j,end))*100), 'k', 'LineWidth', 1.5)
+        histogram(letterChangeRelativeRandomGrasp, 'BinWidth', .5, 'facecolor', 'none', 'edgecolor', 'k', 'LineWidth', 1)
+        [h,p] = kstest2(letterChangeRelativeGrasp, letterChangeRelativeRandomGrasp)
     else
         figure(14)
         histogram(letterChangeRelativeGrasp, 'BinWidth', .5, 'facecolor', gray, 'edgecolor', 'none')
@@ -511,6 +548,34 @@ for j= 3:4
         histogram(slotOnsetRelativeGrasp, 'BinWidth', .5, 'facecolor', green, 'edgecolor', 'none')
         plot(xVector,(sum(cumulativeReach(cumulativeReach(:,1) == j, 2:end))/...
             sum(cumulativeReach(cumulativeReach(:,1) == j,end))*100), 'k', 'LineWidth', 1.5)
+        histogram(letterChangeRelativeRandomGrasp, 'BinWidth', .5, 'facecolor', 'none', 'edgecolor', 'k', 'LineWidth', 1)
+        [h,p] = kstest2(letterChangeRelativeGrasp, letterChangeRelativeRandomGrasp)
     end
     clear lowerBound upperBound
+end
+
+%%
+figure(3)
+hold on
+xlim([.5 2.5])
+set(gca, 'Xtick', [1 2], 'XtickLabel', {'letter change before go signal', 'letter change after go signal'})
+ylim([0 400])
+set(gca, 'Ytick', [0 100 200 300 400], 'YtickLabel', [0 .5 1 1.5 2])
+ylabel('reach onset')
+figure(4)
+hold on
+xlim([.5 2.5])
+set(gca, 'Xtick', [1 2], 'XtickLabel', {'letter change before go signal', 'letter change after go signal'})
+ylim([0 400])
+set(gca, 'Ytick', [0 100 200 300 400], 'YtickLabel', [0 .5 1 1.5 2])
+ylabel('reach onset')
+for i =1:numParticipants
+    currentParticipant = letterToReach(letterToReach(:,2) == i, :);
+    for j = 3:4
+        currentData = currentParticipant(currentParticipant(:,1) == j, :);
+        figure(j)
+        plot(1, mean(currentData(currentData(:,3) == 1, 4)), 'ko')
+        plot(2, mean(currentData(currentData(:,3) == 2, 4)), 'ko')
+        line([1 2], [mean(currentData(currentData(:,3) == 1, 4)) mean(currentData(currentData(:,3) == 2, 4))], 'Color', 'k')
+    end
 end
