@@ -434,6 +434,7 @@ for j = 1:numParticipants % loop over subjects
         ballGrasp = NaN(numTrials,1);
         ballOnset = NaN(numTrials,1);
         slotOnset = NaN(numTrials,1);
+        trialEnd = NaN(numTrials,1);
         reachOnset = NaN(numTrials,vectorLength);
         stopTrial = min([numTrials 30]);
         for n = 1:stopTrial % loop over trials for current subject & block
@@ -460,9 +461,10 @@ for j = 1:numParticipants % loop over subjects
                 continue
             end
             reachOnset(n,:) = [zeros(1,vectorLength-reachToGrasp) ones(1,reachToGrasp)];
+            trialEnd(n) = currentResult(n).info.trialEnd;
         end
         currentVariable = [subject testID numLetterChange letterChange ...
-                           ballGrasp ballOnset slotOnset];
+                           ballGrasp ballOnset slotOnset trialEnd];
         cumulativeReach = [cumulativeReach; [blockID nansum(reachOnset)]];
         histogramData = [histogramData; currentVariable];
         clear startTime trialLength
@@ -491,7 +493,23 @@ for j = 1:numParticipants % loop over subjects
         randomGrasp = [randomGrasp; [testID letterChange currentGrasp]];
     end
 end
-            
+ 
+%% count trials for PG and TW
+count = 1;
+j = 3;
+cutOffVector = [500 400 300 200 100 0 100 200 300 400];
+graspTimes = histogramData(histogramData(:,2) == j,5);
+graspToEnd = histogramData(histogramData(:,2) == j,end) - histogramData(histogramData(:,2) == j,5);
+for i = 1:10
+    minGrasp = min(graspTimes);
+    if i < 6
+        trialCount(count) = sum(graspTimes > cutOffVector(i));        
+    else
+        trialCount(count) = sum(graspToEnd > cutOffVector(i)); 
+    end
+    count = count + 1;
+end
+
 %%
 figure(13)
 set(gcf,'renderer','Painters', 'Position', [250 200 400 500])
@@ -513,12 +531,12 @@ for j= 3:4
     upperBound = nanmean(letterChangeRelativeGrasp) + 3*nanstd(letterChangeRelativeGrasp);
     letterChangeRelativeGrasp(letterChangeRelativeGrasp < lowerBound) = [];
     letterChangeRelativeGrasp(letterChangeRelativeGrasp > upperBound) = [];
-    letterChangeRelativeRandomGrasp = (randomGrasp(randomGrasp(:,1) == j,2) - ...
-        randomGrasp(randomGrasp(:,1) == j,3))/200; % in seconds
-    lowerBound = nanmean(letterChangeRelativeRandomGrasp) - 3*nanstd(letterChangeRelativeRandomGrasp);
-    upperBound = nanmean(letterChangeRelativeRandomGrasp) + 3*nanstd(letterChangeRelativeRandomGrasp);
-    letterChangeRelativeRandomGrasp(letterChangeRelativeRandomGrasp < lowerBound) = [];
-    letterChangeRelativeRandomGrasp(letterChangeRelativeRandomGrasp > upperBound) = [];
+%     letterChangeRelativeRandomGrasp = (randomGrasp(randomGrasp(:,1) == j,2) - ...
+%         randomGrasp(randomGrasp(:,1) == j,3))/200; % in seconds
+%     lowerBound = nanmean(letterChangeRelativeRandomGrasp) - 3*nanstd(letterChangeRelativeRandomGrasp);
+%     upperBound = nanmean(letterChangeRelativeRandomGrasp) + 3*nanstd(letterChangeRelativeRandomGrasp);
+%     letterChangeRelativeRandomGrasp(letterChangeRelativeRandomGrasp < lowerBound) = [];
+%     letterChangeRelativeRandomGrasp(letterChangeRelativeRandomGrasp > upperBound) = [];
     ballOnsetRelativelGrasp = (histogramData(histogramData(:,2) == j,6) - ...
         histogramData(histogramData(:,2) == j,5))/200; % in seconds
     lowerBound = nanmean(ballOnsetRelativelGrasp) - 3*nanstd(ballOnsetRelativelGrasp);
@@ -539,8 +557,12 @@ for j= 3:4
         histogram(slotOnsetRelativeGrasp, 'BinWidth', .5, 'facecolor', green, 'edgecolor', 'none')
         plot(xVector,(sum(cumulativeReach(cumulativeReach(:,1) == j, 2:end))/...
             sum(cumulativeReach(cumulativeReach(:,1) == j,end))*100), 'k', 'LineWidth', 1.5)
-        histogram(letterChangeRelativeRandomGrasp, 'BinWidth', .5, 'facecolor', 'none', 'edgecolor', 'k', 'LineWidth', 1)
-        [h,p] = kstest2(letterChangeRelativeGrasp, letterChangeRelativeRandomGrasp)
+        b = bar([-1.75 -1.25 -.75 -.25 .25 .75 1.25 1.75], trialCount_FT/3.29);
+        b.FaceColor = 'none';
+        b.EdgeColor = 'k';
+        b.BarWidth = 1;
+        %         histogram(letterChangeRelativeRandomGrasp, 'BinWidth', .5, 'facecolor', 'none', 'edgecolor', 'k', 'LineWidth', 1)
+        %         [h,p] = kstest2(letterChangeRelativeGrasp, letterChangeRelativeRandomGrasp)
     else
         figure(14)
         histogram(letterChangeRelativeGrasp, 'BinWidth', .5, 'facecolor', gray, 'edgecolor', 'none')
@@ -548,11 +570,16 @@ for j= 3:4
         histogram(slotOnsetRelativeGrasp, 'BinWidth', .5, 'facecolor', green, 'edgecolor', 'none')
         plot(xVector,(sum(cumulativeReach(cumulativeReach(:,1) == j, 2:end))/...
             sum(cumulativeReach(cumulativeReach(:,1) == j,end))*100), 'k', 'LineWidth', 1.5)
-        histogram(letterChangeRelativeRandomGrasp, 'BinWidth', .5, 'facecolor', 'none', 'edgecolor', 'k', 'LineWidth', 1)
-        [h,p] = kstest2(letterChangeRelativeGrasp, letterChangeRelativeRandomGrasp)
+        b = bar([-2.25 -1.75 -1.25 -.75 -.25 .25 .75 1.25 1.75 2.25], trialCount_TW/2.94);
+        b.FaceColor = 'none';
+        b.EdgeColor = 'k';
+        b.BarWidth = 1;
+%         histogram(letterChangeRelativeRandomGrasp, 'BinWidth', .5, 'facecolor', 'none', 'edgecolor', 'k', 'LineWidth', 1)
+%         [h,p] = kstest2(letterChangeRelativeGrasp, letterChangeRelativeRandomGrasp)
     end
     clear lowerBound upperBound
 end
+
 
 %%
 figure(3)
