@@ -98,12 +98,10 @@ for j = 1:numParticipants % loop over subjects
                 continue
             end
             c = c:c+length(currentResult(n).dualTask.tLetterChanges)-1;
-            cAll = cAll:cAll+length(currentResult(n).dualTask.tLetterChanges)-1;
             changeDetected(c) = currentResult(n).dualTask.changeDetected;
             changeMissed(c) = currentResult(n).dualTask.changeMissed;
                         
             c = c(end) + 1;
-            cAll = cAll(end) + 1;
         end
         currentPerformance = [currentParticipant blockID c-1 sum(changeDetected) sum(changeMissed)];
         
@@ -111,7 +109,7 @@ for j = 1:numParticipants % loop over subjects
         clear letterChangePhase changeDetected changeMissed currentPerformance
     end
 end
-clear c cAll
+clear c 
 %% plot vigilance performance vs. relative time on display (Panel B)
 letterDetectViewTime = NaN(numParticipants,3);
 for i = 1:numParticipants
@@ -124,7 +122,7 @@ figure(5)
 hold on
 plot(letterDetectViewTime(:,2), letterDetectViewTime(:, 3),...
     'o', 'MarkerFaceColor', 'k','MarkerEdgeColor', 'k')
-%%
+%% plot trend lines
 letterDetectViewTime = NaN(numParticipants*2,4);
 count = 1;
 for j= 3:4
@@ -163,23 +161,15 @@ save('letterDetectViewTime', 'letterDetectViewTime')
 cd(analysisPath)
 clear p_FT y_FT p_TW y_TW
 
-%% plot display fixation probability relative to letter change (Panel D)
+%% plot fixation probability relative time of letter change
 preLetterChange = 100;
 postLetterChange = 300;
 fixationRateDisplay = [];
-fixationRateBall = [];
-fixationRateSlot = [];
-reachRate = [];
-transportRate = [];
 for j = 1:numParticipants % loop over subjects
     for i = 3:4 % loop over dual task conditions
         currentResult = pulledData{j,i};
         numTrials = length(currentResult);
         fixationVectorDisplay = NaN(numTrials,preLetterChange+postLetterChange);
-        fixationVectorBall= NaN(numTrials,preLetterChange+postLetterChange);
-        fixationVectorSlot = NaN(numTrials,preLetterChange+postLetterChange);
-        vectorReach = NaN(numTrials,preLetterChange+postLetterChange);
-        vectorTrasnport = NaN(numTrials,preLetterChange+postLetterChange);
         stopTrial = min([numTrials 30]);
         for n = 1:stopTrial % loop over trials for current subject & block
             if currentResult(n).info.dropped
@@ -211,8 +201,6 @@ for j = 1:numParticipants % loop over subjects
                 relativeOffset = length(currentResult(n).gaze.Xinterpolated);
             end
             fixationVectorDisplay(n,relativeOnset:relativeOffset) = zeros(1,relativeOffset-relativeOnset+1);
-            fixationVectorBall(n,relativeOnset:relativeOffset) = zeros(1,relativeOffset-relativeOnset+1);
-            fixationVectorSlot(n,relativeOnset:relativeOffset) = zeros(1,relativeOffset-relativeOnset+1);
             gazeXinterpolated = currentResult(n).gaze.Xinterpolated;
             gazeYinterpolated = currentResult(n).gaze.Yinterpolated;
             distancesGaze = NaN(length(criticalLocations), length(gazeXinterpolated));
@@ -243,109 +231,218 @@ for j = 1:numParticipants % loop over subjects
                         continue
                    end
                     fixOnset = max([1 preLetterChange+(fixationOnsets(fix)-letterChange)]);
-                    fixOffset = min([preLetterChange+(fixationOffsets(fix)-letterChange) length(fixationVectorBall)]);
+                    fixOffset = min([preLetterChange+(fixationOffsets(fix)-letterChange) length(fixationVectorDisplay)]);
                     minimalDistance = min(mean(distancesGaze(:,fixationOnsets(fix):fixationOffsets(fix)),2));
                     fixationOn = find(mean(distancesGaze(:,fixationOnsets(fix):fixationOffsets(fix)),2) == minimalDistance);
                     if fixationOn == 3 % indicates fixation on display
                         fixationVectorDisplay(n,fixOnset:fixOffset) = 1;
-                    elseif fixationOn == 1 % indicates fixation on ball
-                        fixationVectorBall(n,fixOnset:fixOffset) = 1;
-                    elseif fixationOn == 2 % indicates fixation on slot
-                        fixationVectorSlot(n,fixOnset:fixOffset) = 1;
                     end
                 end
             end
-            % reach onset to offset
-            reachOnset = currentResult(n).info.phaseStart.primaryReach - startTime;
-            reachOffset = currentResult(n).info.phaseStart.ballApproach - startTime -1;
-            reachOn = max([1 preLetterChange+(reachOnset-letterChange)]);
-            reachOff = min([preLetterChange+(reachOffset-letterChange) length(vectorReach)]);
-            if reachOff < 1
-                continue
-            end
-            vectorReach(n,relativeOnset:relativeOffset) = zeros(1,relativeOffset-relativeOnset+1);
-            vectorReach(n,reachOn:reachOff) = 1;
-            % transport onset to offset
-            transportOnset = currentResult(n).info.phaseStart.transport - startTime;
-            transportOffset = currentResult(n).info.phaseStart.slotApproach - startTime -1;
-            transportOn = max([1 preLetterChange+(transportOnset-letterChange)]);
-            transportOff = min([preLetterChange+(transportOffset-letterChange) length(vectorTrasnport)]);
-            if transportOff < 1 || transportOn > transportOff
-                continue
-            end
-            vectorTrasnport(n,relativeOnset:relativeOffset) = zeros(1,relativeOffset-relativeOnset+1);
-            vectorTrasnport(n,transportOn:transportOff) = 1;
         end
         currentFixationRateDisplay = [j i nanmean(fixationVectorDisplay)];
-        currentFixationRateBall = [j i nanmean(fixationVectorBall)];
-        currentFixationRateSlot = [j i nanmean(fixationVectorSlot)];
-        currentReachOnset = [j i nanmean(vectorReach)];
-        currentTransportOnset = [j i nanmean(vectorTrasnport)];
         fixationRateDisplay= [fixationRateDisplay; currentFixationRateDisplay];
-        fixationRateBall = [fixationRateBall; currentFixationRateBall];
-        fixationRateSlot = [fixationRateSlot; currentFixationRateSlot];
-        reachRate = [reachRate; currentReachOnset];
-        transportRate = [transportRate; currentTransportOnset];
         clear criticalLocations fixationDetect fixationOnsets fixationOffsets 
         clear minimalDistance gazeVelocity gazeXinterpolated gazeYinterpolated
-        clear distanceGaze fixationOn startTime slotPosition reachOn reachOff
-        clear currentFixationRateBall currentFixationRateDisplay currentReachOnset
-        clear transportOn transportOff transportOnset transportOffset
-        clear currentTransportOnset reachOnset reachOffset currentFixationRateSlot
+        clear distancesGaze fixationOn startTime slotPosition currentFixationRateDisplay 
+        clear relativeOnset relativeOffset
     end
 end
 
-%%
+%% draw plot (Panel C)
 blue = [49,130,189]./255;
+grey = [150,150,150]./255;
 orange = [255,127,0]./255;
-green = [77,175,74]./255;
-gray = [150,150,150]./255;
-xLength = 400;
-
+xLength = preLetterChange+ postLetterChange;
 % plot display abd ball fixation rate and reach probability for fingertips
 figure(11)
 hold on
 xlim([0 xLength])
-set(gca, 'Xtick', [0 100 200 300 400 ], 'XtickLabel', [-.5 0 .5 1 1.5])
-ylim([0 1])
-set(gca, 'Ytick', [0 .25 .5 .75 1])
-line([preLetterChange preLetterChange], [0 1], 'Color', gray, 'LineStyle', '--')
-plot(mean(fixationRateDisplay(fixationRateDisplay(:,2) == 3, 3:end-4)),'Color', blue, 'LineWidth', 2)
-plot(mean(fixationRateBall(fixationRateBall(:,2) == 3, 3:end-4)),'Color', orange, 'LineWidth', 2)
-plot(mean(reachRate(reachRate(:,2) == 3, 3:end-4)),'Color', 'k', 'LineWidth', 2)
-
-% plot display abd ball fixation rate and reach probability for tweezers
-figure(12)
-hold on
-xlim([0 xLength])
 set(gca, 'Xtick', [0 100 200 300 400], 'XtickLabel', [-.5 0 .5 1 1.5])
 ylim([0 1])
 set(gca, 'Ytick', [0 .25 .5 .75 1])
-line([preLetterChange preLetterChange], [0 1], 'Color', gray, 'LineStyle', '--')
-plot(mean(fixationRateDisplay(fixationRateDisplay(:,2) == 4, 3:end-4)),'Color', blue, 'LineWidth', 2)
-plot(mean(fixationRateBall(fixationRateBall(:,2) == 4, 3:end-4)),'Color', orange, 'LineWidth', 2)
-plot(mean(reachRate(reachRate(:,2) == 4, 3:end-4)),'Color', 'k', 'LineWidth', 2)
+line([preLetterChange preLetterChange], [0 1], 'Color', grey, 'LineStyle', '--')
+plot(mean(fixationRateDisplay(fixationRateDisplay(:,2) == 3, 3:end-4)),'Color', blue, 'LineWidth', 2)
 
-% plot display abd slot fixation rate and transport probability for fingertips
+% plot display abd ball fixation rate and reach probability for tweezers
+plot(mean(fixationRateDisplay(fixationRateDisplay(:,2) == 4, 3:end-4)),'Color', blue, 'LineStyle', '--', 'LineWidth', 2)
+
+%% plot movement events and time of letter change relative to time of grasp
+histogramFixations = [];
+cumulativeReach = [];
+vectorLength = 600;
+for j = 1:numParticipants % loop over subjects
+    for blockID = 3:4 % loop over dual task conditions
+        currentResult = pulledData{j,blockID};
+        currentParticipant = currentResult(1).info.subject;
+        numTrials = length(currentResult);
+        % open variable matrices that we want to pull
+        testID = blockID*ones(numTrials,1);
+        ballGrasp = NaN(numTrials,1);
+        ballOnset = NaN(numTrials,1);
+        trialEnd = NaN(numTrials,1);
+        reachOnset = NaN(numTrials,vectorLength);
+        stopTrial = min([numTrials 30]);
+        for n = 1:stopTrial % loop over trials for current subject & block
+            if currentResult(n).info.dropped
+                stopTrial = min([stopTrial+1 numTrials]);
+                continue
+            end
+            ballGrasp(n) = currentResult(n).info.phaseStart.ballGrasp; 
+            if ~isempty(currentResult(n).gaze.fixation.onsetsBall)
+                ballOnset(n) = currentResult(n).gaze.fixation.onsetsBall(1) + currentResult(n).info.trialStart;
+            end
+            reachToGrasp = currentResult(n).info.phaseStart.ballGrasp-currentResult(n).info.phaseStart.primaryReach;
+            if reachToGrasp > vectorLength
+                continue
+            end
+            trialEnd(n) = currentResult(n).info.trialEnd;
+            reachOnset(n,:) = [zeros(1,vectorLength-reachToGrasp) ones(1,reachToGrasp)];
+        end
+        currentVariable = [testID ballGrasp ...
+                           ballOnset trialEnd];
+        cumulativeReach = [cumulativeReach; [blockID nansum(reachOnset)]];
+        histogramFixations = [histogramFixations; currentVariable];
+        clear startTime trialLength
+    end
+end
+
+histogramLetterChanges = [];
+for j = 1:numParticipants % loop over subjects
+    for blockID = 3:4 % loop over dual task conditions
+        currentResult = pulledData{j,blockID};
+        currentParticipant = currentResult(1).info.subject;
+        numTrials = length(currentResult);
+        % open variable matrices that we want to pull
+        c = 1;
+        stopTrial = min([numTrials 30]);
+        for n = 1:stopTrial % loop over trials for current subject & block
+            if currentResult(n).info.dropped
+                stopTrial = min([stopTrial+1 numTrials]);
+                continue
+            end
+            if isnan(currentResult(n).dualTask.tLetterChanges)
+                continue
+            end
+            startTime = currentResult(n).info.trialStart;
+            letterChange = currentResult(n).dualTask.sampleLetterChange;
+            c = c:c+length(currentResult(n).dualTask.tLetterChanges)-1;
+            ballGrasp = currentResult(n).info.phaseStart.ballGrasp; 
+            letterChangeVector(c,:) = [blockID*ones(length(c),1) ...
+                ballGrasp*ones(length(c),1) currentResult(n).dualTask.sampleLetterChange'];
+            c = c(end) + 1;
+        end
+        
+        histogramLetterChanges = [histogramLetterChanges; letterChangeVector];
+        clear startTime trialLength letterChangeVector
+    end
+end
+
+%%
+stepWidth = .25;
 figure(13)
+set(gcf,'renderer','Painters')
 hold on
-xlim([0 xLength])
-set(gca, 'Xtick', [0 100 200 300 400], 'XtickLabel', [-.5 0 .5 1 1.5])
-ylim([0 1])
-set(gca, 'Ytick', [0 .25 .5 .75 1])
-line([preLetterChange preLetterChange], [0 1], 'Color', gray, 'LineStyle', '--')
-plot(mean(fixationRateDisplay(fixationRateDisplay(:,2) == 3, 3:end-4)),'Color', blue, 'LineWidth', 2)
-plot(mean(fixationRateSlot(fixationRateSlot(:,2) == 3, 3:end-4)),'Color', green, 'LineWidth', 2)
-plot(mean(transportRate(transportRate(:,2) == 3, 3:end-4)),'Color', 'k', 'LineWidth', 2)
-
-% plot display abd ball fixation rate and reach probability for tweezers
+box off
+xlim([-2 1.5])
+set(gca, 'Xtick', [-2 -1.5 -1 -.5 0 .5 1 1.5])
+ylim([0 140])
 figure(14)
+set(gcf,'renderer','Painters')
 hold on
-xlim([0 xLength])
-set(gca, 'Xtick', [0 100 200 300 400], 'XtickLabel', [-.5 0 .5 1 1.5])
-ylim([0 1])
-set(gca, 'Ytick', [0 .25 .5 .75 1])
-line([preLetterChange preLetterChange], [0 1], 'Color', gray, 'LineStyle', '--')
-plot(mean(fixationRateDisplay(fixationRateDisplay(:,2) == 4, 3:end-4)),'Color', blue, 'LineWidth', 2)
-plot(mean(fixationRateSlot(fixationRateSlot(:,2) == 4, 3:end-4)),'Color', green, 'LineWidth', 2)
-plot(mean(transportRate(transportRate(:,2) == 4, 3:end-4)),'Color', 'k', 'LineWidth', 2)
+box off
+xlim([-2 1.5])
+set(gca, 'Xtick', [-2 -1.5 -1 -.5 0 .5 1 1.5])
+ylim([0 140])
+for j= 3:4
+    letterChangeRelativeGrasp = (histogramLetterChanges(histogramLetterChanges(:,1) == j,3) - ...
+        histogramLetterChanges(histogramLetterChanges(:,1) == j,2))/200; % in seconds
+    lowerBound = nanmean(letterChangeRelativeGrasp) - 3*nanstd(letterChangeRelativeGrasp);
+    upperBound = nanmean(letterChangeRelativeGrasp) + 3*nanstd(letterChangeRelativeGrasp);
+    letterChangeRelativeGrasp(letterChangeRelativeGrasp < lowerBound) = [];
+    letterChangeRelativeGrasp(letterChangeRelativeGrasp > upperBound) = [];
+    ballOnsetRelativelGrasp = (histogramFixations(histogramFixations(:,1) == j,3) - ...
+        histogramFixations(histogramFixations(:,1) == j,2))/200; % in seconds
+    lowerBound = nanmean(ballOnsetRelativelGrasp) - 3*nanstd(ballOnsetRelativelGrasp);
+    upperBound = nanmean(ballOnsetRelativelGrasp) + 3*nanstd(ballOnsetRelativelGrasp);
+    ballOnsetRelativelGrasp(ballOnsetRelativelGrasp < lowerBound) = [];
+    ballOnsetRelativelGrasp(ballOnsetRelativelGrasp > upperBound) = [];
+    if j == 3
+        figure(13)
+        histogram(letterChangeRelativeGrasp, 'BinWidth', stepWidth, 'facecolor', grey, 'edgecolor', 'none')
+        histogram(ballOnsetRelativelGrasp, 'BinWidth', stepWidth, 'facecolor', orange, 'edgecolor', 'none')
+    else
+        figure(14)
+        histogram(letterChangeRelativeGrasp, 'BinWidth', stepWidth, 'facecolor', grey, 'edgecolor', 'none')
+        histogram(ballOnsetRelativelGrasp, 'BinWidth', stepWidth, 'facecolor', orange, 'edgecolor', 'none')
+    end
+    clear lowerBound upperBound letterChangeRelativeGrasp ballOnsetRelativelGrasp slotOnsetRelativeGrasp
+end
+%% add trial counts for PG and TW
+% create vector with trials in which a letter change earlier than xx
+% samples could not have happened (grasp was earlier) and after xx samples
+% letter change could not have happened (trial end)
+cutOffVector = [400 350 300 250 200 150 100 50 0 50 100 150 200 250];
+trialCount = NaN(1, length(cutOffVector));
+xVector = -1.875:stepWidth:1.4;
+trialRatio = stepWidth/3.75;
+for j = 3:4
+    graspTimes = histogramFixations(histogramFixations(:,1) == j,2);
+    graspToEnd = histogramFixations(histogramFixations(:,1) == j,end) - histogramFixations(histogramFixations(:,1) == j,2);
+    for i = 1:length(cutOffVector)
+        if i < length(cutOffVector)/2+2
+            trialCount(1,i) = sum(graspTimes > cutOffVector(i));
+        else
+            trialCount(1,i) = sum(graspToEnd > cutOffVector(i));
+        end
+    end
+    if j == 3
+        figure(13)
+        b = bar(xVector, trialCount*trialRatio);
+        b.FaceColor = 'none';
+        b.EdgeColor = 'k';
+        b.BarWidth = 1;
+    else
+        figure(14)
+        b = bar(xVector, trialCount*trialRatio);
+        b.FaceColor = 'none';
+        b.EdgeColor = 'k';
+        b.BarWidth = 1;
+    end
+end
+
+%% add cumulative curves and lines
+phaseToGraspAll = [];
+for j = 1:numParticipants % loop over subjects
+    for blockID = 3:4 % loop over dual task conditions
+        currentResult = pulledData{j,blockID};
+        currentParticipant = currentResult(1).info.subject;
+        numTrials = length(currentResult);
+        % open variable matrices that we want to pull
+        stopTrial = min([numTrials 30]);
+        for n = 1:stopTrial % loop over trials for current subject & block
+            if currentResult(n).info.dropped
+                stopTrial = min([stopTrial+1 numTrials]);
+                continue
+            end
+            reachToGrasp = currentResult(n).info.phaseStart.primaryReach - ...
+                currentResult(n).info.phaseStart.ballGrasp;
+            phaseToGraspAll = [phaseToGraspAll; [blockID reachToGrasp]];
+        end
+    end
+    clear reachToGrasp
+end
+
+for j = 3:4
+    xVector_reach = -3:.005:-0.0009;
+    if j == 3
+        figure(13)
+    else
+        figure(14)
+    end
+    plot(xVector_reach,(sum(cumulativeReach(cumulativeReach(:,1) == j, 2:end))/...
+        sum(cumulativeReach(cumulativeReach(:,1) == j,end))*100), 'k', 'LineWidth', 1.5)
+    line([nanmedian(phaseToGraspAll(phaseToGraspAll(:,1) == j, 2))/200 ...
+          nanmedian(phaseToGraspAll(phaseToGraspAll(:,1) == j, 2))/200],...
+        [0 180], 'Color', 'k', 'LineStyle', '--')
+end
