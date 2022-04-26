@@ -354,6 +354,7 @@ box off
 xlim([-2 1.5])
 set(gca, 'Xtick', [-2 -1.5 -1 -.5 0 .5 1 1.5])
 ylim([0 140])
+ksTestData = [];
 for j= 3:4
     letterChangeRelativeGrasp = (histogramLetterChanges(histogramLetterChanges(:,1) == j,3) - ...
         histogramLetterChanges(histogramLetterChanges(:,1) == j,2))/200; % in seconds
@@ -371,10 +372,12 @@ for j= 3:4
         figure(13)
         histogram(letterChangeRelativeGrasp, 'BinWidth', stepWidth, 'facecolor', grey, 'edgecolor', 'none')
         histogram(ballOnsetRelativelGrasp, 'BinWidth', stepWidth, 'facecolor', orange, 'edgecolor', 'none')
+        letterChangeDistribution_FT = cumsum(letterChangeRelativeGrasp);
     else
         figure(14)
         histogram(letterChangeRelativeGrasp, 'BinWidth', stepWidth, 'facecolor', grey, 'edgecolor', 'none')
         histogram(ballOnsetRelativelGrasp, 'BinWidth', stepWidth, 'facecolor', orange, 'edgecolor', 'none')
+        letterChangeDistribution_TW = cumsum(letterChangeRelativeGrasp);
     end
     clear lowerBound upperBound letterChangeRelativeGrasp ballOnsetRelativelGrasp slotOnsetRelativeGrasp
 end
@@ -382,9 +385,10 @@ end
 % create vector with trials in which a letter change earlier than xx
 % samples could not have happened (grasp was earlier) and after xx samples
 % letter change could not have happened (trial end)
+%cutOffVector = [400 300 200 100 0 100 200]; --> for larger bin size
 cutOffVector = [400 350 300 250 200 150 100 50 0 50 100 150 200 250];
 trialCount = NaN(1, length(cutOffVector));
-xVector = -1.875:stepWidth:1.4;
+xVector = -1.875:stepWidth:1.4; %-1.75:stepWidth:1.25;
 trialRatio = stepWidth/3.75;
 for j = 3:4
     graspTimes = histogramFixations(histogramFixations(:,1) == j,2);
@@ -402,12 +406,14 @@ for j = 3:4
         b.FaceColor = 'none';
         b.EdgeColor = 'k';
         b.BarWidth = 1;
+        [h,p_FT] = kstest2(letterChangeDistribution_FT, cumsum(trialCount*trialRatio));
     else
         figure(14)
         b = bar(xVector, trialCount*trialRatio);
         b.FaceColor = 'none';
         b.EdgeColor = 'k';
         b.BarWidth = 1;
+        [h,p_TW] = kstest2(letterChangeDistribution_TW, cumsum(trialCount*trialRatio));
     end
 end
 
@@ -442,7 +448,8 @@ for j = 3:4
     end
     plot(xVector_reach,(sum(cumulativeReach(cumulativeReach(:,1) == j, 2:end))/...
         sum(cumulativeReach(cumulativeReach(:,1) == j,end))*100), 'k', 'LineWidth', 1.5)
-    line([nanmedian(phaseToGraspAll(phaseToGraspAll(:,1) == j, 2))/200 ...
-          nanmedian(phaseToGraspAll(phaseToGraspAll(:,1) == j, 2))/200],...
-        [0 180], 'Color', 'k', 'LineStyle', '--')
+    % optional: add line at median position
+%     line([nanmedian(phaseToGraspAll(phaseToGraspAll(:,1) == j, 2))/200 ...
+%           nanmedian(phaseToGraspAll(phaseToGraspAll(:,1) == j, 2))/200],...
+%         [0 180], 'Color', 'k', 'LineStyle', '--')
 end
