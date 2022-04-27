@@ -406,14 +406,14 @@ for j = 3:4
         b.FaceColor = 'none';
         b.EdgeColor = 'k';
         b.BarWidth = 1;
-        [h,p_FT] = kstest2(letterChangeDistribution_FT, cumsum(trialCount*trialRatio));
+        [h,p_FT, ks2stat_FT] = kstest2(letterChangeDistribution_FT, cumsum(trialCount*trialRatio));
     else
         figure(14)
         b = bar(xVector, trialCount*trialRatio);
         b.FaceColor = 'none';
         b.EdgeColor = 'k';
         b.BarWidth = 1;
-        [h,p_TW] = kstest2(letterChangeDistribution_TW, cumsum(trialCount*trialRatio));
+        [h,p_TW, ks2stat_TW] = kstest2(letterChangeDistribution_TW, cumsum(trialCount*trialRatio));
     end
 end
 
