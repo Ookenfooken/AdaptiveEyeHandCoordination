@@ -25,7 +25,10 @@ Saves relevant trial information into more descriptive data format (pulledData.m
 Requires pullDataTrial.m, readoutTrialInfo.m, readoutGaze.m, readoutEffector.m, readoutVigilanceTask.m.
 
 - plotIndividualTrials.m
-Contains info of which individual trials were used for single trial examples (Figure 1 and 5A).
+Contains info of which individual trials were used for single trial examples (Figures 1 and 2A-E).
+
+- createPlotsFigure2.m
+Generates matlab plot of fixation pattern probability for different grasp modes (Figure 2F)
 
 - analyzePhaseDurations.m
 Creates matrix with durations of different phase durations. Saves matlab structure to compare movement duration in different task 
@@ -35,27 +38,27 @@ conditions (comparePhaseDurations.R) and to use for normalized fixation probabil
 Analyzes gaze shifts from ball to slot in single task and from the slot back to the display in dual task condition.
 Stats are then calculated in R (compareGazeShifts.R).
 
-- createPlotFigure2.m
+- createPlotFigure3.m
 Generates matlab plots of fixation probabilities and tool speed in a normalized time frame. Requires normalizeMovementsPhases.m
 
 - analyzeFixationSubGoals.m
 Reads out ball and slot fixation onsets relative to reach onset and saves matlab structure for the general linear model (GLM)
 GLM is then run in R (GLMmovementPhases.R).
 
-- createPlotsFigure3.m
+- createPlotsFigure4.m
 Generates matlab plots of fixation timing and duration in dual task condition. Histograms require histf.m.
 
-- createPlotsFigure4.m
+- createPlotsFigure5.m
 Generates matlab plots of letter detection task performance and eye and hand movement adaptation relative to letter change. 
 Saves matlab structure to compare detection task performance in R (compareDetectionTask.R).
 
-- createPlotsFigure5.m
+- createPlotsFigure6.m
 Generates matlab plots of different fixation types in grasp modes and relative to the time of letter change. 
 
-- createPlotsFigure6.m
+- createPlotsFigure7.m
 Generates matlab plots of phase durations and cumulative fixation probabilites for most common fixation patterns.
 Saves matlab structure to compare phase durations for fixation patterns in R (comparePhasesFixationPatterns.R). 
 
-- createPlotsFigure7.m
+- createPlotsFigure8.m
 Generates matlab plots of phase durations for early (before approach phase onsets) and late (after onset pproach phase onsets) fixations.
 Saves matlab structure to compare phase durations in R (comparePhasesFixationTiming.R). 
