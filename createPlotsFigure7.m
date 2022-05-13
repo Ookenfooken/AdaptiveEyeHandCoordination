@@ -23,9 +23,13 @@ for blockID = 3:4
         numTrials = length(currentResult);
         stopTrial = min([numTrials 30]);
         fixationPattern = NaN(numTrials,1);
-        ballPhaseDuration = NaN(numTrials,1);
+        ballApproach = NaN(numTrials,1);
+        ballGrasp = NaN(numTrials, 1);
+        combinedBallPhaseDuration = NaN(numTrials,1);
         transportDuration = NaN(numTrials,1);
-        slotPhaseDuration = NaN(numTrials,1);
+        slotApproach = NaN(numTrials,1);
+        slotEntry = NaN(numTrials,1);
+        combinedSlotPhaseDuration = NaN(numTrials,1);
         for n = 1:stopTrial % loop over trials for current participant & block
             if currentResult(n).info.dropped
                 stopTrial = min([stopTrial+1 numTrials]);
@@ -48,14 +52,19 @@ for blockID = 3:4
                     fixationPattern(n) = 4;
                 end
             end
-            ballPhaseDuration(n) = (currentResult(n).info.phaseDuration.ballApproach + ...
+            ballApproach(n) = currentResult(n).info.phaseDuration.ballApproach/200; % in seconds
+            ballGrasp(n) = currentResult(n).info.phaseDuration.ballGrasp/200; 
+            combinedBallPhaseDuration(n) = (currentResult(n).info.phaseDuration.ballApproach + ...
                 currentResult(n).info.phaseDuration.ballGrasp)/200; % in seconds
             transportDuration(n) = currentResult(n).info.phaseDuration.transport/200;
-            slotPhaseDuration(n) = (currentResult(n).info.phaseDuration.slotApproach + ...
+            slotApproach(n) = currentResult(n).info.phaseDuration.slotApproach/200;
+            slotEntry(n) = currentResult(n).info.phaseDuration.ballInSlot/200;
+            combinedSlotPhaseDuration(n) = (currentResult(n).info.phaseDuration.slotApproach + ...
                 currentResult(n).info.phaseDuration.ballInSlot)/200;
             
             currentDurations = [blockID*ones(numTrials,1) currentParticipant*ones(numTrials,1) ...
-                fixationPattern ballPhaseDuration transportDuration slotPhaseDuration];
+                fixationPattern combinedBallPhaseDuration transportDuration combinedSlotPhaseDuration ...
+                ballApproach ballGrasp slotApproach slotEntry ];
         end
         phaseDurations = [phaseDurations; currentDurations];
     end

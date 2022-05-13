@@ -14,7 +14,7 @@ phaseDurations$dual <- as.factor(phaseDurations$dual)
 phases_aov <- aggregate(. ~ participant + tool + dual, median, na.rm = TRUE, na.action = NULL, data = phaseDurations)
 phases_aov <- cbind(phases_aov[,1:3], rowSums(phases_aov[,c(4:8)]))
 colnames(phases_aov) <-  c("participant", "tool", "dual", "duration")
-aov_all <- ezANOVA(data = phases_aov, dv=duration, wid=participant, within=.(tool, dual), type = 2)
+aov_all <- ezANOVA(data = phases_aov, dv=duration, wid=participant, within=.(tool, dual), type = 3)
 # Anova Result
 ## $ANOVA
 ## Effect DFn DFd        F            p p<.05        ges

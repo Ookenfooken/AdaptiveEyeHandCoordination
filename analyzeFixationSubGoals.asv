@@ -83,7 +83,7 @@ for j = 1:numParticipants % loop over subjects
                 ballFixations(n) = 1;
                 ballOnsets(n) = currentResult(n).gaze.fixation.onsetsBall(1)+trialStart-startReach;
                 ballOffsets(n) = currentResult(n).gaze.fixation.offsetsBall(1)+trialStart-startReach;
-                ballMidpoint(n) = ballOnsets(n) + (ballOffsets(n) - ballOnsets(n))/2;
+                ballMidpoint(n) = (ballOffsets(n) - ballOnsets(n))/2;
                 if numel(currentResult(n).gaze.fixation.onsetsBall)>1
                     ballFixations(n) = 2;
                 end
@@ -104,7 +104,7 @@ for j = 1:numParticipants % loop over subjects
                     slotOnsets(n) = currentResult(n).gaze.fixation.onsetsSlot+trialStart-startReach;
                     slotOffsets(n) = currentResult(n).gaze.fixation.offsetsSlot+trialStart-startReach;
                 end
-                slotMidpoint(n) = slotOnsets(n) + (slotOffsets(n) - slotOnsets(n))/2;
+                slotMidpoint(n) = (slotOffsets(n) - slotOnsets(n))/2;
             end
             clear startReach toolVelocity slotIndx startFrame stopFrame trialStart
         end
@@ -119,8 +119,8 @@ for j = 1:numParticipants % loop over subjects
     end
 end
 
-glmData_ball = [variables(:,1:2) variables(:,10) variables(:,3:9) variables(:,11:13)]; % paste relevant ball data
-glmData_slot = [variables(:,1:2) variables(:,14) variables(:,3:9) variables(:,15:17)]; % paste relevatn slot data
+glmData_ball = [variables(:,1:2) variables(:,10) variables(:,3:9) variables(:,11)]; % paste relevant ball data
+glmData_slot = [variables(:,1:2) variables(:,12) variables(:,3:9) variables(:,13)]; % paste relevatn slot data
 %%
 cd(fullfile(pwd,'R\'))
 save('glmData_ball', 'glmData_ball')

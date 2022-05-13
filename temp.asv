@@ -1,0 +1,31 @@
+%% plot phase durations for most common fixation types in finger trip trials (Panel A)
+blockID = 3;
+currentTool = phaseDurations(phaseDurations(:,1) == blockID,:);
+counter = 1;
+for i = 1:numParticipants
+    currentParticipant = currentTool(currentTool(:,2) == i,3:end);
+    % exclude participant that has ball-slot as most common pattern
+    if sum(currentParticipant(:,1) == 3) >  sum(currentParticipant(:,1) == 0)
+        continue
+    end
+    % most common pattern
+    displayOnly = currentParticipant(currentParticipant(:,1) == 0,:); % select fixation pattern
+    % only include participants that have at least 3 trials in each pattern
+    if size(displayOnly,1) < 3
+        continue
+    end
+    slotOnly = currentParticipant(currentParticipant(:,1) == 2,:); % select fixation pattern
+    if size(slotOnly,1) < 3
+        continue
+    end
+    % save durations into structure for stats
+    durationFT(counter,:) = [blockID i nanmedian(displayOnly(:,2)) nanmedian(displayOnly(:,3)) ...
+        nanmedian(displayOnly(:,4))...
+        nanmedian(slotOnly(:,2)) nanmedian(slotOnly(:,3)) nanmedian(slotOnly(:,4))];
+    counter = counter+1;
+end
+xlim([.5 3.5])
+set(gca, 'Xtick', [1 2 3], 'XtickLabel', {'approach & grasp phase', 'transport', 'approach & slot phase'})
+ylim([0 1.5])
+set(gca, 'Ytick', [0 .25 .5 .75 1 1.25 1.5])
+ylabel('phase duration (s)')
