@@ -23,13 +23,12 @@ for blockID = 3:4
         numTrials = length(currentResult);
         stopTrial = min([numTrials 30]);
         fixationPattern = NaN(numTrials,1);
+        reachDuration = NaN(numTrials,1);
         ballApproach = NaN(numTrials,1);
         ballGrasp = NaN(numTrials, 1);
-        combinedBallPhaseDuration = NaN(numTrials,1);
         transportDuration = NaN(numTrials,1);
         slotApproach = NaN(numTrials,1);
         slotEntry = NaN(numTrials,1);
-        combinedSlotPhaseDuration = NaN(numTrials,1);
         for n = 1:stopTrial % loop over trials for current participant & block
             if currentResult(n).info.dropped
                 stopTrial = min([stopTrial+1 numTrials]);
@@ -52,19 +51,16 @@ for blockID = 3:4
                     fixationPattern(n) = 4;
                 end
             end
-            ballApproach(n) = currentResult(n).info.phaseDuration.ballApproach/200; % in seconds
+            reachDuration(n) = currentResult(n).info.phaseDuration.primaryReach/200; % in seconds
+            ballApproach(n) = currentResult(n).info.phaseDuration.ballApproach/200; 
             ballGrasp(n) = currentResult(n).info.phaseDuration.ballGrasp/200; 
-            combinedBallPhaseDuration(n) = (currentResult(n).info.phaseDuration.ballApproach + ...
-                currentResult(n).info.phaseDuration.ballGrasp)/200; % in seconds
             transportDuration(n) = currentResult(n).info.phaseDuration.transport/200;
             slotApproach(n) = currentResult(n).info.phaseDuration.slotApproach/200;
             slotEntry(n) = currentResult(n).info.phaseDuration.ballInSlot/200;
-            combinedSlotPhaseDuration(n) = (currentResult(n).info.phaseDuration.slotApproach + ...
-                currentResult(n).info.phaseDuration.ballInSlot)/200;
             
             currentDurations = [blockID*ones(numTrials,1) currentParticipant*ones(numTrials,1) ...
-                fixationPattern combinedBallPhaseDuration transportDuration combinedSlotPhaseDuration ...
-                ballApproach ballGrasp slotApproach slotEntry ];
+                fixationPattern reachDuration ballApproach ballGrasp transportDuration  ...
+                slotApproach slotEntry];
         end
         phaseDurations = [phaseDurations; currentDurations];
     end
@@ -94,25 +90,40 @@ for i = 1:numParticipants
         continue
     end
     for n = 1:3
-        plot(n-.1, nanmedian(displayOnly(:,n+1)), 'o', 'MarkerEdgeColor', 'none', 'MarkerFaceColor', fixationPatternColors(1,:))
-        plot(n+.1, nanmedian(slotOnly(:,n+1)), 'o', 'MarkerEdgeColor', 'none', 'MarkerFaceColor', fixationPatternColors(3,:))
-        line([n-.1 n+.1], [nanmedian(displayOnly(:,n+1)) nanmedian(slotOnly(:,n+1))], 'Color', 'k')
+        plot(n-.1, nanmedian(displayOnly(:,n+4)), 'o', 'MarkerEdgeColor', 'none', 'MarkerFaceColor', fixationPatternColors(1,:))
+        plot(n+.1, nanmedian(slotOnly(:,n+4)), 'o', 'MarkerEdgeColor', 'none', 'MarkerFaceColor', fixationPatternColors(3,:))
+        line([n-.1 n+.1], [nanmedian(displayOnly(:,n+4)) nanmedian(slotOnly(:,n+4))], 'Color', 'k')
     end
     % save durations into structure for stats
-    durationFT(counter,:) = [blockID i nanmedian(displayOnly(:,2)) nanmedian(displayOnly(:,3)) nanmedian(displayOnly(:,4))...
-        nanmedian(slotOnly(:,2)) nanmedian(slotOnly(:,3)) nanmedian(slotOnly(:,4))];
+    durationFT(counter,:) = [blockID i nanmedian(displayOnly(:,2:end)) ...
+        nanmedian(slotOnly(:,2:end))];
     counter = counter+1;
 end
 xlim([.5 3.5])
-set(gca, 'Xtick', [1 2 3], 'XtickLabel', {'approach & grasp phase', 'transport', 'approach & slot phase'})
-ylim([0 1.5])
-set(gca, 'Ytick', [0 .25 .5 .75 1 1.25 1.5])
+set(gca, 'Xtick', [1 2 3], 'XtickLabel', {'transport', 'slot approach', 'slot entry'})
+ylim([0 1])
+set(gca, 'Ytick', [0 .25 .5 .75 1])
 ylabel('phase duration (s)')
 %% plot phase durations for most common fixation types in tweezer trials (Panel D)
 blockID = 4;
 currentTool = phaseDurations(phaseDurations(:,1) == blockID,:);
+
 figure(blockID)
 hold on
+xlim([.5 3.5])
+set(gca, 'Xtick', [1 2 3], 'XtickLabel', {'reach', 'ball aprroach', 'ball grasp'})
+ylim([0 1.25])
+set(gca, 'Ytick', [0 .25 .5 .75 1 1.25])
+ylabel('Phase duration')
+
+figure(blockID*10)
+hold on
+xlim([.5 3.5])
+set(gca, 'Xtick', [1 2 3], 'XtickLabel', {'transport', 'slot approach', 'slot entry'})
+ylim([0 1.25])
+set(gca, 'Ytick', [0 .25 .5 .75 1 1.25])
+ylabel('Phase duration')
+
 counter = 1;
 for i = 1:numParticipants
     currentParticipant = currentTool(currentTool(:,2) == i,3:end); % select fixation pattern
@@ -126,20 +137,22 @@ for i = 1:numParticipants
         continue
     end
     for n = 1:3
+        figure(blockID)
         plot(n-.1, nanmedian(ballSlot(:,n+1)), 'o', 'MarkerEdgeColor', 'none', 'MarkerFaceColor', fixationPatternColors(4,:))
         plot(n+.1, nanmedian(ballDisplaySlot(:,n+1)), 'o', 'MarkerEdgeColor', 'none', 'MarkerFaceColor', fixationPatternColors(5,:))
         line([n-.1 n+.1], [nanmedian(ballSlot(:,n+1)) nanmedian(ballDisplaySlot(:,n+1))], 'Color', 'k')
     end
+    for n = 1:3
+        figure(blockID*10)
+        plot(n-.1, nanmedian(ballSlot(:,n+4)), 'o', 'MarkerEdgeColor', 'none', 'MarkerFaceColor', fixationPatternColors(4,:))
+        plot(n+.1, nanmedian(ballDisplaySlot(:,n+4)), 'o', 'MarkerEdgeColor', 'none', 'MarkerFaceColor', fixationPatternColors(5,:))
+        line([n-.1 n+.1], [nanmedian(ballSlot(:,n+4)) nanmedian(ballDisplaySlot(:,n+4))], 'Color', 'k')
+    end
     % save durations into structure for stats
-    durationTW(counter,:) = [blockID i nanmedian(ballSlot(:,2)) nanmedian(ballSlot(:,3)) nanmedian(ballSlot(:,4))...
-        nanmedian(ballDisplaySlot(:,2)) nanmedian(ballDisplaySlot(:,3)) nanmedian(ballDisplaySlot(:,4))];
+    durationTW(counter,:) = [blockID i nanmedian(ballSlot(:,2:end))...
+        nanmedian(ballDisplaySlot(:,2:end))];
     counter = counter+1;
 end
-xlim([.5 3.5])
-set(gca, 'Xtick', [1 2 3], 'XtickLabel', {'approach & grasp phase', 'transport', 'approach & slot phase'})
-ylim([0 1.25])
-set(gca, 'Ytick', [0 .25 .5 .75 1 1.25])
-ylabel('Phase duration')
 
 %% save phase durations for statistical analysis in R
 fixationPatternPhases = [durationFT; durationTW];
