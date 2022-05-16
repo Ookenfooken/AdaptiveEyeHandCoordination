@@ -75,18 +75,11 @@ hold on
 counter = 1;
 for i = 1:numParticipants
     currentParticipant = currentTool(currentTool(:,2) == i,3:end);
-    % exclude participant that has ball-slot as most common pattern
-    if sum(currentParticipant(:,1) == 3) >  sum(currentParticipant(:,1) == 0)
-        continue
-    end
     % most common pattern
     displayOnly = currentParticipant(currentParticipant(:,1) == 0,:); % select fixation pattern
-    % only include participants that have at least 3 trials in each pattern
-    if size(displayOnly,1) < 3
-        continue
-    end
     slotOnly = currentParticipant(currentParticipant(:,1) == 2,:); % select fixation pattern
-    if size(slotOnly,1) < 3
+    % only include participants that have at least 3 trials in each pattern
+    if size(displayOnly,1) < 3 || size(slotOnly,1) < 3
         continue
     end
     for n = 1:3
@@ -129,11 +122,8 @@ for i = 1:numParticipants
     currentParticipant = currentTool(currentTool(:,2) == i,3:end); % select fixation pattern
     % only include participants that have at least 3 trials in each pattern
     ballSlot = currentParticipant(currentParticipant(:,1) == 3,:);
-    if size(ballSlot,1) < 3
-        continue
-    end
     ballDisplaySlot = currentParticipant(currentParticipant(:,1) == 4,:); % select fixation pattern
-    if size(ballDisplaySlot,1) < 3
+    if size(ballSlot,1) < 3 || size(ballDisplaySlot,1) < 3
         continue
     end
     for n = 1:3
