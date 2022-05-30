@@ -389,7 +389,7 @@ end
 cutOffVector = [400 350 300 250 200 150 100 50 0 50 100 150 200 250];
 trialCount = NaN(1, length(cutOffVector));
 xVector = -1.875:stepWidth:1.4; %-1.75:stepWidth:1.25;
-trialRatio = stepWidth/3.75;
+trialRatio = stepWidth/4;
 for j = 3:4
     graspTimes = histogramFixations(histogramFixations(:,1) == j,2);
     graspToEnd = histogramFixations(histogramFixations(:,1) == j,end) - histogramFixations(histogramFixations(:,1) == j,2);

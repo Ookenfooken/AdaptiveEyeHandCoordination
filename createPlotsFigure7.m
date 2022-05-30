@@ -311,7 +311,7 @@ for i = 1:numParticipants % loop over subjects
         end
         cumulativeOffsetReach(n,:) = [ballFixPattern zeros(1,fixOff) ones(1,vectorTransport-fixOff)];
         
-        onsetPhase = currentResult(n).info.phaseStart.ballApproach - currentResult(n).info.trialStart+1;
+        onsetPhase = currentResult(n).info.phaseStart.ballGrasp - currentResult(n).info.trialStart+1;
         phaseOffset = onsetPhase - shiftApproach;
         fixOn = onsetFixBall - phaseOffset;
         if fixOn > vectorApproach-1
@@ -345,7 +345,7 @@ for i = 1:numParticipants % loop over subjects
         end
         cumulativeOffsetTransport(n,:) = [ballFixPattern zeros(1,fixOff) ones(1,vectorTransport-fixOff)];
         
-        onsetPhase = currentResult(n).info.phaseStart.slotApproach - currentResult(n).info.trialStart+1;
+        onsetPhase = currentResult(n).info.phaseStart.ballInSlot - currentResult(n).info.trialStart+1;
         phaseOffset = onsetPhase - shiftApproach;
         fixOn = onsetFixSlot - phaseOffset;
         if fixOn > vectorApproach-1

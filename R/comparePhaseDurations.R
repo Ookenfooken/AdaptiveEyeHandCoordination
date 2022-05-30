@@ -27,3 +27,11 @@ duration_fingertips <- mean(phases_compare[phases_compare$tool == 0,]$duration)
 sd_fingertips <- sd(phases_compare[phases_compare$tool == 0,]$duration)
 duration_tweezers <- mean(phases_compare[phases_compare$tool == 1,]$duration)
 sd_tweezers <- sd(phases_compare[phases_compare$tool == 1,]$duration)
+
+# test which phases drive the difference in timing
+phases_compare <- aggregate(. ~ participant + tool, median, na.rm = TRUE, na.action = NULL, data = phaseDurations)
+t.test(phases_compare[phases_compare$tool == 0,]$reach, phases_compare[phases_compare$tool == 1,]$reach, paired = TRUE)
+t.test(phases_compare[phases_compare$tool == 0,]$ballPhase, phases_compare[phases_compare$tool == 1,]$ballPhase, paired = TRUE)
+t.test(phases_compare[phases_compare$tool == 0,]$transport, phases_compare[phases_compare$tool == 1,]$transport, paired = TRUE)
+t.test(phases_compare[phases_compare$tool == 0,]$slotPhase, phases_compare[phases_compare$tool == 1,]$slotPhase, paired = TRUE)
+t.test(phases_compare[phases_compare$tool == 0,]$return, phases_compare[phases_compare$tool == 1,]$return, paired = TRUE)
