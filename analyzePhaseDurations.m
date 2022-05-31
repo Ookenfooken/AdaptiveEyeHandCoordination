@@ -31,9 +31,11 @@ for j = 1:numParticipants % loop over subjects
         participant = currentSubject*ones(numTrials, 1);
         testID = i*ones(numTrials,1);
         reachDuration = NaN(numTrials,1);
-        ballPhaseDuration = NaN(numTrials,1);
+        ballApproachDuration = NaN(numTrials,1);
+        ballGraspDuration = NaN(numTrials,1);
         transportDuration = NaN(numTrials,1);
-        slotPhaseDuration = NaN(numTrials,1);
+        slotApproachDuration = NaN(numTrials,1);
+        slotEntryDuration = NaN(numTrials,1);
         returnDuration = NaN(numTrials,1);
         graspRelLift = NaN(numTrials,1);
         entryRelLift = NaN(numTrials,1);
@@ -45,11 +47,11 @@ for j = 1:numParticipants % loop over subjects
             end
             % duration
             reachDuration(n) = currentResult(n).info.phaseDuration.primaryReach; % in secs
-            ballPhaseDuration(n) = currentResult(n).info.phaseDuration.ballApproach + ...
-                currentResult(n).info.phaseDuration.ballGrasp;
+            ballApproachDuration(n) = currentResult(n).info.phaseDuration.ballApproach;
+            ballGraspDuration(n) = currentResult(n).info.phaseDuration.ballGrasp;
             transportDuration(n) = currentResult(n).info.phaseDuration.transport;
-            slotPhaseDuration(n) = currentResult(n).info.phaseDuration.slotApproach + ...
-                currentResult(n).info.phaseDuration.ballInSlot;
+            slotApproachDuration(n) = currentResult(n).info.phaseDuration.slotApproach;
+            slotEntryDuration(n) = currentResult(n).info.phaseDuration.ballInSlot;
             returnDuration(n) = currentResult(n).info.phaseDuration.return;
             graspRelLift(n) = currentResult(n).info.phaseStart.ballGrasp - ...
                 currentResult(n).info.phaseStart.transport;
@@ -57,7 +59,8 @@ for j = 1:numParticipants % loop over subjects
                 currentResult(n).info.phaseStart.transport;
         end
         currentVariable = [participant testID tool dual ...
-            reachDuration ballPhaseDuration transportDuration slotPhaseDuration ...
+            reachDuration ballApproachDuration ballGraspDuration ...
+            transportDuration slotApproachDuration slotEntryDuration ...
             returnDuration graspRelLift entryRelLift];
         
         phaseTiming = [phaseTiming; currentVariable];
@@ -76,7 +79,9 @@ for j = 1:numParticipants
     
     for i = 1:numBlocks
         currentBlock = currentSubject(currentSubject(:,2) == i, :);
-        phasesParticipants(count,:) = [i j nanmedian(currentBlock(:,5:end))];
+        phasesParticipants(count,:) = [i j nanmedian(currentBlock(:,5)) ...
+            nanmedian(currentBlock(:,6)+currentBlock(:,7)) nanmedian(currentBlock(:,8))...
+            nanmedian(currentBlock(:,9)+currentBlock(:,10)) nanmedian(currentBlock(:,11:13))];
         count = count + 1;
     end
 end
