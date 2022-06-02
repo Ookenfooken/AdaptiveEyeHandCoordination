@@ -8,7 +8,7 @@ cd(analysisPath)
 % define some specs
 orange = [255,127,0]./255;
 green = [77,175,74]./255;
-red = [228,26,28]./255;
+purple = [152,0,203]./255;
 blue = [55,126,184]./255;
 numParticipants = 11;
 %% First create plots for fingertip trials (Panels A & B)
@@ -54,6 +54,9 @@ hold on
 figure(33) % trial order effect
 set(gcf,'renderer','Painters', 'Position', [20 50 400 600])
 hold on
+figure(44) % participant order effect
+set(gcf,'renderer','Painters', 'Position', [20 50 400 600])
+hold on
 for j = 1:numParticipants % loop over subjects
     currentResult = pulledData{j,blockID};
     currentParticipant = currentResult(1).info.subject;
@@ -81,6 +84,7 @@ for j = 1:numParticipants % loop over subjects
             figure(11)
             % blue tick mark for no ball fixations
             line([-550 -550], [trialPositionTransport-.1 trialPositionTransport+.1], 'Color', blue, 'LineWidth', 2)
+            trialColourBall = blue;
         end
         % plot ball and slot fixations during reach and transport phase
         if ~isempty(currentResult(n).gaze.fixation.onsetsBall)
@@ -93,14 +97,16 @@ for j = 1:numParticipants % loop over subjects
                         [trialPositionReach trialPositionReach], 'Color', orange, 'LineWidth', 1.5)
                 else
                     line([ballOnsets(k)-ballGrasp ballOffsets(k)-ballGrasp-1],...
-                        [trialPositionReach trialPositionReach], 'Color', red, 'LineWidth', 1.5)
+                        [trialPositionReach trialPositionReach], 'Color', purple, 'LineWidth', 1.5)
                 end
             end
+            trialColourBall = orange;
         end
         if isempty(currentResult(n).gaze.fixation.onsetsSlot)
             figure(22)
             % blue tick mark for no slot fixations
             line([-550 -550], [trialPositionTransport-.1 trialPositionTransport+.1], 'Color', blue, 'LineWidth', 2)
+            trialColourSlot = blue;
         end
         if ~isempty(currentResult(n).gaze.fixation.onsetsSlot)
             slotOnsets = currentResult(n).gaze.fixation.onsetsSlot;
@@ -112,9 +118,10 @@ for j = 1:numParticipants % loop over subjects
                         [trialPositionTransport trialPositionTransport], 'Color', green, 'LineWidth', 1.5)
                 else
                     line([slotOnsets(k)-ballInSlot slotOffsets(k)-ballInSlot],...
-                        [trialPositionTransport trialPositionTransport], 'Color', red, 'LineWidth', 1.5)
+                        [trialPositionTransport trialPositionTransport], 'Color', purple, 'LineWidth', 1.5)
                 end
             end
+            trialColourSlot = green;
         end
         figure(11) % zero indicates ball grasp
         plot(startReach-ballGrasp, trialPositionReach, 'k|', 'MarkerSize', 3) % start of primary reach
@@ -126,8 +133,11 @@ for j = 1:numParticipants % loop over subjects
         plot(currentResult(n).info.phaseStart.return-trialStart-ballInSlot, trialPositionTransport, 'k|', 'MarkerSize', 3)
         % plot trial order
         figure(33)
-        plot(currentBallIndices(reachIndx,1), trialPositionReach, 'k.', 'MarkerSize', 8)
-        plot(currentSlotIndices(transportIndx,1)+50, trialPositionTransport, 'k.', 'MarkerSize', 8)
+        plot(currentBallIndices(reachIndx,1), trialPositionReach, '.', 'Color', trialColourBall, 'MarkerSize', 8)
+        plot(currentSlotIndices(transportIndx,1)+50, trialPositionTransport, '.', 'Color', trialColourSlot, 'MarkerSize', 8)
+        figure(44)
+        plot(currentParticipant, trialPositionReach, '.', 'Color', trialColourBall, 'MarkerSize', 8)
+        plot(currentParticipant+50, trialPositionTransport, '.', 'Color', trialColourSlot, 'MarkerSize', 8)
         clear startReach startTransport ballApproach ballGrasp ballInSlot slotApproach
         clear ballOffsets ballOnsets slotOnsets slotOffsets reachIndx transportIndx
         clear trialPositionReach trialPositionTransport trialStart
@@ -178,6 +188,9 @@ hold on
 figure(333) % trial order effect
 set(gcf,'renderer','Painters', 'Position', [20 50 400 600])
 hold on
+figure(444) % participant order effect
+set(gcf,'renderer','Painters', 'Position', [20 50 400 600])
+hold on
 for j = 1:numParticipants % loop over subjects
     currentResult = pulledData{j,blockID};
     currentParticipant = currentResult(1).info.subject;
@@ -205,6 +218,7 @@ for j = 1:numParticipants % loop over subjects
             figure(111)
             % blue tick mark for no ball fixations
             line([-550 -550], [trialPositionTransport-.1 trialPositionTransport+.1], 'Color', blue, 'LineWidth', 2)
+            trialColourBall = blue;
         end
         % plot ball and slot fixations during reach and transport phase
         if ~isempty(currentResult(n).gaze.fixation.onsetsBall)
@@ -217,14 +231,16 @@ for j = 1:numParticipants % loop over subjects
                         [trialPositionReach trialPositionReach], 'Color', orange, 'LineWidth', 1.5)
                 else
                     line([ballOnsets(k)-ballGrasp ballOffsets(k)-ballGrasp-1],...
-                        [trialPositionReach trialPositionReach], 'Color', red, 'LineWidth', 1.5)
+                        [trialPositionReach trialPositionReach], 'Color', purple, 'LineWidth', 1.5)
                 end
             end
+            trialColourBall = orange;
         end
         if isempty(currentResult(n).gaze.fixation.onsetsSlot)
             figure(222)
             % blue tick mark for no slot fixations
             line([-550 -550], [trialPositionTransport-.1 trialPositionTransport+.1], 'Color', blue, 'LineWidth', 2)
+            trialColourSlot = blue;
         end
         if ~isempty(currentResult(n).gaze.fixation.onsetsSlot)
             slotOnsets = currentResult(n).gaze.fixation.onsetsSlot;
@@ -236,9 +252,10 @@ for j = 1:numParticipants % loop over subjects
                         [trialPositionTransport trialPositionTransport], 'Color', green, 'LineWidth', 1.5)
                 else
                     line([slotOnsets(k)-ballInSlot slotOffsets(k)-ballInSlot],...
-                        [trialPositionTransport trialPositionTransport], 'Color', red, 'LineWidth', 1.5)
+                        [trialPositionTransport trialPositionTransport], 'Color', purple, 'LineWidth', 1.5)
                 end
             end
+            trialColourSlot = green;
         end
         figure(111) % zero indicates ball grasp
         plot(startReach-ballGrasp, trialPositionReach, 'k|', 'MarkerSize', 3) % start of primary reach
@@ -250,8 +267,11 @@ for j = 1:numParticipants % loop over subjects
         plot(currentResult(n).info.phaseStart.return-trialStart-ballInSlot, trialPositionTransport, 'k|', 'MarkerSize', 3)
         % plot trial order
         figure(333)
-        plot(currentBallIndices(reachIndx,1), trialPositionReach, 'k.', 'MarkerSize', 8)
-        plot(currentSlotIndices(transportIndx,1)+50, trialPositionTransport, 'k.', 'MarkerSize', 8)
+        plot(currentBallIndices(reachIndx,1), trialPositionReach, '.', 'Color', trialColourBall, 'MarkerSize', 8)
+        plot(currentSlotIndices(transportIndx,1)+50, trialPositionTransport, '.', 'Color', trialColourSlot, 'MarkerSize', 8)
+        figure(444)
+        plot(currentParticipant, trialPositionReach, '.', 'Color', trialColourBall, 'MarkerSize', 8)
+        plot(currentParticipant+50, trialPositionTransport, '.', 'Color', trialColourSlot, 'MarkerSize', 8)
         clear startReach startTransport ballApproach ballGrasp ballInSlot slotApproach
         clear ballOffsets ballOnsets slotOnsets slotOffsets reachIndx transportIndx
         clear trialPositionReach trialPositionTransport trialStart

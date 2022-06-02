@@ -139,12 +139,10 @@ end
 clear count
 figure(5)
 hold on
+% plot fingertip trials
 plot(letterDetectViewTime(letterDetectViewTime(:,2) == 3, 3), letterDetectViewTime(letterDetectViewTime(:,2) == 3, 4),...
     'o', 'MarkerFaceColor', 'k','MarkerEdgeColor', 'k')
-% remove outlier
-p_FT = polyfit(letterDetectViewTime(letterDetectViewTime(:,2) == 3, 3),letterDetectViewTime(letterDetectViewTime(:,2) == 3, 4),1);
-y_FT = polyval(p_FT,letterDetectViewTime(letterDetectViewTime(:,2) == 3, 3));
-plot(letterDetectViewTime(letterDetectViewTime(:,2) == 3, 3), y_FT, 'k-')
+% plot tool trials
 plot(letterDetectViewTime(letterDetectViewTime(:,2) == 4, 3), letterDetectViewTime(letterDetectViewTime(:,2) == 4, 4),...
     'o', 'MarkerFaceColor', 'none','MarkerEdgeColor', 'k')
 p_TW = polyfit(letterDetectViewTime(letterDetectViewTime(:,2) == 4, 3),letterDetectViewTime(letterDetectViewTime(:,2) == 4, 4),1);
