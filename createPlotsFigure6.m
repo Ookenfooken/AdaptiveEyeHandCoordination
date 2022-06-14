@@ -27,6 +27,10 @@ for blockID = 3:4
                 stopTrial = min([stopTrial+1 numTrials]);
                 continue
             end
+            % cannot classify trials in which the ball is fixated multiple times
+            if numel(currentResult(n).gaze.fixation.onsetsBall) > 1
+                    continue
+            end
             % ball and slot fixations during reach and transport phase
             if isempty(currentResult(n).gaze.fixation.onsetsBall) && isempty(currentResult(n).gaze.fixation.onsetsSlot)
                 fixationPattern = 0;

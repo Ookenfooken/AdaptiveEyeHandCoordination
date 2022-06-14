@@ -28,6 +28,10 @@ for blockID = 3:4
                 stopTrial = min([stopTrial+1 numTrials]);
                 continue
             end
+            % cannot classify trials in which the ball is fixated multiple times
+            if numel(currentResult(n).gaze.fixation.onsetsBall) > 1
+                continue
+            end
             % ball and slot fixations during reach and transport phase
             if isempty(currentResult(n).gaze.fixation.onsetsBall) && isempty(currentResult(n).gaze.fixation.onsetsSlot)
                 fixationPattern = 0;
@@ -61,7 +65,7 @@ clear letterChange graspDifference dropDifference
 %% Plot fixation pattern for each grasp mode (Panel F)
 % initiate variable to plot mean
 fixationPatternAverage = NaN(numParticipants*2,6);
-figure(9)
+figure(10)
 hold on
 set(gcf,'renderer','Painters', 'Position', [250 250 800 400])
 count = 1;

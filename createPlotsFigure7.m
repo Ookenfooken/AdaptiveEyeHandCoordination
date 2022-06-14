@@ -55,10 +55,14 @@ for blockID = 3:4
             elseif ~isempty(currentResult(n).gaze.fixation.onsetsBall) && isempty(currentResult(n).gaze.fixation.onsetsSlot)
                 fixationPattern(n) = 1;
             else
+                % more than one ball fixation cannot be calssified
+                if numel(currentResult(n).gaze.fixation.onsetsBall) > 1
+                    continue
+                end
                 ballOffset = currentResult(n).gaze.fixation.offsetsBall(1);
                 slotIdx = find(currentResult(n).gaze.fixation.onsetsSlot > ballOffset, 1, 'first');
                 slotOnset = currentResult(n).gaze.fixation.onsetsSlot(slotIdx);
-                if slotOnset-ballOffset < eyeShift
+                if slotOnset-ballOffset < eyeShift 
                     fixationPattern(n) = 3;
                 else
                     fixationPattern(n) = 4;
@@ -92,7 +96,7 @@ for i = 1:numParticipants
     displayOnly = currentParticipant(currentParticipant(:,1) == 0,:); % select fixation pattern
     slotOnly = currentParticipant(currentParticipant(:,1) == 2,:); % select fixation pattern
     % only include participants that have at least 2 trials in each pattern
-    if size(displayOnly,1) < 2 || size(slotOnly,1) < 2
+    if size(displayOnly,1) < 1 || size(slotOnly,1) < 1
         continue
     end
     for n = 1:3
@@ -136,7 +140,7 @@ for i = 1:numParticipants
     % only include participants that have at least 3 trials in each pattern
     ballSlot = currentParticipant(currentParticipant(:,1) == 3,:);
     ballDisplaySlot = currentParticipant(currentParticipant(:,1) == 4,:); % select fixation pattern
-    if size(ballSlot,1) < 2 || size(ballDisplaySlot,1) < 2
+    if size(ballSlot,1) < 1 || size(ballDisplaySlot,1) < 1
         continue
     end
     for n = 1:3
