@@ -34,6 +34,19 @@ for blockID = 3:4
                 stopTrial = min([stopTrial+1 numTrials]);
                 continue
             end
+            % we are only interested in fixations that occur before ball
+            % grasp/slot entry
+            if ~isempty(currentResult(n).gaze.fixation.onsetsBall)
+                if currentResult(n).gaze.fixation.onsetsBall(1)+currentResult(n).info.trialStart ...
+                        >= currentResult(n).info.phaseStart.ballGrasp
+                    continue
+                end
+            elseif ~isempty(currentResult(n).gaze.fixation.onsetsSlot)
+                if currentResult(n).gaze.fixation.onsetsSlot(1)+currentResult(n).info.trialStart...
+                        >= currentResult(n).info.phaseStart.ballInSlot
+                    continue
+                end
+            end
             % ball and slot fixations during reach and transport phase
             if isempty(currentResult(n).gaze.fixation.onsetsBall) && isempty(currentResult(n).gaze.fixation.onsetsSlot)
                 fixationPattern(n) = 0;
@@ -72,14 +85,14 @@ blockID = 3;
 currentTool = phaseDurations(phaseDurations(:,1) == blockID,:);
 figure(blockID)
 hold on
-counter = 1;
+count = 1;
 for i = 1:numParticipants
     currentParticipant = currentTool(currentTool(:,2) == i,3:end);
     % most common pattern
     displayOnly = currentParticipant(currentParticipant(:,1) == 0,:); % select fixation pattern
     slotOnly = currentParticipant(currentParticipant(:,1) == 2,:); % select fixation pattern
-    % only include participants that have at least 3 trials in each pattern
-    if size(displayOnly,1) < 3 || size(slotOnly,1) < 3
+    % only include participants that have at least 2 trials in each pattern
+    if size(displayOnly,1) < 2 || size(slotOnly,1) < 2
         continue
     end
     for n = 1:3
@@ -88,9 +101,9 @@ for i = 1:numParticipants
         line([n-.1 n+.1], [nanmedian(displayOnly(:,n+4)) nanmedian(slotOnly(:,n+4))], 'Color', 'k')
     end
     % save durations into structure for stats
-    durationFT(counter,:) = [blockID i nanmedian(displayOnly(:,2:end)) ...
-        nanmedian(slotOnly(:,2:end))];
-    counter = counter+1;
+    durationFT(count,:) = [blockID i 0 nanmedian(displayOnly(:,2:end),1)]; 
+    durationFT(count+1,:) = [blockID i 2 nanmedian(slotOnly(:,2:end),1)];
+    count = count+2;
 end
 xlim([.5 3.5])
 set(gca, 'Xtick', [1 2 3], 'XtickLabel', {'transport', 'slot approach', 'slot entry'})
@@ -123,7 +136,7 @@ for i = 1:numParticipants
     % only include participants that have at least 3 trials in each pattern
     ballSlot = currentParticipant(currentParticipant(:,1) == 3,:);
     ballDisplaySlot = currentParticipant(currentParticipant(:,1) == 4,:); % select fixation pattern
-    if size(ballSlot,1) < 3 || size(ballDisplaySlot,1) < 3
+    if size(ballSlot,1) < 2 || size(ballDisplaySlot,1) < 2
         continue
     end
     for n = 1:3
@@ -139,15 +152,15 @@ for i = 1:numParticipants
         line([n-.1 n+.1], [nanmedian(ballSlot(:,n+4)) nanmedian(ballDisplaySlot(:,n+4))], 'Color', 'k')
     end
     % save durations into structure for stats
-    durationTW(counter,:) = [blockID i nanmedian(ballSlot(:,2:end))...
-        nanmedian(ballDisplaySlot(:,2:end))];
-    counter = counter+1;
+    durationTW(counter,:) = [blockID i 3 nanmedian(ballSlot(:,2:end),1)];
+    durationTW(counter+1,:) = [blockID i 4 nanmedian(ballDisplaySlot(:,2:end),1)];
+    counter = counter+2;
 end
 
 %% save phase durations for statistical analysis in R
-fixationPatternPhases = [durationFT; durationTW];
+fixationPatternPhases_new = [durationFT; durationTW];
 cd(savePath)
-save('fixationPatternPhases', 'fixationPatternPhases');
+save('fixationPatternPhases_new', 'fixationPatternPhases_new');
 cd(analysisPath)
 clear displayOnly ballOnly ballSlot ballDisplaySlot
 %% plot cumulative slot fixations relative to trannsport & slot approach (Panels B-C)

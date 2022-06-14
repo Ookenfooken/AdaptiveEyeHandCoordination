@@ -87,8 +87,8 @@ for j = 1:numParticipants % loop over subjects
         c = 1;
         currentResult = pulledData{j,blockID};
         currentParticipant = currentResult(1).info.subject;
-        stopTrial = min([numTrials 30]);
         numTrials = length(currentResult);
+        stopTrial = min([numTrials 30]);
         for n = 1:stopTrial % loop over trials for current subject & block
             if currentResult(n).info.dropped
                 stopTrial = min([stopTrial+1 numTrials]);

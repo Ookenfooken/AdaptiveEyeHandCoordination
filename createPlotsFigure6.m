@@ -54,7 +54,7 @@ for blockID = 3:4
         gazeSequence = [gazeSequence; currentGazeSequence];
     end
 end
-clear ballIdx ballOffset slotIdx slotOnset ballFixType 
+clear ballIdx ballOffset slotIdx slotOnset ballFixType
 clear letterChange graspDifference dropDifference
 
 %% plot probability of letter change in fingertip trials relative to grasp (Panel A)
@@ -65,24 +65,26 @@ lowerBound = -2;
 upperBound = 2;
 figure(blockID*selectedColumn) % relative to ball grasp
 hold on
-storedMeans = zeros(5,1);
+probabilities = NaN(5,9);
+t = 1;
 for timePoint = lowerBound:.5:upperBound
     currentTimeWindow = currentTool(currentTool(:,selectedColumn) > timePoint-.25 & ...
-        currentTool(:,selectedColumn) < timePoint+.25, 3); 
+        currentTool(:,selectedColumn) < timePoint+.25, 3);
     for n = 1:5
-       plot(timePoint, sum(currentTimeWindow == n-1)/length(currentTimeWindow), ...
-           '-o','MarkerEdgeColor', 'none', 'MarkerFaceColor', fixationPatternColors(n,:))
-       if timePoint > lowerBound
-          line([timePoint-.5 timePoint],[storedMeans(n) sum(currentTimeWindow == n-1)/length(currentTimeWindow)],...
-              'Color', fixationPatternColors(n,:), 'LineWidth', 2) 
-       end
-       storedMeans(n) = sum(currentTimeWindow == n-1)/length(currentTimeWindow);
+        probabilities(n,t) = sum(currentTimeWindow == n-1)/length(currentTimeWindow);
     end
+    t = t+1;
 end
-clear storedMeans
+[h,p_FT_grasp, ks2stat_FT_grasp] = kstest(probabilities(3,:));
+for n = 1:5
+    b = bar(lowerBound:.5:upperBound, probabilities(n,:), 1);
+    b.EdgeColor = fixationPatternColors(n,:);
+    b.FaceColor = 'none';
+end
 line([0 0], [0 1], 'Color', gray)
 ylim([0 1])
 set(gca, 'Ytick', [0 .25 .5 .75 1])
+clear probabilities
 %% plot probability of letter change in fingertip trials relative to slot entry (Panel B)
 blockID = 3;
 currentTool = gazeSequence(gazeSequence(:,1) == blockID,:);
@@ -91,24 +93,26 @@ lowerBound = -3;
 upperBound = 1;
 figure(blockID*selectedColumn) % relative to ball grasp
 hold on
-storedMeans = zeros(5,1);
+probabilities = NaN(5,9);
+t = 1;
 for timePoint = lowerBound:.5:upperBound
     currentTimeWindow = currentTool(currentTool(:,selectedColumn) > timePoint-.25 & ...
-        currentTool(:,selectedColumn) < timePoint+.25, 3); 
+        currentTool(:,selectedColumn) < timePoint+.25, 3);
     for n = 1:5
-       plot(timePoint, sum(currentTimeWindow == n-1)/length(currentTimeWindow), ...
-           '-o','MarkerEdgeColor', 'none', 'MarkerFaceColor', fixationPatternColors(n,:))
-       if timePoint > lowerBound
-          line([timePoint-.5 timePoint],[storedMeans(n) sum(currentTimeWindow == n-1)/length(currentTimeWindow)],...
-              'Color', fixationPatternColors(n,:), 'LineWidth', 2) 
-       end
-       storedMeans(n) = sum(currentTimeWindow == n-1)/length(currentTimeWindow);
+        probabilities(n,t) = sum(currentTimeWindow == n-1)/length(currentTimeWindow);
     end
+    t = t+1;
 end
-clear storedMeans
+[h,p_FT_entry, ks2stat_FT_entry] = kstest(probabilities(3,:));
+for n = 1:5
+    b = bar(lowerBound:.5:upperBound, probabilities(n,:), 1);
+    b.EdgeColor = fixationPatternColors(n,:);
+    b.FaceColor = 'none';
+end
 line([0 0], [0 1], 'Color', gray)
 ylim([0 1])
 set(gca, 'Ytick', [0 .25 .5 .75 1])
+clear probabilities
 %% plot probability of letter change in tweezer trials relative to grasp (Panel C)
 blockID = 4;
 currentTool = gazeSequence(gazeSequence(:,1) == blockID,:);
@@ -117,24 +121,26 @@ lowerBound = -2;
 upperBound = 2;
 figure(blockID*selectedColumn) % relative to ball grasp
 hold on
-storedMeans = zeros(5,1);
+probabilities = NaN(5,9);
+t = 1;
 for timePoint = lowerBound:.5:upperBound
     currentTimeWindow = currentTool(currentTool(:,selectedColumn) > timePoint-.25 & ...
-        currentTool(:,selectedColumn) < timePoint+.25, 3); 
+        currentTool(:,selectedColumn) < timePoint+.25, 3);
     for n = 1:5
-       plot(timePoint, sum(currentTimeWindow == n-1)/length(currentTimeWindow), ...
-           '-o','MarkerEdgeColor', 'none', 'MarkerFaceColor', fixationPatternColors(n,:))
-       if timePoint > lowerBound
-          line([timePoint-.5 timePoint],[storedMeans(n) sum(currentTimeWindow == n-1)/length(currentTimeWindow)],...
-              'Color', fixationPatternColors(n,:), 'LineWidth', 2) 
-       end
-       storedMeans(n) = sum(currentTimeWindow == n-1)/length(currentTimeWindow);
+        probabilities(n,t) = sum(currentTimeWindow == n-1)/length(currentTimeWindow);
     end
+    t = t+1;
 end
-clear storedMeans
+[h,p_TW_grasp, ks2stat_TW_grasp] = kstest(probabilities(4,:));
+for n = 1:5
+    b = bar(lowerBound:.5:upperBound, probabilities(n,:), 1);
+    b.EdgeColor = fixationPatternColors(n,:);
+    b.FaceColor = 'none';
+end
 line([0 0], [0 1], 'Color', gray)
 ylim([0 1])
 set(gca, 'Ytick', [0 .25 .5 .75 1])
+clear probabilities
 %% plot probability of letter change in tweezer trials relative to slot entry (Panel D)
 blockID = 4;
 currentTool = gazeSequence(gazeSequence(:,1) == blockID,:);
@@ -143,21 +149,23 @@ lowerBound = -3;
 upperBound = 1;
 figure(blockID*selectedColumn) % relative to ball grasp
 hold on
-storedMeans = zeros(5,1);
+probabilities = NaN(5,9);
+t = 1;
 for timePoint = lowerBound:.5:upperBound
     currentTimeWindow = currentTool(currentTool(:,selectedColumn) > timePoint-.25 & ...
-        currentTool(:,selectedColumn) < timePoint+.25, 3); 
+        currentTool(:,selectedColumn) < timePoint+.25, 3);
     for n = 1:5
-       plot(timePoint, sum(currentTimeWindow == n-1)/length(currentTimeWindow), ...
-           '-o','MarkerEdgeColor', 'none', 'MarkerFaceColor', fixationPatternColors(n,:))
-       if timePoint > lowerBound
-          line([timePoint-.5 timePoint],[storedMeans(n) sum(currentTimeWindow == n-1)/length(currentTimeWindow)],...
-              'Color', fixationPatternColors(n,:), 'LineWidth', 2) 
-       end
-       storedMeans(n) = sum(currentTimeWindow == n-1)/length(currentTimeWindow);
+        probabilities(n,t) = sum(currentTimeWindow == n-1)/length(currentTimeWindow);
     end
+    t = t+1;
 end
-clear storedMeans
+[h,p_TW_entry, ks2stat_TW_entry] = kstest(probabilities(4,:));
+for n = 1:5
+    b = bar(lowerBound:.5:upperBound, probabilities(n,:), 1);
+    b.EdgeColor = fixationPatternColors(n,:);
+    b.FaceColor = 'none';
+end
 line([0 0], [0 1], 'Color', gray)
 ylim([0 1])
 set(gca, 'Ytick', [0 .25 .5 .75 1])
+clear probabilities
