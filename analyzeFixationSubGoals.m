@@ -26,7 +26,7 @@ for j = 1:numParticipants % loop over subjects
             reachOnsets(n) = currentResult(n).info.phaseStart.primaryReach;
             transportOnsets(n) = currentResult(n).info.phaseStart.transport;
         end
-        % exclude drast outliers
+        % exclude drastic outliers
         earlyReaches = nanmean(reachOnsets) - 3*nanstd(reachOnsets);
         lateReaches = nanmean(reachOnsets) + 3*nanstd(reachOnsets);
         earlyTransports = nanmean(transportOnsets) - 3*nanstd(transportOnsets);
@@ -78,7 +78,6 @@ for j = 1:numParticipants % loop over subjects
                 == max(toolVelocity(stopFrame:currentResult(n).info.phaseStart.slotApproach-trialStart)), 1, 'first');
             slotApproach(n) = currentResult(n).info.phaseStart.slotApproach-startReach;
             ballInSlot(n) = currentResult(n).info.phaseStart.ballInSlot-startReach;
-            
             if ~isempty(currentResult(n).gaze.fixation.onsetsBall)
                 ballFixations(n) = 1;
                 ballOnsets(n) = currentResult(n).gaze.fixation.onsetsBall(1)+trialStart-startReach;
