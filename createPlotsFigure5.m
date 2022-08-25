@@ -1,4 +1,4 @@
-% read in mean gaze data and phase duration to use for normalization
+% read in saved gaze data structure
 analysisPath = pwd;
 resultPath = fullfile(pwd,'results\');
 savePath = fullfile(pwd,'R\');

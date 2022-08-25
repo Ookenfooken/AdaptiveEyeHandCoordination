@@ -49,4 +49,16 @@ trialInfo.trialStart = startTime;
 trialInfo.trialEnd = stopFrame;
 trialInfo.length = stopFrame - startTime;
 
+% get absolute time stamps
+trialInfo.timeStamp.start = currentTrial(1,1);
+trialInfo.timeStamp.go = currentTrial(startTime,1);
+trialInfo.timeStamp.reach = currentTrial(phaseChangeIdx(2),1);
+trialInfo.timeStamp.ballApproach = currentTrial(phaseChangeIdx(3),1);
+trialInfo.timeStamp.ballGrasp = currentTrial(phaseChangeIdx(4),1);
+trialInfo.timeStamp.transport = currentTrial(phaseChangeIdx(5),1);
+trialInfo.timeStamp.slotApproach = currentTrial(phaseChangeIdx(6),1);
+trialInfo.timeStamp.ballInSlot = currentTrial(phaseChangeIdx(7),1);
+trialInfo.timeStamp.ballDropped = currentTrial(phaseChangeIdx(8),1);
+trialInfo.timeStamp.return = currentTrial(phaseChangeIdx(9),1);
+trialInfo.timeStamp.trialEnd = currentTrial(stopFrame,1);
 end
