@@ -29,14 +29,13 @@ for i = 3:numBlocks % plot per block aka experimental condition
         averageLength = sum(floor(phaseDurationNorm(i,3:7)))+ceil(305.8878);
     end
     averagedSilentPeriod = NaN(numSubjects, averageLength);
-    averagedMissedChanges = NaN(numSubjects, averageLength);
+    averagedSilentChangeBeforeReach = NaN(numSubjects*3, averageLength);
     
     for j = 1:numSubjects
         
         currentBlock = pulledData{j,i};
         numTrials = length(currentBlock);
         silentPeriod = NaN(numTrials, averageLength);
-        missedChanges = NaN(numTrials, averageLength);
         stopTrial = min([numTrials 30]);
         for n = 1:stopTrial
             if currentBlock(n).info.dropped
@@ -55,19 +54,15 @@ for i = 3:numBlocks % plot per block aka experimental condition
             end
             normalizedData = normalizeSilentPeriod(phaseDurationNorm, trialInfo, dualInfo,  dualPrevious, i);
             silentPeriod(n,:) = normalizedData.silentPeriod;
-            missedChanges(n,:) = normalizedData.missedChanges;
         end
-        % store average trace per participant
-        averagedSilentPeriod(j,:) = nanmean(silentPeriod);  
-        averagedMissedChanges(j,:) = nanmean(missedChanges);        
+        % store average trace per subject per slot
+        averagedSilentPeriod(j,:) = nanmean(silentPeriod);        
     end
     %%
     figure(i)
-    hold on
     yMax = 0.6;
     ylim([0 yMax])
     plot(mean(averagedSilentPeriod), 'Color', grey1, 'LineWidth', 2)
-    plot(mean(averagedMissedChanges), 'Color', 'b', 'LineWidth', 2)
     if i == 3
         reachOnset = ceil(289.8013);
     else
@@ -76,27 +71,11 @@ for i = 3:numBlocks % plot per block aka experimental condition
     % reach onset
     line([reachOnset reachOnset], [0 yMax], 'Color', 'k', 'LineStyle', '--')
     % ball approach
-    line([floor(phaseDurationNorm(i,3))+reachOnset floor(phaseDurationNorm(i,3))+reachOnset], ...
+    line([sum(floor(phaseDurationNorm(i,3:4)))+reachOnset sum(floor(phaseDurationNorm(i,3:4)))+reachOnset], ...
         [0 yMax], 'Color', grey2, 'LineStyle', '--')
     % ball contact
-    line([sum(floor(phaseDurationNorm(i,3:4)))+reachOnset+floor(phaseDurationNorm(i,8)) ...
-          sum(floor(phaseDurationNorm(i,3:4)))+floor(phaseDurationNorm(i,8))+reachOnset], ...
-        [0 yMax], 'Color', 'r', 'LineStyle', '--')
-    % transport
     line([sum(floor(phaseDurationNorm(i,3:4)))+reachOnset sum(floor(phaseDurationNorm(i,3:4)))+reachOnset], ...
-        [0 yMax], 'Color', 'k', 'LineStyle', '--')
-    % slot approach
-    line([sum(floor(phaseDurationNorm(i,3:5)))+reachOnset sum(floor(phaseDurationNorm(i,3:5)))+reachOnset], ...
-        [0 yMax], 'Color', grey2, 'LineStyle', '--')
-    % slot entry
-    line([sum(floor(phaseDurationNorm(i,3:4)))+reachOnset+floor(phaseDurationNorm(i,9)) ...
-          sum(floor(phaseDurationNorm(i,3:4)))+floor(phaseDurationNorm(i,9))+reachOnset], ...
         [0 yMax], 'Color', 'r', 'LineStyle', '--')
-    % return
-    line([sum(floor(phaseDurationNorm(i,3:6)))+reachOnset sum(floor(phaseDurationNorm(i,3:6)))+reachOnset], ...
-        [0 yMax], 'Color', 'k', 'LineStyle', '--')
-    
-    
     clear yMax liftoff
 end
 
