@@ -17,9 +17,21 @@ for i = 1:numLetterChanges
     letterChangeVector(currentLetterChange+1:stopFrame) = 1;
 end
 
+% letter changes 1 s before reach
+preReachBin = 1;
+preReachVector = zeros(info.trialEnd,1);
+for i = 1:numLetterChanges
+    currentLetterChange = dualTask.sampleLetterChange(i);
+    if dualTask.tLetterChanges(i) < info.timeStamp.reach && ...
+            dualTask.tLetterChanges(i) > info.timeStamp.reach - preReachBin
+        stopFrame = min([currentLetterChange+251 length(preReachVector)]);
+        preReachVector(currentLetterChange+1:stopFrame) = 1;
+    end
+end
+
 % misses
 % first check if the last change was a miss
-missBin = .5;
+missBin = .3; % w was on for .3 s
 missedChangesVector = zeros(info.trialEnd,1);
 if ~isnan(dualPrevious.tLetterChanges)
     if dualPrevious.changeMissed(end) && dualPrevious.tLetterChanges(end)+missBin > info.timeStamp.start
@@ -48,6 +60,8 @@ stopFrame = info.phaseStart.primaryReach;
 
 normLetterVector1 = resample(letterChangeVector(startFrame:stopFrame), ...
     duration, stopFrame-startFrame+1);
+normEarlyVector1 = resample(preReachVector(startFrame:stopFrame), ...
+    duration, stopFrame-startFrame+1);
 normMissVector1 = resample(missedChangesVector(startFrame:stopFrame), ...
     duration, stopFrame-startFrame+1);
         
@@ -61,6 +75,8 @@ stopFrame = info.phaseStart.ballApproach;
 
 normLetterVector2 = resample(letterChangeVector(startFrame:stopFrame), ...
     duration, stopFrame-startFrame+1);
+normEarlyVector2 = resample(preReachVector(startFrame:stopFrame), ...
+    duration, stopFrame-startFrame+1);
 normMissVector2 = resample(missedChangesVector(startFrame:stopFrame), ...
     duration, stopFrame-startFrame+1);
 
@@ -72,6 +88,8 @@ startFrame = info.phaseStart.ballApproach;
 stopFrame = info.phaseStart.transport;
 
 normLetterVector3 = resample(letterChangeVector(startFrame:stopFrame), ...
+    duration, stopFrame-startFrame+1);
+normEarlyVector3 = resample(preReachVector(startFrame:stopFrame), ...
     duration, stopFrame-startFrame+1);
 normMissVector3 = resample(missedChangesVector(startFrame:stopFrame), ...
     duration, stopFrame-startFrame+1);
@@ -86,6 +104,8 @@ stopFrame = info.phaseStart.slotApproach;
 
 normLetterVector4 = resample(letterChangeVector(startFrame:stopFrame), ...
     duration, stopFrame-startFrame+1);
+normEarlyVector4 = resample(preReachVector(startFrame:stopFrame), ...
+    duration, stopFrame-startFrame+1);
 normMissVector4 = resample(missedChangesVector(startFrame:stopFrame), ...
     duration, stopFrame-startFrame+1);
 
@@ -97,6 +117,8 @@ startFrame = info.phaseStart.slotApproach;
 stopFrame = info.phaseStart.return;
 
 normLetterVector5 = resample(letterChangeVector(startFrame:stopFrame), ...
+    duration, stopFrame-startFrame+1);
+normEarlyVector5 = resample(preReachVector(startFrame:stopFrame), ...
     duration, stopFrame-startFrame+1);
 normMissVector5 = resample(missedChangesVector(startFrame:stopFrame), ...
     duration, stopFrame-startFrame+1);
@@ -111,6 +133,8 @@ stopFrame = info.trialEnd;
 
 normLetterVector6 = resample(letterChangeVector(startFrame:stopFrame), ...
     duration, stopFrame-startFrame+1);
+normEarlyVector6 = resample(preReachVector(startFrame:stopFrame), ...
+    duration, stopFrame-startFrame+1);
 normMissVector6 = resample(missedChangesVector(startFrame:stopFrame), ...
     duration, stopFrame-startFrame+1);
 
@@ -120,10 +144,21 @@ clear startFrame stopFrame duration
 % paste tool speed together
 % normalizedData.silentPeriod = [normLetterVector1' normLetterVector2' normLetterVector3' ...
 %     normLetterVector4' normLetterVector5' normLetterVector6'];
+[a,b] = butter(2,20/200);
 
-normalizedData.silentPeriod = [normLetterVector1' normLetterVector2(1:floor(durationNorm(blockNo,3)))' ...
+silentPeriod = [normLetterVector1' normLetterVector2(1:floor(durationNorm(blockNo,3)))' ...
    normLetterVector3(1:floor(durationNorm(blockNo,4)))' normLetterVector4(1:floor(durationNorm(blockNo,5)))' ...
    normLetterVector5(1:floor(durationNorm(blockNo,6)))' normLetterVector6(1:floor(durationNorm(blockNo,7)))'];
+
+silentPeriod_smoothed = filtfilt(a,b, silentPeriod);
+normalizedData.silentPeriod = silentPeriod_smoothed;
+
+silentPreReach = [normEarlyVector1' normEarlyVector2(1:floor(durationNorm(blockNo,3)))' ...
+   normEarlyVector3(1:floor(durationNorm(blockNo,4)))' normEarlyVector4(1:floor(durationNorm(blockNo,5)))' ...
+   normEarlyVector5(1:floor(durationNorm(blockNo,6)))' normEarlyVector6(1:floor(durationNorm(blockNo,7)))'];
+
+silentPreReach_smoothed = filtfilt(a,b, silentPreReach);
+normalizedData.silentPreReach = silentPreReach_smoothed;
 
 normalizedData.missedChanges = [normMissVector1' normMissVector2(1:floor(durationNorm(blockNo,3)))' ...
    normMissVector3(1:floor(durationNorm(blockNo,4)))' normMissVector4(1:floor(durationNorm(blockNo,5)))' ...
