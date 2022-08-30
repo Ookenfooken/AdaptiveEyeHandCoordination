@@ -22,7 +22,7 @@ Requires prepareData.m, plotData.m, createBallVector.m, and gazePositionRaw.m
 
 - pullExperimentInfo.m
 Saves relevant trial information into more descriptive data format (pulledData.mat) that is used for further analysis
-Requires pullDataTrial.m, readoutTrialInfo.m, readoutGaze.m, readoutEffector.m, readoutVigilanceTask.m.
+Requires pullDataTrial.m, readoutTrialInfo.m, readoutGaze.m, readoutRawGaze.m, readoutEffector.m, readoutVigilanceTask.m.
 
 - plotIndividualTrials.m
 Contains info of which individual trials were used for single trial examples (Figures 1 and 2A-E).
@@ -32,7 +32,7 @@ Generates matlab plot of fixation pattern probability for different grasp modes 
 
 - analyzePhaseDurations.m
 Creates matrix with durations of different phase durations. Saves matlab structure to compare movement duration in different task 
-conditions (comparePhaseDurations.R) and to use for normalized fixation probabilities plot (Figure 2).
+conditions (comparePhaseDurations.R) and to use for normalized fixation probabilities plot (Figure 3).
 
 -analyzeSpatioTemporalCoordination.m
 Analyzes gaze shifts from ball to slot in single task and from the slot back to the display in dual task condition.
