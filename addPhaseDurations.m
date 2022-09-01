@@ -10,27 +10,14 @@ cd(analysisPath)
 numParticipants = 11;
 sampleRate = 200;
 numBlocks = size(pulledData,2);
-vigilanceBlocks = [3 4];
-tweezersBlocks = [2 4];
 phaseTiming = [];
 
 for j = 1:numParticipants % loop over subjects
-    for i = 1:numBlocks % loop over blocks/experimental conditions
+    for i = 3:numBlocks % loop over dual task
         currentResult = pulledData{j,i};
-        currentSubject = currentResult(i).info.subject;
         numTrials = length(currentResult);
-        if ismember(i, vigilanceBlocks) %single vs. dual
-            dual = ones(numTrials,1);
-        else
-            dual = zeros(numTrials,1);
-        end
-        if ismember(i, tweezersBlocks) %PG vs. TW
-            tool = ones(numTrials,1);
-        else
-            tool = zeros(numTrials,1);
-        end
-        participant = currentSubject*ones(numTrials, 1);
         testID = i*ones(numTrials,1);
+        participant = currentResult(i).info.subject*ones(numTrials, 1);
         preReachDuration = NaN(numTrials,1);
         reachDuration = NaN(numTrials,1);
         ballApproachDuration = NaN(numTrials,1);
@@ -47,6 +34,11 @@ for j = 1:numParticipants % loop over subjects
                 stopTrial = min([stopTrial+1 numTrials]);
                 continue
             end
+            preReachBin = 1;
+            if currentResult(n).dualTask.tLetterChanges(1) > currentResult(n).info.timeStamp.reach || ...
+                currentResult(n).dualTask.tLetterChanges(1) < currentResult(n).info.timeStamp.reach - preReachBin
+                continue
+            end
             % duration
             preReachDuration(n) = (currentResult(n).info.timeStamp.reach - currentResult(n).info.timeStamp.start)*sampleRate;
             reachDuration(n) = currentResult(n).info.phaseDuration.primaryReach; 
@@ -61,8 +53,7 @@ for j = 1:numParticipants % loop over subjects
             entryRelLift(n) = currentResult(n).info.phaseStart.ballInSlot - ...
                 currentResult(n).info.phaseStart.transport;
         end
-        currentVariable = [participant testID tool dual ...
-            reachDuration ballApproachDuration ballGraspDuration ...
+        currentVariable = [testID participant reachDuration ballApproachDuration ballGraspDuration ...
             transportDuration slotApproachDuration slotEntryDuration ...
             returnDuration graspRelLift entryRelLift preReachDuration];
         
@@ -82,23 +73,18 @@ for j = 1:numParticipants
     
     for i = 1:numBlocks
         currentBlock = currentSubject(currentSubject(:,2) == i, :);
-        phasesParticipants(count,:) = [i j nanmedian(currentBlock(:,5)) ...
-            nanmedian(currentBlock(:,6)+currentBlock(:,7)) nanmedian(currentBlock(:,8))...
-            nanmedian(currentBlock(:,9)+currentBlock(:,10)) nanmedian(currentBlock(:,11:14))];
+        phasesParticipants(count,:) = [i j nanmedian(currentBlock(:,3)) ...
+            nanmedian(currentBlock(:,4)+currentBlock(:,5)) nanmedian(currentBlock(:,6))...
+            nanmedian(currentBlock(:,7)+currentBlock(:,8)) nanmedian(currentBlock(:,9:12))];
         count = count + 1;
     end
 end
 
-phaseDurationNorm = NaN(numBlocks, numColumns);
+phaseDurationEarlyReaches = NaN(numBlocks, numColumns);
 for i = 1:numBlocks
-    phaseDurationNorm(i,:) = nanmean(phasesParticipants(phasesParticipants(:,1) == i, :));
+    phaseDurationEarlyReaches(i,:) = nanmean(phasesParticipants(phasesParticipants(:,1) == i, :));
 end
 
 cd(resultPath)
-save('phaseDurationNorm', 'phaseDurationNorm')
-cd(analysisPath)
-%% second save data for stats analysis
-phaseDurations = [phaseTiming(:,1:4) phaseTiming(:,5:end-2)./sampleRate];
-cd(savePath)
-save('phaseDurations', 'phaseDurations')
+save('phaseDurationEarlyReaches', 'phaseDurationEarlyReaches')
 cd(analysisPath)
