@@ -19,7 +19,7 @@ for j = 1:numParticipants % loop over subjects
         % open variable matrices that we want to pull
         currentVariable = NaN(numTrials,numVariables);
         stopTrial = min([numTrials 30]);
-        for n = 2:stopTrial % loop over trials for current subject & block
+        for n = 1:stopTrial % loop over trials for current subject & block
             if currentResult(n).info.dropped
                 stopTrial = min([stopTrial+1 numTrials]);
                 continue
@@ -27,8 +27,8 @@ for j = 1:numParticipants % loop over subjects
 
             tStart = currentResult(n).info.timeStamp.start;
             goTime = currentResult(n).info.timeStamp.go;
-            reach = currentResult(n).info.timeStamp.reach;
-            transport = currentResult(n).info.timeStamp.transport;
+            ballApproach = currentResult(n).info.timeStamp.reach;
+            slotApproach = currentResult(n).info.timeStamp.transport;
             earlyTrial = 0;
             lateTrial = 0;
             % check whether a letter change was detected in the current
@@ -37,34 +37,34 @@ for j = 1:numParticipants % loop over subjects
                 detectedChanges = currentResult(n).dualTask.tLetterChanges(currentResult(n).dualTask.changeDetected);
                 detectedChange = detectedChanges(1);
             else % otherwise use the previous trial
-                if sum(currentResult(n-1).dualTask.changeDetected) > 0
+                if n > 1 && sum(currentResult(n-1).dualTask.changeDetected) > 0
                     detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
                     detectedChange = detectedChanges(end);
                 else
                     continue
                 end
             end
-            if reach - detectedChanges(1) > 0 && reach - detectedChanges(1) <= 1
+            if ballApproach - detectedChanges(1) > 0 && ballApproach - detectedChanges(1) <= 1
                 earlyTrial = 1;
             end
-            if transport - detectedChanges(1) > 0 && transport - detectedChanges(1) <= 1
+            if slotApproach - detectedChanges(1) > 0 && slotApproach - detectedChanges(1) <= 1
                 lateTrial = 1;
             end
             % if the change happened before the reach good
-            if detectedChange < reach
-                letterChangeBeforeReach = detectedChange - reach;
+            if detectedChange <= ballApproach
+                letterChangeBeforeReach = detectedChange - ballApproach;
                 letterChangeRelativeGo = detectedChange - goTime;
             else % otherwise use the previous trial
-                if sum(currentResult(n-1).dualTask.changeDetected) > 0
+                if n > 1 && sum(currentResult(n-1).dualTask.changeDetected) > 0
                     detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
-                    letterChangeBeforeReach = detectedChanges(end) - reach;
+                    letterChangeBeforeReach = detectedChanges(end) - ballApproach;
                     letterChangeRelativeGo = detectedChanges(end) - goTime;
                 else
                     continue
                 end
             end
 
-            goToReach = reach-goTime;
+            goToReach = ballApproach-goTime;
             reachDuration = currentResult(n).info.phaseDuration.primaryReach/200;
 
             currentVariable(n,:) = [currentParticipant blockID letterChangeBeforeReach letterChangeRelativeGo ...
@@ -117,6 +117,7 @@ hold on
 xlim([-6.5 2])
 ylim([-1 2])
 line([0 0],[-1 2], 'Color', lightGrey)
+line([-6.5 2],[0 0], 'Color', lightGrey)
 plot(relativeChanges_PG(:,4), relativeChanges_PG(:,5), '.', 'Color', lightGrey)
 plot(earlyChanges, relativeChanges_PG(relativeChanges_PG(:,end-1) == 1,5), ...
     '.', 'Color', lightBlue)
@@ -125,17 +126,18 @@ plot(earlyChanges, relativeChanges_PG(relativeChanges_PG(:,end-1) == 1,5), ...
 % plot(relativeChanges_PG(relativeChanges_PG(:,end) ~= 0 & relativeChanges_PG(:,end) ~= 2,4), ...
 %     relativeChanges_PG(relativeChanges_PG(:,end) ~= 0 & relativeChanges_PG(:,end) ~= 2,5), '.', 'Color', 'm')
 for i = -6:0.5:2
-    reactBin = mean(relativeChanges_PG(relativeChanges_PG(:,4) < i & relativeChanges_PG(:,4) > i-0.5, 5));
-    moveBin = mean(relativeChanges_PG(relativeChanges_PG(:,4) < i & relativeChanges_PG(:,4) > i-0.5,6));
+    reactBin = median(relativeChanges_PG(relativeChanges_PG(:,4) < i & relativeChanges_PG(:,4) > i-0.5, 5));
+    moveBin = median(relativeChanges_PG(relativeChanges_PG(:,4) < i & relativeChanges_PG(:,4) > i-0.5,6));
     line([i-.5 i], [reactBin reactBin], 'Color', 'k')
     %line([i-.5 i], [moveBin moveBin], 'Color', 'r')
 end
 %plot(relativeChanges_PG(:,4), relativeChanges_PG(:,5), 'k.')
 % plot(relativeChanges_PG(:,4), relativeChanges_PG(:,6), 'r.')
 figure(333)
+set(gcf,'renderer','Painters')
 xlim([-6.5 2])
 hold on
-histogram(relativeChanges_PG(relativeChanges_PG(:,4) > -6.5 & relativeChanges_PG(:,4) < 2,4), 'BinWidth', .5, 'facecolor', lightGrey, 'edgecolor', 'none')
+histogram(relativeChanges_PG(:,4), 'BinWidth', .5, 'facecolor', lightGrey, 'edgecolor', 'none')
 histogram(earlyChanges, 'BinWidth', .5, 'facecolor', lightBlue, 'edgecolor', 'none')
 %histogram(lateChanges, 'BinWidth', .25, 'facecolor', lightRed, 'edgecolor', 'none')
 %%
@@ -149,6 +151,7 @@ hold on
 xlim([-6.5 2])
 ylim([-1 2])
 line([0 0],[-1 2], 'Color', lightGrey)
+line([-6.5 2],[0 0], 'Color', lightGrey)
 plot(relativeChanges_TW(:,4), relativeChanges_TW(:,5), '.', 'Color', lightGrey)
 plot(earlyChanges, relativeChanges_TW(relativeChanges_TW(:,end-1) == 1,5), ...
     '.', 'Color', lightBlue)
@@ -157,17 +160,19 @@ plot(earlyChanges, relativeChanges_TW(relativeChanges_TW(:,end-1) == 1,5), ...
 % plot(relativeChanges_PG(relativeChanges_PG(:,end) ~= 0 & relativeChanges_PG(:,end) ~= 2,4), ...
 %     relativeChanges_PG(relativeChanges_PG(:,end) ~= 0 & relativeChanges_PG(:,end) ~= 2,5), '.', 'Color', 'm')
 for i = -6:0.5:2
-    reactBin = mean(relativeChanges_TW(relativeChanges_TW(:,4) < i & relativeChanges_TW(:,4) > i-0.5, 5));
-    moveBin = mean(relativeChanges_TW(relativeChanges_TW(:,4) < i & relativeChanges_TW(:,4) > i-0.5,6));
+    reactBin = median(relativeChanges_TW(relativeChanges_TW(:,4) < i & relativeChanges_TW(:,4) > i-0.5, 5));
+    moveBin = median(relativeChanges_TW(relativeChanges_TW(:,4) < i & relativeChanges_TW(:,4) > i-0.5,6));
     line([i-.5 i], [reactBin reactBin], 'Color', 'k')
     %line([i-.5 i], [moveBin moveBin], 'Color', 'r')
 end
 %plot(relativeChanges_PG(:,4), relativeChanges_PG(:,5), 'k.')
 % plot(relativeChanges_PG(:,4), relativeChanges_PG(:,6), 'r.')
 figure(444)
+set(gcf,'renderer','Painters')
 xlim([-6.5 2])
+ylim([0 50])
 hold on
-histogram(relativeChanges_TW(relativeChanges_TW(:,4) > -6.5 & relativeChanges_TW(:,4) < 2,4), 'BinWidth', .5, 'facecolor', lightGrey, 'edgecolor', 'none')
+histogram(relativeChanges_TW(:,4), 'BinWidth', .5, 'facecolor', lightGrey, 'edgecolor', 'none')
 histogram(earlyChanges, 'BinWidth', .5, 'facecolor', lightBlue, 'edgecolor', 'none')
 %histogram(lateChanges, 'BinWidth', .25, 'facecolor', lightRed, 'edgecolor', 'none')
 
@@ -199,7 +204,9 @@ for j = 1:numParticipants % loop over subjects
             if isnan(currentResult(n).dualTask.tLetterChanges)
                 continue
             end
-            reach = currentResult(n).info.timeStamp.reach;
+            ballApproach = currentResult(n).info.timeStamp.ballApproach;
+            slotApproach = currentResult(n).info.timeStamp.slotApproach;
+            preInterval = 1.5;
             % ball fixations
             if ~isempty(currentResult(n).gaze.fixation.onsetsBall)
                 fixBallOnRelative = currentResult(n).gaze.fixation.onsetsBall(1)/200;
@@ -230,8 +237,18 @@ for j = 1:numParticipants % loop over subjects
             changeMissed(c) = currentResult(n).dualTask.changeMissed;
             for i = 1:length(currentResult(n).dualTask.tLetterChanges)
                 currentLetterChange = currentResult(n).dualTask.tLetterChanges(i);
-                if currentLetterChange < reach+1.5
-                    currentReach(i) = reach-currentLetterChange;
+                if currentLetterChange < ballApproach && currentLetterChange >= ballApproach-preInterval
+                    earlyReach(i) = 1;
+                else
+                    earlyReach(i) = 0;
+                end
+                if currentLetterChange < slotApproach && currentLetterChange >= slotApproach-preInterval
+                    lateReach(i) = 1;
+                else
+                    lateReach(i) = 0;
+                end
+                if currentLetterChange < ballApproach+1.5
+                    currentReach(i) = ballApproach-currentLetterChange;
                 else
                     if n < stopTrial
                         currentReach(i) = currentResult(n+1).info.timeStamp.reach - currentLetterChange;
@@ -241,7 +258,9 @@ for j = 1:numParticipants % loop over subjects
                 end
             end
             reachOnsets(c) = currentReach;
-            clear currentReach
+            earlyReaches(c) = earlyReach;
+            lateReaches(c) = lateReach;
+            clear currentReach earlyReach lateReach
             % ball onsets
             for i = 1:length(currentResult(n).dualTask.tLetterChanges)
                 currentLetterChange = currentResult(n).dualTask.tLetterChanges(i);
@@ -319,10 +338,11 @@ for j = 1:numParticipants % loop over subjects
         end
 
         currentVariable = [currentParticipant*ones(1,length(fixationPattern))' blockID*ones(1,length(fixationPattern))' ...
-            fixationPattern' changeDetected' changeMissed' reachOnsets' ballFixOnsets' ballFixOffsets' slotFixOnsets' slotFixOffsets'];
+            fixationPattern' changeDetected' changeMissed' reachOnsets' ballFixOnsets' ballFixOffsets' slotFixOnsets' slotFixOffsets' ...
+            earlyReaches' lateReaches'];
 
         eventsRelativeLetter = [eventsRelativeLetter; currentVariable];
-        clear fixationPattern changeDetected changeMissed reachOnsets ballFixOnsets ballFixOffsets slotFixOnsets slotFixOffsets
+        clear fixationPattern changeDetected changeMissed reachOnsets ballFixOnsets ballFixOffsets slotFixOnsets slotFixOffsets earlyReaches lateReaches
     end
 end
 
@@ -415,12 +435,19 @@ line([1.5 1.5], [0 ymax], 'Color', lightGrey)
 balFixations_TW = eventsRelativeLetter( eventsRelativeLetter(:,2) == 4,:);
 selectedColumn = 7;
 ballOnsetTW = balFixations_TW( balFixations_TW(:,selectedColumn) > lowerBound & balFixations_TW(:,selectedColumn) < upperBound ,:);
-ballOffsetTW = balFixations_TW( balFixations_TW(:,selectedColumn+1) > lowerBound & balFixations_TW(:,selectedColumn+1) < upperBound ,:);
+ballOnset_early = ballOnsetTW( ballOnsetTW(:,end-1) ==1 ,:);
+ballOnset_late = ballOnsetTW( ballOnsetTW(:,end) ==1 ,:);
+%ballOffsetTW = balFixations_TW( balFixations_TW(:,selectedColumn+1) > lowerBound & balFixations_TW(:,selectedColumn+1) < upperBound ,:);
 fixationPattern = 3;
 figure(fixationPattern)
+set(gcf,'renderer','Painters')
 hold on
 histogram(ballOnsetTW(ballOnsetTW(:,3) == fixationPattern,selectedColumn), 'BinWidth', .25, ...
     'facecolor', 'none', 'edgecolor', fixationPatternColors(fixationPattern+1,:))
+histogram(ballOnset_early(ballOnset_early(:,3) == fixationPattern,selectedColumn), 'BinWidth', .25, ...
+    'facecolor', lightBlue, 'edgecolor', 'none')
+histogram(ballOnset_late(ballOnset_late(:,3) == fixationPattern,selectedColumn), 'BinWidth', .25, ...
+    'facecolor', lightRed, 'edgecolor', 'none')
 % histogram(ballOffsetTW(ballOffsetTW(:,3) == fixationPattern,selectedColumn+1), 'BinWidth', .25, ...
 %     'facecolor', fixationPatternColors(fixationPattern+1,:), 'edgecolor', 'none')
 ymax = 40;
@@ -430,9 +457,14 @@ line([0 0], [0 ymax], 'Color', lightGrey)
 line([1.5 1.5], [0 ymax], 'Color', lightGrey)
 fixationPattern = 4;
 figure(fixationPattern)
+set(gcf,'renderer','Painters')
 hold on
 histogram(ballOnsetTW(ballOnsetTW(:,3) == fixationPattern,selectedColumn), 'BinWidth', .25, ...
     'facecolor', 'none', 'edgecolor', fixationPatternColors(fixationPattern+1,:))
+histogram(ballOnset_early(ballOnset_early(:,3) == fixationPattern,selectedColumn), 'BinWidth', .25, ...
+    'facecolor', lightBlue, 'edgecolor', 'none')
+histogram(ballOnset_late(ballOnset_late(:,3) == fixationPattern,selectedColumn), 'BinWidth', .25, ...
+    'facecolor', lightRed, 'edgecolor', 'none')
 % histogram(ballOffsetTW(ballOffsetTW(:,3) == fixationPattern,selectedColumn+1), 'BinWidth', .25, ...
 %     'facecolor', fixationPatternColors(fixationPattern+1,:), 'edgecolor', 'none')
 xlim([0 upperBound])
@@ -443,13 +475,20 @@ line([1.5 1.5], [0 ymax], 'Color', lightGrey)
 %% add fixation types for tweezers for the slot fixations
 balFixations_TW = eventsRelativeLetter( eventsRelativeLetter(:,2) == 4,:);
 selectedColumn = 9;
-ballOnsetTW = balFixations_TW( balFixations_TW(:,selectedColumn) > lowerBound & balFixations_TW(:,selectedColumn) < upperBound ,:);
-ballOffsetTW = balFixations_TW( balFixations_TW(:,selectedColumn+1) > lowerBound & balFixations_TW(:,selectedColumn+1) < upperBound ,:);
+slotOnsetTW = balFixations_TW( balFixations_TW(:,selectedColumn) > lowerBound & balFixations_TW(:,selectedColumn) < upperBound ,:);
+slotOnset_early = slotOnsetTW( slotOnsetTW(:,end-1) ==1 ,:);
+slotOnset_late = slotOnsetTW( slotOnsetTW(:,end) ==1 ,:);
+%ballOffsetTW = balFixations_TW( balFixations_TW(:,selectedColumn+1) > lowerBound & balFixations_TW(:,selectedColumn+1) < upperBound ,:);
 fixationPattern = 3;
 figure(fixationPattern*10)
+set(gcf,'renderer','Painters')
 hold on
-histogram(ballOnsetTW(ballOnsetTW(:,3) == fixationPattern,selectedColumn), 'BinWidth', .25, ...
+histogram(slotOnsetTW(slotOnsetTW(:,3) == fixationPattern,selectedColumn), 'BinWidth', .25, ...
     'facecolor', 'none', 'edgecolor', fixationPatternColors(fixationPattern+1,:))
+histogram(slotOnset_early(slotOnset_early(:,3) == fixationPattern,selectedColumn), 'BinWidth', .25, ...
+    'facecolor', lightBlue, 'edgecolor', 'none')
+histogram(slotOnset_late(slotOnset_late(:,3) == fixationPattern,selectedColumn), 'BinWidth', .25, ...
+    'facecolor', lightRed, 'edgecolor', 'none')
 % histogram(ballOffsetTW(ballOffsetTW(:,3) == fixationPattern,selectedColumn+1), 'BinWidth', .25, ...
 %     'facecolor', fixationPatternColors(fixationPattern+1,:), 'edgecolor', 'none')
 ymax = 40;
@@ -459,10 +498,15 @@ line([0 0], [0 ymax], 'Color', lightGrey)
 line([1.5 1.5], [0 ymax], 'Color', lightGrey)
 fixationPattern = 4;
 figure(fixationPattern*10)
+set(gcf,'renderer','Painters')
 hold on
-histogram(ballOnsetTW(ballOnsetTW(:,3) == fixationPattern,selectedColumn), 'BinWidth', .25, ...
+histogram(slotOnsetTW(slotOnsetTW(:,3) == fixationPattern,selectedColumn), 'BinWidth', .25, ...
     'facecolor', 'none', 'edgecolor', fixationPatternColors(fixationPattern+1,:))
-histogram(ballOnsetTW(ballOnsetTW(:,3) == 2,selectedColumn), 'BinWidth', .25, ...
+histogram(slotOnset_early(slotOnset_early(:,3) == fixationPattern,selectedColumn), 'BinWidth', .25, ...
+    'facecolor', lightBlue, 'edgecolor', 'none')
+histogram(slotOnset_late(slotOnset_late(:,3) == fixationPattern,selectedColumn), 'BinWidth', .25, ...
+    'facecolor', lightRed, 'edgecolor', 'none')
+histogram(slotOnsetTW(slotOnsetTW(:,3) == 2,selectedColumn), 'BinWidth', .25, ...
     'facecolor', 'none', 'edgecolor', fixationPatternColors(2+1,:))
 % histogram(ballOffsetTW(ballOffsetTW(:,3) == fixationPattern,selectedColumn+1), 'BinWidth', .25, ...
 %     'facecolor', fixationPatternColors(fixationPattern+1,:), 'edgecolor', 'none')
@@ -473,13 +517,20 @@ line([1.5 1.5], [0 ymax], 'Color', lightGrey)
 %% add fixation types for fingertips for the slot fixations
 balFixations_PG = eventsRelativeLetter( eventsRelativeLetter(:,2) == 3,:);
 selectedColumn = 9;
-ballOnsetPG = balFixations_PG( balFixations_PG(:,selectedColumn) > lowerBound & balFixations_PG(:,selectedColumn) < upperBound ,:);
-ballOffsetPG = balFixations_PG( balFixations_PG(:,selectedColumn+1) > lowerBound & balFixations_PG(:,selectedColumn+1) < upperBound ,:);
+slotOnsetPG = balFixations_PG( balFixations_PG(:,selectedColumn) > lowerBound & balFixations_PG(:,selectedColumn) < upperBound ,:);
+slotOnset_early = slotOnsetPG( slotOnsetPG(:,end-1) ==1 ,:);
+slotOnset_late = slotOnsetPG( slotOnsetPG(:,end) ==1 ,:);
+%ballOffsetPG = balFixations_PG( balFixations_PG(:,selectedColumn+1) > lowerBound & balFixations_PG(:,selectedColumn+1) < upperBound ,:);
 fixationPattern = 2;
 figure(fixationPattern*10)
+set(gcf,'renderer','Painters')
 hold on
-histogram(ballOnsetPG(ballOnsetPG(:,3) == fixationPattern,selectedColumn), 'BinWidth', .25, ...
+histogram(slotOnsetPG(slotOnsetPG(:,3) == fixationPattern,selectedColumn), 'BinWidth', .25, ...
     'facecolor', 'none', 'edgecolor', fixationPatternColors(fixationPattern+1,:))
+histogram(slotOnset_early(slotOnset_early(:,3) == fixationPattern,selectedColumn), 'BinWidth', .25, ...
+    'facecolor', lightBlue, 'edgecolor', 'none')
+histogram(slotOnset_late(slotOnset_late(:,3) == fixationPattern,selectedColumn), 'BinWidth', .25, ...
+    'facecolor', lightRed, 'edgecolor', 'none')
 % histogram(ballOffsetPG(ballOffsetPG(:,3) == fixationPattern,selectedColumn+1), 'BinWidth', .25, ...
 %     'facecolor', fixationPatternColors(fixationPattern+1,:), 'edgecolor', 'none')
 ymax = 40;
