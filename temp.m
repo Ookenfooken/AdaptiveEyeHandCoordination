@@ -27,7 +27,7 @@ for j = 1:numParticipants % loop over subjects
 
             tStart = currentResult(n).info.timeStamp.start;
             goTime = currentResult(n).info.timeStamp.go;
-            ballApproach = currentResult(n).info.timeStamp.reach;
+            ballApproach = currentResult(n).info.timeStamp.ballApproach;
             slotApproach = currentResult(n).info.timeStamp.transport;
             earlyTrial = 0;
             lateTrial = 0;
@@ -44,10 +44,10 @@ for j = 1:numParticipants % loop over subjects
                     continue
                 end
             end
-            if ballApproach - detectedChanges(1) > 0 && ballApproach - detectedChanges(1) <= 1
+            if ballApproach - detectedChanges(1) > 0 && ballApproach - detectedChanges(1) <= 1.5
                 earlyTrial = 1;
             end
-            if slotApproach - detectedChanges(1) > 0 && slotApproach - detectedChanges(1) <= 1
+            if slotApproach - detectedChanges(1) > 0 && slotApproach - detectedChanges(1) <= 1.5
                 lateTrial = 1;
             end
             % if the change happened before the reach good
@@ -378,18 +378,25 @@ lowerBound = -1.5;
 upperBound = 5;
 balFixations_PG = eventsRelativeLetter( eventsRelativeLetter(:,2) == 3,:);
 selectedColumn = 7;
-ballOnsetPG = balFixations_PG( balFixations_PG(:,selectedColumn) > lowerBound & balFixations_PG(:,selectedColumn) < upperBound ,selectedColumn);
-ballOffsetPG = balFixations_PG( balFixations_PG(:,selectedColumn+1) > lowerBound & balFixations_PG(:,selectedColumn+1) < upperBound ,selectedColumn+1);
+ballOnsetPG = balFixations_PG( balFixations_PG(:,selectedColumn) > lowerBound & balFixations_PG(:,selectedColumn) < upperBound ,:);
+ballOnset_early = ballOnsetPG( ballOnsetPG(:,end-1) ==1 ,selectedColumn);
+ballOnset_late = ballOnsetPG( ballOnsetPG(:,end) ==1 ,selectedColumn);
+%ballOffsetPG = balFixations_PG( balFixations_PG(:,selectedColumn+1) > lowerBound & balFixations_PG(:,selectedColumn+1) < upperBound ,selectedColumn+1);
 figure(selectedColumn)
+set(gcf,'renderer','Painters')
 hold on
-histogram(ballOnsetPG, 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', 'k')
-histogram(ballOffsetPG, 'BinWidth', .25, 'facecolor', lightGrey, 'edgecolor', 'none')
-ymax = 80;
+histogram(ballOnsetPG(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', lightGrey)
+histogram(ballOnset_early, 'BinWidth', .25, ...
+    'facecolor', lightBlue, 'edgecolor', 'none')
+histogram(ballOnset_late, 'BinWidth', .25, ...
+    'facecolor', lightRed, 'edgecolor', 'none')
+%histogram(ballOffsetPG, 'BinWidth', .25, 'facecolor', lightGrey, 'edgecolor', 'none')
+ymax = 25;
 xlim([0 upperBound])
 ylim([0 ymax])
 line([0 0], [0 ymax], 'Color', lightGrey)
 line([1.5 1.5], [0 ymax], 'Color', lightGrey)
-%
+%%
 balFixations_TW = eventsRelativeLetter( eventsRelativeLetter(:,2) == 4,:);
 ballOnsetTW = balFixations_TW( balFixations_TW(:,selectedColumn) > lowerBound & balFixations_TW(:,selectedColumn) < upperBound ,selectedColumn);
 ballOffsetTW = balFixations_TW( balFixations_TW(:,selectedColumn+1) > lowerBound & balFixations_TW(:,selectedColumn+1) < upperBound ,selectedColumn+1);
@@ -406,18 +413,25 @@ line([1.5 1.5], [0 ymax], 'Color', lightGrey)
 %% plot slot on and offset
 balFixations_PG = eventsRelativeLetter( eventsRelativeLetter(:,2) == 3,:);
 selectedColumn = 9;
-ballOnsetPG = balFixations_PG( balFixations_PG(:,selectedColumn) > lowerBound & balFixations_PG(:,selectedColumn) < upperBound ,selectedColumn);
-ballOffsetPG = balFixations_PG( balFixations_PG(:,selectedColumn+1) > lowerBound & balFixations_PG(:,selectedColumn+1) < upperBound ,selectedColumn+1);
+slotOnsetPG = balFixations_PG( balFixations_PG(:,selectedColumn) > lowerBound & balFixations_PG(:,selectedColumn) < upperBound ,:);
+slotOnset_early = slotOnsetPG( slotOnsetPG(:,end-1) ==1 ,selectedColumn);
+slotOnset_late = slotOnsetPG( slotOnsetPG(:,end) ==1 ,selectedColumn);
+%ballOffsetPG = balFixations_PG( balFixations_PG(:,selectedColumn+1) > lowerBound & balFixations_PG(:,selectedColumn+1) < upperBound ,selectedColumn+1);
 figure(selectedColumn)
+set(gcf,'renderer','Painters')
 hold on
-histogram(ballOnsetPG, 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', 'k')
-histogram(ballOffsetPG, 'BinWidth', .25, 'facecolor', lightGrey, 'edgecolor', 'none')
-ymax = 80;
+histogram(slotOnsetPG(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', lightGrey)
+histogram(slotOnset_early, 'BinWidth', .25, ...
+    'facecolor', lightBlue, 'edgecolor', 'none')
+histogram(slotOnset_late, 'BinWidth', .25, ...
+    'facecolor', lightRed, 'edgecolor', 'none')
+%histogram(ballOffsetPG, 'BinWidth', .25, 'facecolor', lightGrey, 'edgecolor', 'none')
+ymax = 25;
 xlim([0 upperBound])
 ylim([0 ymax])
 line([0 0], [0 ymax], 'Color', lightGrey)
 line([1.5 1.5], [0 ymax], 'Color', lightGrey)
-%
+%%
 balFixations_TW = eventsRelativeLetter( eventsRelativeLetter(:,2) == 4,:);
 ballOnsetTW = balFixations_TW( balFixations_TW(:,selectedColumn) > lowerBound & balFixations_TW(:,selectedColumn) < upperBound ,selectedColumn);
 ballOffsetTW = balFixations_TW( balFixations_TW(:,selectedColumn+1) > lowerBound & balFixations_TW(:,selectedColumn+1) < upperBound ,selectedColumn+1);
