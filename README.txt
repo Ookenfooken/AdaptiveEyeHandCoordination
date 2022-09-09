@@ -27,9 +27,6 @@ Requires pullDataTrial.m, readoutTrialInfo.m, readoutGaze.m, readoutRawGaze.m, r
 - plotIndividualTrials.m
 Contains info of which individual trials were used for single trial examples (Figures 1 and 2A-E).
 
-- createPlotsFigure2.m
-Generates matlab plot of fixation pattern probability for different grasp modes (Figure 2F)
-
 - analyzePhaseDurations.m
 Creates matrix with durations of different phase durations. Saves matlab structure to compare movement duration in different task 
 conditions (comparePhaseDurations.R) and to use for normalized fixation probabilities plot (Figure 3).
@@ -38,17 +35,24 @@ conditions (comparePhaseDurations.R) and to use for normalized fixation probabil
 Analyzes gaze shifts from ball to slot in single task and from the slot back to the display in dual task condition.
 Stats are then calculated in R (compareGazeShifts.R).
 
-- createPlotFigure3.m
+- createPlotFigure2and3.m
 Generates matlab plots of fixation probabilities and tool speed in a normalized time frame. Requires normalizeMovementsPhases.m
+
+- createPlotsFigure4.m
+Generates matlab plot of fixation pattern probability for different grasp modes (Figure 4B) and histograms of ball and 
+slot fixations in dual task condition (4C). Histograms require histf.m.
 
 - analyzeFixationSubGoals.m
 Reads out ball and slot fixation onsets relative to reach onset and saves matlab structure for the general linear model (GLM)
 GLM is then run in R (GLMmovementPhases.R).
 
-- createPlotsFigure4.m
-Generates matlab plots of fixation timing and duration in dual task condition. Histograms require histf.m.
-
 - createPlotsFigure5.m
+Generates matlab plots of fixation timing and duration relative to contact events in dual task condition. 
+
+- createPlotsFigure6.m
+Generates cumulative plots of ball and slot fixation on and offsets relative to events.
+
+- createPlotsFigure7.m
 Generates matlab plots of letter detection task performance and eye and hand movement adaptation relative to letter change. 
 Saves matlab structure to compare detection task performance in R (compareDetectionTask.R).
 

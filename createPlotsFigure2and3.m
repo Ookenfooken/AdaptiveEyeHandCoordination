@@ -28,10 +28,12 @@ numBlocks = size(pulledData,2);
 radius = 2.5; % gaze on landmarks in centroid
 vigilanceBlocks = [3 4];
 tweezerBlocks = [2 4];
+sampleRate = 200;
+[a,b] = butter(2,20/sampleRate);
 
 for i = 1:numBlocks % plot per block aka experimental condition
     
-    slotCount = 1;
+    slotCount = 0;
     averageLength = sum(floor(phaseDurationNorm(i,3:7))); % normalized durations of phases are stored in columns 3-7
     averagedToolSpeed = NaN(numSubjects*3, averageLength+1);
     averagedGazeToBall = NaN(numSubjects*3, averageLength+1);
@@ -57,7 +59,7 @@ for i = 1:numBlocks % plot per block aka experimental condition
                 continue
             end
             effector = currentBlock(n).effector;
-            gaze = currentBlock(n).gaze;
+            gaze = currentBlock(n).rawGaze;
             info = currentBlock(n).info;
             normalizedData = normalizeMovementsPhases(phaseDurationNorm, info, effector, gaze, i, radius);
             toolSpeed(n,:) = [info.cuedSlot normalizedData.toolSpeed'];
@@ -67,17 +69,23 @@ for i = 1:numBlocks % plot per block aka experimental condition
                 gazeToDisplay(n,:) = [info.cuedSlot normalizedData.gazeDisplay];
             end
         end
+        % filter data for each participant and
         % store average trace per subject per slot
-        averagedToolSpeed(slotCount:slotCount+2,:) = [[1 nanmedian(toolSpeed(toolSpeed(:,1) == 1, 2:end))]; ...
-            [2 nanmedian(toolSpeed(toolSpeed(:,1) == 2, 2:end))]; [3 nanmedian(toolSpeed(toolSpeed(:,1) == 3, 2:end))]];
-        averagedGazeToBall(slotCount:slotCount+2,:) = [[1 nanmean(gazeToBall(gazeToBall(:,1) == 1, 2:end))]; ...
-            [2 nanmean(gazeToBall(gazeToBall(:,1) == 2, 2:end))]; [3 nanmean(gazeToBall(gazeToBall(:,1) == 3, 2:end))]];
-        averagedGazeToSlot(slotCount:slotCount+2,:) = [[1 nanmean(gazeToSlot(gazeToSlot(:,1) == 1, 2:end))]; ...
-            [2 nanmean(gazeToSlot(gazeToSlot(:,1) == 2, 2:end))]; [3 nanmean(gazeToSlot(gazeToSlot(:,1) == 3, 2:end))]];
-        if ismember(i, vigilanceBlocks)
-            averagedGazeToDisplay(slotCount:slotCount+2,:) = [[1 nanmean(gazeToDisplay(gazeToDisplay(:,1) == 1, 2:end))]; ...
-                [2 nanmean(gazeToDisplay(gazeToDisplay(:,1) == 2, 2:end))]; [3 nanmean(gazeToDisplay(gazeToDisplay(:,1) == 3, 2:end))]];
+        for slotID = 1:3
+            currentBallProbability = nanmean(gazeToBall(gazeToBall(:,1) == slotID, 2:end));
+            smoothedBallProbability = filtfilt(a,b, currentBallProbability);
+            averagedGazeToBall(slotCount+slotID,:) = [slotID smoothedBallProbability];
+            currentSlotProbability = nanmean(gazeToSlot(gazeToSlot(:,1) == slotID, 2:end));
+            smoothedSlotProbability = filtfilt(a,b, currentSlotProbability);
+            averagedGazeToSlot(slotCount+slotID,:) = [slotID smoothedSlotProbability];
+            if ismember(i, vigilanceBlocks)
+                currentDisplayProbability = nanmean(gazeToDisplay(gazeToDisplay(:,1) == slotID, 2:end));
+                smoothedDisplayProbability = filtfilt(a,b, currentDisplayProbability);
+                averagedGazeToDisplay(slotCount+slotID,:) = [slotID smoothedDisplayProbability];
+            end
         end
+        averagedToolSpeed(slotCount+1:slotCount+3,:) = [[1 nanmedian(toolSpeed(toolSpeed(:,1) == 1, 2:end))]; ...
+            [2 nanmedian(toolSpeed(toolSpeed(:,1) == 2, 2:end))]; [3 nanmedian(toolSpeed(toolSpeed(:,1) == 3, 2:end))]];
         slotCount = slotCount + 3;
     end
     %%
@@ -105,9 +113,9 @@ for i = 1:numBlocks % plot per block aka experimental condition
     line([liftoff+round(phaseDurationNorm(i,9)) liftoff+round(phaseDurationNorm(i,9))], [0 yMax], ...
         'Color', 'k', 'LineStyle', '--')
     % plot average tool speed
-    plot(mean(averagedToolSpeed(averagedToolSpeed(:,1) == 1, 2:end)), 'Color', grey1, 'LineWidth', 2)
-    plot(mean(averagedToolSpeed(averagedToolSpeed(:,1) == 2, 2:end)), 'Color', grey2, 'LineWidth', 2)
-    plot(mean(averagedToolSpeed(averagedToolSpeed(:,1) == 3, 2:end)), 'Color', grey3, 'LineWidth', 2)
+    plot(nanmean(averagedToolSpeed(averagedToolSpeed(:,1) == 1, 2:end)), 'Color', grey1, 'LineWidth', 2)
+    plot(nanmean(averagedToolSpeed(averagedToolSpeed(:,1) == 2, 2:end)), 'Color', grey2, 'LineWidth', 2)
+    plot(nanmean(averagedToolSpeed(averagedToolSpeed(:,1) == 3, 2:end)), 'Color', grey3, 'LineWidth', 2)
     
     figure(i*10)
     if ismember(i, tweezerBlocks)
@@ -117,7 +125,7 @@ for i = 1:numBlocks % plot per block aka experimental condition
         xlim([0 averageLength])
         set(gca, 'Xtick', [liftoff-100 liftoff liftoff+100 liftoff+200], 'XtickLabel', [-.5 0 .5 1])
     end    
-    ylim([0 1])
+    ylim([0 1.02])
     set(gca, 'Ytick', [0 .25 .50 .75 1],'YTickLabel', [0 .25 .50 .75 1])
     hold on
     % indicate phases as rectangles
@@ -131,18 +139,18 @@ for i = 1:numBlocks % plot per block aka experimental condition
     line([liftoff+round(phaseDurationNorm(i,9)) liftoff+round(phaseDurationNorm(i,9))], [0 yMax], ...
         'Color', 'k', 'LineStyle', '--')
     % plot fixation probabilities
-    plot(mean(averagedGazeToBall(averagedGazeToBall(:,1) == 1, 2:end)), 'Color', orange1, 'LineWidth', 2)
-    plot(mean(averagedGazeToBall(averagedGazeToBall(:,1) == 2, 2:end)), 'Color', orange2, 'LineWidth', 2)
-    plot(mean(averagedGazeToBall(averagedGazeToBall(:,1) == 3, 2:end)), 'Color', orange3, 'LineWidth', 2)
+    plot(nanmean(averagedGazeToBall(averagedGazeToBall(:,1) == 1, 2:end)), 'Color', orange1, 'LineWidth', 2)
+    plot(nanmean(averagedGazeToBall(averagedGazeToBall(:,1) == 2, 2:end)), 'Color', orange2, 'LineWidth', 2)
+    plot(nanmean(averagedGazeToBall(averagedGazeToBall(:,1) == 3, 2:end)), 'Color', orange3, 'LineWidth', 2)
     
-    plot(mean(averagedGazeToSlot(averagedGazeToSlot(:,1) == 1, 2:end)), 'Color', green1, 'LineWidth', 2)
-    plot(mean(averagedGazeToSlot(averagedGazeToSlot(:,1) == 2, 2:end)), 'Color', green2, 'LineWidth', 2)
-    plot(mean(averagedGazeToSlot(averagedGazeToSlot(:,1) == 3, 2:end)), 'Color', green3, 'LineWidth', 2)
+    plot(nanmean(averagedGazeToSlot(averagedGazeToSlot(:,1) == 1, 2:end)), 'Color', green1, 'LineWidth', 2)
+    plot(nanmean(averagedGazeToSlot(averagedGazeToSlot(:,1) == 2, 2:end)), 'Color', green2, 'LineWidth', 2)
+    plot(nanmean(averagedGazeToSlot(averagedGazeToSlot(:,1) == 3, 2:end)), 'Color', green3, 'LineWidth', 2)
     
     if ismember(i, vigilanceBlocks)
-        plot(mean(averagedGazeToDisplay(averagedGazeToDisplay(:,1) == 1, 2:end)), 'Color', blue1, 'LineWidth', 2)
-        plot(mean(averagedGazeToDisplay(averagedGazeToDisplay(:,1) == 2, 2:end)), 'Color', blue2, 'LineWidth', 2)
-        plot(mean(averagedGazeToDisplay(averagedGazeToDisplay(:,1) == 3, 2:end)), 'Color', blue3, 'LineWidth', 2)
+        plot(nanmean(averagedGazeToDisplay(averagedGazeToDisplay(:,1) == 1, 2:end)), 'Color', blue1, 'LineWidth', 2)
+        plot(nanmean(averagedGazeToDisplay(averagedGazeToDisplay(:,1) == 2, 2:end)), 'Color', blue2, 'LineWidth', 2)
+        plot(nanmean(averagedGazeToDisplay(averagedGazeToDisplay(:,1) == 3, 2:end)), 'Color', blue3, 'LineWidth', 2)
     end
     clear yMax liftoff
 end
