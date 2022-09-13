@@ -1,9 +1,9 @@
 function [normalizedData] = normalizeSilentPeriod(durationNorm, durationEarly, info, gaze, dualTask, dualPrevious, blockNo, radius)
 
 % all letter changes
+sampleRate = 200;
 wBin = .3; % w was on for .3 s
 silentPeriod = 1.5;
-sampleRate = 200;
 letterChangeVector = zeros(info.trialEnd,1);
 timeLCVector = zeros(info.trialEnd,1);
 % find relevant letter changes and check if the first relevant change is affecting trial start
@@ -295,21 +295,18 @@ clear startFrame stopFrame duration
 % paste tool speed together
 % normalizedData.silentPeriod = [normLetterVector1' normLetterVector2' normLetterVector3' ...
 %     normLetterVector4' normLetterVector5' normLetterVector6'];
-[a,b] = butter(2,20/sampleRate);
 
 silentPeriod = [normLetterVector1(1:floor(durationNorm(blockNo,10)))' normLetterVector2(1:floor(durationNorm(blockNo,3)))' ...
    normLetterVector3(1:floor(durationNorm(blockNo,4)))' normLetterVector4(1:floor(durationNorm(blockNo,5)))' ...
    normLetterVector5(1:floor(durationNorm(blockNo,6)))' normLetterVector6(1:floor(durationNorm(blockNo,7)))'];
 
-silentPeriod_smoothed = filtfilt(a,b, silentPeriod);
-normalizedData.silentPeriod = silentPeriod_smoothed;
+normalizedData.silentPeriod = silentPeriod;
 
 timeLetterChange = [normTimeLCVector1(1:floor(durationNorm(blockNo,10)))' normTimeLCVector2(1:floor(durationNorm(blockNo,3)))' ...
    normTimeLCVector3(1:floor(durationNorm(blockNo,4)))' normTimeLCVector4(1:floor(durationNorm(blockNo,5)))' ...
    normTimeLCVector5(1:floor(durationNorm(blockNo,6)))' normTimeLCVector6(1:floor(durationNorm(blockNo,7)))'];
 
-timeLC_smoothed = filtfilt(a,b, timeLetterChange);
-normalizedData.timeLC = timeLC_smoothed;
+normalizedData.timeLC = timeLetterChange;
 
 normalizedData.missedChanges = [normMissVector1(1:floor(durationNorm(blockNo,10)))' normMissVector2(1:floor(durationNorm(blockNo,3)))' ...
    normMissVector3(1:floor(durationNorm(blockNo,4)))' normMissVector4(1:floor(durationNorm(blockNo,5)))' ...
@@ -319,70 +316,43 @@ ballFixations = [normBall1(1:floor(durationNorm(blockNo,10)))' normBall2(1:floor
    normBall3(1:floor(durationNorm(blockNo,4)))' normBall4(1:floor(durationNorm(blockNo,5)))' ...
    normBall5(1:floor(durationNorm(blockNo,6)))' normBall6(1:floor(durationNorm(blockNo,7)))'];
 
-ballFixations_smoothed = filtfilt(a,b, ballFixations);
-normalizedData.gazeBall = ballFixations_smoothed;
+normalizedData.gazeBall = ballFixations;
 
 slotFixations = [normSlot1(1:floor(durationNorm(blockNo,10)))' normSlot2(1:floor(durationNorm(blockNo,3)))' ...
    normSlot3(1:floor(durationNorm(blockNo,4)))' normSlot4(1:floor(durationNorm(blockNo,5)))' ...
    normSlot5(1:floor(durationNorm(blockNo,6)))' normSlot6(1:floor(durationNorm(blockNo,7)))'];
 
-slotFixations_smoothed = filtfilt(a,b, slotFixations);
-normalizedData.gazeSlot = slotFixations_smoothed;
+normalizedData.gazeSlot = slotFixations;
 
 % early reaches
 silentPreReach = [normEarlySilentVector1(1:floor(durationEarly(blockNo,10)))' normEarlySilentVector2(1:floor(durationEarly(blockNo,3)))' ...
    normEarlySilentVector3(1:floor(durationEarly(blockNo,4)))' normEarlySilentVector4(1:floor(durationEarly(blockNo,5)))' ...
    normEarlySilentVector5(1:floor(durationEarly(blockNo,6)))' normEarlySilentVector6(1:floor(durationEarly(blockNo,7)))'];
 
-if ~isnan(silentPreReach(1))
-    silentPreReach_smoothed = filtfilt(a,b, silentPreReach);
-    normalizedData.silentPreReach = silentPreReach_smoothed;
-else
-    normalizedData.silentPreReach = silentPreReach;
-end
+normalizedData.silentPreReach = silentPreReach;
 
 LCPreReach = [normEarlyLCVector1(1:floor(durationEarly(blockNo,10)))' normEarlyLCVector2(1:floor(durationEarly(blockNo,3)))' ...
    normEarlyLCVector3(1:floor(durationEarly(blockNo,4)))' normEarlyLCVector4(1:floor(durationEarly(blockNo,5)))' ...
    normEarlyLCVector5(1:floor(durationEarly(blockNo,6)))' normEarlyLCVector6(1:floor(durationEarly(blockNo,7)))'];
 
-if ~isnan(LCPreReach(1))
-    silentPreReach_smoothed = filtfilt(a,b, LCPreReach);
-    normalizedData.timeLCPreReach = silentPreReach_smoothed;
-else
-    normalizedData.timeLCPreReach = LCPreReach;
-end
+normalizedData.timeLCPreReach = LCPreReach;
 
 missedLCpreReach = [normEarlyMissVector1(1:floor(durationEarly(blockNo,10)))' normEarlyMissVector2(1:floor(durationEarly(blockNo,3)))' ...
    normEarlyMissVector3(1:floor(durationEarly(blockNo,4)))' normEarlyMissVector4(1:floor(durationEarly(blockNo,5)))' ...
    normEarlyMissVector5(1:floor(durationEarly(blockNo,6)))' normEarlyMissVector6(1:floor(durationEarly(blockNo,7)))'];
 
-if ~isnan(missedLCpreReach(1))
-    silentPreReach_smoothed = filtfilt(a,b, missedLCpreReach);
-    normalizedData.missedLCPreReach = silentPreReach_smoothed;
-else
-    normalizedData.missedLCPreReach = missedLCpreReach;
-end
+normalizedData.missedLCPreReach = missedLCpreReach;
 
 fixBallpreReach = [normEarlyBallFixVector1(1:floor(durationEarly(blockNo,10)))' normEarlyBallFixVector2(1:floor(durationEarly(blockNo,3)))' ...
    normEarlyBallFixVector3(1:floor(durationEarly(blockNo,4)))' normEarlyBallFixVector4(1:floor(durationEarly(blockNo,5)))' ...
    normEarlyBallFixVector5(1:floor(durationEarly(blockNo,6)))' normEarlyBallFixVector6(1:floor(durationEarly(blockNo,7)))'];
 
-if ~isnan(fixBallpreReach(1))
-    silentPreReach_smoothed = filtfilt(a,b, fixBallpreReach);
-    normalizedData.gazeBallPreReach = silentPreReach_smoothed;
-else
-    normalizedData.gazeBallPreReach = fixBallpreReach;
-end
+normalizedData.gazeBallPreReach = fixBallpreReach;
 
 fixSlotpreReach = [normEarlySlotFixVector1(1:floor(durationEarly(blockNo,10)))' normEarlySlotFixVector2(1:floor(durationEarly(blockNo,3)))' ...
    normEarlySlotFixVector3(1:floor(durationEarly(blockNo,4)))' normEarlySlotFixVector4(1:floor(durationEarly(blockNo,5)))' ...
    normEarlySlotFixVector5(1:floor(durationEarly(blockNo,6)))' normEarlySlotFixVector6(1:floor(durationEarly(blockNo,7)))'];
 
-if ~isnan(fixSlotpreReach(1))
-    silentPreReach_smoothed = filtfilt(a,b, fixSlotpreReach);
-    normalizedData.gazeSlotPreReach = silentPreReach_smoothed;
-else
-    normalizedData.gazeSlotPreReach = fixSlotpreReach;
-end
+normalizedData.gazeSlotPreReach = fixSlotpreReach;
 
 end

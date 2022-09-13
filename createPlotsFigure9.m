@@ -21,6 +21,8 @@ lightGreen = [116,196,118]./255;
 lightPurple = [158,154,200]./255;
 darkPurple = [77,0,75]./255;
 red = [228,26,28]./255;
+sampleRate = 200;
+[a,b] = butter(2,20/sampleRate);
 
 %%
 numSubjects = size(pulledData,1);
@@ -125,41 +127,96 @@ for i = 3:numBlocks % plot per block aka experimental condition
             gazeToBall_early(n,:) = normalizedData.gazeBallPreReach;
             gazeToSlot_early(n,:) = normalizedData.gazeSlotPreReach;
         end
+        % filter data for each participant and
         % store average trace per participant
-        averagedSilentPeriod(j,:) = nanmean(silentPeriod(:,2:end));
-        averagedTimeLC(j,:) = nanmean(timeLetterChange(:,2:end));
-        averagedMissedChanges(j,:) = nanmean(missedChanges(:,2:end));
-        averagedBallFixations(j,:) = nanmean(gazeToBall(:,2:end));
-        averagedSlotFixations(j,:) = nanmean(gazeToSlot(:,2:end));
+        averagedSilentPeriod(j,:) = filtfilt(a,b, nanmean(silentPeriod(:,2:end)));
+        averagedTimeLC(j,:) = filtfilt(a,b, nanmean(timeLetterChange(:,2:end)));
+        averagedMissedChanges(j,:) = filtfilt(a,b, nanmean(missedChanges(:,2:end)));
+        averagedBallFixations(j,:) = filtfilt(a,b, nanmean(gazeToBall(:,2:end)));
+        averagedSlotFixations(j,:) = filtfilt(a,b, nanmean(gazeToSlot(:,2:end)));
         % for early reaches
-        earlySilentPeriod(j,:) = nanmean(silentPeriod_early);
-        earlyTimeLC(j,:) = nanmean(timeLetterChange_early);
-        earlyMissedChanges(j,:) = nanmean(missedChanges_early);
-        earlyBallFixations(j,:) = nanmean(gazeToBall_early);
-        earlySlotFixations(j,:) = nanmean(gazeToSlot_early);
+        earlySilentPeriod(j,:) = filtfilt(a,b, nanmean(silentPeriod_early));
+        earlyTimeLC(j,:) = filtfilt(a,b, nanmean(timeLetterChange_early));
+        earlyMissedChanges(j,:) = filtfilt(a,b, nanmean(missedChanges_early));
+        earlyBallFixations(j,:) = filtfilt(a,b, nanmean(gazeToBall_early));
+        earlySlotFixations(j,:) = filtfilt(a,b, nanmean(gazeToSlot_early));
         % by fixation type
         if i == 3
-            silentFixationType(count:count+1,:) = [[1 nanmean(silentPeriod(silentPeriod(:,1) == 0, 2:end),1)]; ...
-                [2 nanmean(silentPeriod(silentPeriod(:,1) == 2, 2:end))]];
-            timeLCFixationType(count:count+1,:) = [[1 nanmean(timeLetterChange(timeLetterChange(:,1) == 0, 2:end),1)]; ...
-                [2 nanmean(timeLetterChange(timeLetterChange(:,1) == 2, 2:end))]];
-            missFixationType(count:count+1,:) = [[1 nanmean(missedChanges(missedChanges(:,1) == 0, 2:end),1)]; ...
-                [2 nanmean(missedChanges(missedChanges(:,1) == 2, 2:end))]];
-            ballFixationType(count:count+1,:) = [[1 nanmean(gazeToBall(gazeToBall(:,1) == 0, 2:end),1)]; ...
-                [2 nanmean(gazeToBall(gazeToBall(:,1) == 2, 2:end))]];
-            slotFixationType(count:count+1,:) = [[1 nanmean(gazeToSlot(gazeToSlot(:,1) == 0, 2:end),1)]; ...
-                [2 nanmean(gazeToSlot(gazeToSlot(:,1) == 2, 2:end))]];
+            testSetDisp = nanmean(silentPeriod(silentPeriod(:,1) == 0, 2:end),1);
+            testSetSlot = nanmean(silentPeriod(silentPeriod(:,1) == 2, 2:end),1);
+            if isnan(testSetDisp(2))
+                silentFixationType(count:count+1,:) = [[1 nanmean(silentPeriod(silentPeriod(:,1) == 0, 2:end),1)]; ...
+                    [2 filtfilt(a,b, nanmean(silentPeriod(silentPeriod(:,1) == 2, 2:end),1))]];
+                timeLCFixationType(count:count+1,:) = [[1 nanmean(timeLetterChange(timeLetterChange(:,1) == 0, 2:end),1)]; ...
+                    [2 filtfilt(a,b, nanmean(timeLetterChange(timeLetterChange(:,1) == 2, 2:end)))]];
+                missFixationType(count:count+1,:) = [[1 nanmean(missedChanges(missedChanges(:,1) == 0, 2:end),1)]; ...
+                    [2 filtfilt(a,b, nanmean(missedChanges(missedChanges(:,1) == 2, 2:end)))]];
+                ballFixationType(count:count+1,:) = [[1 nanmean(gazeToBall(gazeToBall(:,1) == 0, 2:end),1)]; ...
+                    [2 filtfilt(a,b, nanmean(gazeToBall(gazeToBall(:,1) == 2, 2:end)))]];
+                slotFixationType(count:count+1,:) = [[1 nanmean(gazeToSlot(gazeToSlot(:,1) == 0, 2:end),1)]; ...
+                    [2 filtfilt(a,b, nanmean(gazeToSlot(gazeToSlot(:,1) == 2, 2:end)))]];
+            elseif isnan(testSetSlot(2))
+                silentFixationType(count:count+1,:) = [[1 filtfilt(a,b, nanmean(silentPeriod(silentPeriod(:,1) == 0, 2:end),1))]; ...
+                    [2 nanmean(silentPeriod(silentPeriod(:,1) == 2, 2:end),1)]];
+                timeLCFixationType(count:count+1,:) = [[1 filtfilt(a,b, nanmean(timeLetterChange(timeLetterChange(:,1) == 0, 2:end),1))]; ...
+                    [2 nanmean(timeLetterChange(timeLetterChange(:,1) == 2, 2:end))]];
+                missFixationType(count:count+1,:) = [[1 filtfilt(a,b, nanmean(missedChanges(missedChanges(:,1) == 0, 2:end),1))]; ...
+                    [2 nanmean(missedChanges(missedChanges(:,1) == 2, 2:end))]];
+                ballFixationType(count:count+1,:) = [[1 filtfilt(a,b, nanmean(gazeToBall(gazeToBall(:,1) == 0, 2:end),1))]; ...
+                    [2 nanmean(gazeToBall(gazeToBall(:,1) == 2, 2:end))]];
+                slotFixationType(count:count+1,:) = [[1 filtfilt(a,b, nanmean(gazeToSlot(gazeToSlot(:,1) == 0, 2:end),1))]; ...
+                    [2 nanmean(gazeToSlot(gazeToSlot(:,1) == 2, 2:end))]];
+            else
+                silentFixationType(count:count+1,:) = [[1 filtfilt(a,b, nanmean(silentPeriod(silentPeriod(:,1) == 0, 2:end),1))]; ...
+                    [2 filtfilt(a,b, nanmean(silentPeriod(silentPeriod(:,1) == 2, 2:end),1))]];
+                timeLCFixationType(count:count+1,:) = [[1 filtfilt(a,b, nanmean(timeLetterChange(timeLetterChange(:,1) == 0, 2:end),1))]; ...
+                    [2 filtfilt(a,b, nanmean(timeLetterChange(timeLetterChange(:,1) == 2, 2:end)))]];
+                missFixationType(count:count+1,:) = [[1 filtfilt(a,b, nanmean(missedChanges(missedChanges(:,1) == 0, 2:end),1))]; ...
+                    [2 filtfilt(a,b, nanmean(missedChanges(missedChanges(:,1) == 2, 2:end)))]];
+                ballFixationType(count:count+1,:) = [[1 filtfilt(a,b, nanmean(gazeToBall(gazeToBall(:,1) == 0, 2:end),1))]; ...
+                    [2 filtfilt(a,b, nanmean(gazeToBall(gazeToBall(:,1) == 2, 2:end)))]];
+                slotFixationType(count:count+1,:) = [[1 filtfilt(a,b, nanmean(gazeToSlot(gazeToSlot(:,1) == 0, 2:end),1))]; ...
+                    [2 filtfilt(a,b, nanmean(gazeToSlot(gazeToSlot(:,1) == 2, 2:end)))]];
+            end
+            clear testSetDisp testSetSlot
         else
-            silentFixationType(count:count+1,:) = [[1 nanmean(silentPeriod(silentPeriod(:,1) == 3, 2:end),1)]; ...
-                [2 nanmean(silentPeriod(silentPeriod(:,1) == 4, 2:end))]];
-            timeLCFixationType(count:count+1,:) = [[1 nanmean(timeLetterChange(timeLetterChange(:,1) == 3, 2:end),1)]; ...
-                [2 nanmean(timeLetterChange(timeLetterChange(:,1) == 4, 2:end))]];
-            missFixationType(count:count+1,:) = [[1 nanmean(missedChanges(missedChanges(:,1) == 3, 2:end),1)]; ...
-                [2 nanmean(missedChanges(missedChanges(:,1) == 4, 2:end))]];
-            ballFixationType(count:count+1,:) = [[1 nanmean(gazeToBall(gazeToBall(:,1) == 3, 2:end),1)]; ...
-                [2 nanmean(gazeToBall(gazeToBall(:,1) == 4, 2:end))]];
-            slotFixationType(count:count+1,:) = [[1 nanmean(gazeToSlot(gazeToSlot(:,1) == 3, 2:end),1)]; ...
-                [2 nanmean(gazeToSlot(gazeToSlot(:,1) == 4, 2:end))]];
+            testSetTri = nanmean(silentPeriod(silentPeriod(:,1) == 3, 2:end),1);
+            testSetBack = nanmean(silentPeriod(silentPeriod(:,1) == 4, 2:end),1);
+            if isnan(testSetTri(2))
+                silentFixationType(count:count+1,:) = [[1 nanmean(silentPeriod(silentPeriod(:,1) == 3, 2:end),1)]; ...
+                    [2 filtfilt(a,b, nanmean(silentPeriod(silentPeriod(:,1) == 4, 2:end),1))]];
+                timeLCFixationType(count:count+1,:) = [[1 nanmean(timeLetterChange(timeLetterChange(:,1) == 3, 2:end),1)]; ...
+                    [2 filtfilt(a,b, nanmean(timeLetterChange(timeLetterChange(:,1) == 4, 2:end)))]];
+                missFixationType(count:count+1,:) = [[1 nanmean(missedChanges(missedChanges(:,1) == 3, 2:end),1)]; ...
+                    [2 filtfilt(a,b, nanmean(missedChanges(missedChanges(:,1) == 4, 2:end)))]];
+                ballFixationType(count:count+1,:) = [[1 nanmean(gazeToBall(gazeToBall(:,1) == 3, 2:end),1)]; ...
+                    [2 filtfilt(a,b, nanmean(gazeToBall(gazeToBall(:,1) == 4, 2:end)))]];
+                slotFixationType(count:count+1,:) = [[1 nanmean(gazeToSlot(gazeToSlot(:,1) == 3, 2:end),1)]; ...
+                    [2 filtfilt(a,b, nanmean(gazeToSlot(gazeToSlot(:,1) == 4, 2:end)))]];
+            elseif isnan(testSetBack(2))
+                silentFixationType(count:count+1,:) = [[1 filtfilt(a,b, nanmean(silentPeriod(silentPeriod(:,1) == 3, 2:end),1))]; ...
+                    [2 nanmean(silentPeriod(silentPeriod(:,1) == 4, 2:end),1)]];
+                timeLCFixationType(count:count+1,:) = [[1 filtfilt(a,b, nanmean(timeLetterChange(timeLetterChange(:,1) == 3, 2:end),1))]; ...
+                    [2 nanmean(timeLetterChange(timeLetterChange(:,1) == 4, 2:end))]];
+                missFixationType(count:count+1,:) = [[1 filtfilt(a,b, nanmean(missedChanges(missedChanges(:,1) == 3, 2:end),1))]; ...
+                    [2 nanmean(missedChanges(missedChanges(:,1) == 4, 2:end))]];
+                ballFixationType(count:count+1,:) = [[1 filtfilt(a,b, nanmean(gazeToBall(gazeToBall(:,1) == 3, 2:end),1))]; ...
+                    [2 nanmean(gazeToBall(gazeToBall(:,1) == 4, 2:end))]];
+                slotFixationType(count:count+1,:) = [[1 filtfilt(a,b, nanmean(gazeToSlot(gazeToSlot(:,1) == 3, 2:end),1))]; ...
+                    [2 nanmean(gazeToSlot(gazeToSlot(:,1) == 4, 2:end))]];
+            else
+                silentFixationType(count:count+1,:) = [[1 filtfilt(a,b, nanmean(silentPeriod(silentPeriod(:,1) == 3, 2:end),1))]; ...
+                    [2 filtfilt(a,b, nanmean(silentPeriod(silentPeriod(:,1) == 4, 2:end),1))]];
+                timeLCFixationType(count:count+1,:) = [[1 filtfilt(a,b, nanmean(timeLetterChange(timeLetterChange(:,1) == 3, 2:end),1))]; ...
+                    [2 filtfilt(a,b, nanmean(timeLetterChange(timeLetterChange(:,1) == 4, 2:end)))]];
+                missFixationType(count:count+1,:) = [[1 filtfilt(a,b, nanmean(missedChanges(missedChanges(:,1) == 3, 2:end),1))]; ...
+                    [2 filtfilt(a,b, nanmean(missedChanges(missedChanges(:,1) == 4, 2:end)))]];
+                ballFixationType(count:count+1,:) = [[1 filtfilt(a,b, nanmean(gazeToBall(gazeToBall(:,1) == 3, 2:end),1))]; ...
+                    [2 filtfilt(a,b, nanmean(gazeToBall(gazeToBall(:,1) == 4, 2:end)))]];
+                slotFixationType(count:count+1,:) = [[1 filtfilt(a,b, nanmean(gazeToSlot(gazeToSlot(:,1) == 3, 2:end),1))]; ...
+                    [2 filtfilt(a,b, nanmean(gazeToSlot(gazeToSlot(:,1) == 4, 2:end)))]];
+            end
+            clear testSetTri testSetBack
         end
         count = count + 2;
     end

@@ -47,18 +47,21 @@ Reads out ball and slot fixation onsets relative to reach onset and saves matlab
 GLM is then run in R (GLMmovementPhases.R).
 
 - createPlotsFigure5.m
-Generates matlab plots of fixation timing and duration relative to contact events in dual task condition. 
+Generates matlab plots of fixation timing and duration relative to contact events in dual task condition separate for fingertips (5A)
+and tweezers (5B). 
 
 - createPlotsFigure6.m
 Generates cumulative plots of ball and slot fixation on and offsets relative to events.
 
 - createPlotsFigure7.m
-Generates matlab plots of letter detection task performance and eye and hand movement adaptation relative to letter change. 
+Generates matlab plots of letter change occurance and letter detection task performance (panels A & B). 
 Saves matlab structure to compare detection task performance in R (compareDetectionTask.R).
+Creates the response time as a function of the last detected letter change before reach onset relative to the go signal (panels C & D)
 
-- createPlotsFigure6.m
-Generates matlab plots of different fixation types in grasp modes and relative to the time of letter change. 
+- createPlotsFigure8.m
+Generates matlab plots of the frequency of ball and slot fixations relative to the letter change for different fixation patterns. 
 
-- createPlotsFigure7.m
-Generates matlab plots of phase durations and cumulative fixation probabilites for most common fixation patterns.
-Saves matlab structure to compare phase durations for fixation patterns in R (comparePhasesFixationPatterns.R). 
+- createPlotsFigure9.m
+Generates matlab plots of the probabilities to see or miss a letter change or be in the silent period and of 
+ball and slot fixations relative to kinematicevents. Panels C-D focus on trials, in which letter changes occurred within 1 s before reach.
+Panels E-F break down different fixation pattern. 
