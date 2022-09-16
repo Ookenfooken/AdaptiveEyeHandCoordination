@@ -49,9 +49,15 @@ for j = 1:numSubjects % loop over subjects
                 dual(n) = 1;
                 slotEntry = currentResult(n).info.phaseStart.ballInSlot - currentResult(n).info.trialStart;
                 if ~isempty(currentResult(n).gaze.saccades.onsets) && ...
-                        ~isempty(currentResult(n).gaze.fixation.onsetsBall)
+                        ~isempty(currentResult(n).gaze.fixation.onsetsSlot)
+                    if ~isempty(currentResult(n).gaze.fixation.offsetsBall)
+                        ballOffset = currentResult(n).gaze.fixation.offsetsBall(1);
+                        slotIdx = find(currentResult(n).gaze.fixation.onsetsSlot > ballOffset, 1, 'first');
+                    else
+                        slotIdx = 1;
+                    end
                     % find the last saccade to the display
-                    dispSacIdx = find(currentResult(n).gaze.saccades.onsets < currentResult(n).gaze.fixation.onsetsDisplay(end), 1, 'first');
+                    dispSacIdx = find(currentResult(n).gaze.saccades.onsets > currentResult(n).gaze.fixation.onsetsSlot(slotIdx), 1, 'first');
                     if ~isempty(dispSacIdx)
                         gazeShiftReturn(n) = (currentResult(n).gaze.saccades.onsets(dispSacIdx) - slotEntry)/.2; % in miliseconds
                     end

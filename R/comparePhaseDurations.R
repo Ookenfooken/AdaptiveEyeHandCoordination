@@ -38,3 +38,11 @@ t.test(phases_compare[phases_compare$tool == 0,]$transport, phases_compare[phase
 t.test(phases_compare[phases_compare$tool == 0,]$slotApproach, phases_compare[phases_compare$tool == 1,]$slotApproach, paired = TRUE)
 t.test(phases_compare[phases_compare$tool == 0,]$slotEntry, phases_compare[phases_compare$tool == 1,]$slotEntry, paired = TRUE)
 t.test(phases_compare[phases_compare$tool == 0,]$return, phases_compare[phases_compare$tool == 1,]$return, paired = TRUE)
+
+# try mancova approach which may be better
+# aggregate data per condition and participant
+phases_mancova <- aggregate(. ~ participant + tool + dual, median, na.rm = TRUE, na.action = NULL, data = phaseDurations)
+phases_mancova$dual <- NULL
+# run mancova
+mancovaDuration <- manova(cbind(reach, ballApproach, ballGrasp, transport, slotApproach, slotEntry) ~ 
+                      tool, data = phases_mancova)
