@@ -64,4 +64,8 @@ Generates matlab plots of the frequency of ball and slot fixations relative to t
 - createPlotsFigure9.m
 Generates matlab plots of the probabilities to see or miss a letter change or be in the silent period and of 
 ball and slot fixations relative to kinematicevents. Panels C-D focus on trials, in which letter changes occurred within 1 s before reach.
-Panels E-F break down different fixation pattern. 
+Panels E-F break down different fixation pattern.
+
+- analyzePhasesFixationPattern.m
+Reads out participant-wise phase lengths of each kinematic phase separated by the two most common fixation pattern for each grasp mode.
+Stats are then run in R (comparePhasesFixationPatterns.R) 
