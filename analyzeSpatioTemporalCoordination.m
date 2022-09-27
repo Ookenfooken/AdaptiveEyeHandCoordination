@@ -20,7 +20,8 @@ for j = 1:numSubjects % loop over subjects
         testID = i*ones(numTrials,1);
         dual = zeros(numTrials,1);
         gazeShiftToSlot = NaN(numTrials,1);
-        gazeShiftReturn = NaN(numTrials,1);
+        ballFixationDuration = NaN(numTrials,1);
+        slotFixationDuration = NaN(numTrials,1);
         if testID(1) == 1 || testID(1) == 3
             tool = zeros(numTrials,1); % no tool in fingertip condition
         elseif testID(1) == 2 || testID(1) == 4
@@ -47,20 +48,17 @@ for j = 1:numSubjects % loop over subjects
                 end
             else % dual task condition
                 dual(n) = 1;
-                slotEntry = currentResult(n).info.phaseStart.ballInSlot - currentResult(n).info.trialStart;
-                if ~isempty(currentResult(n).gaze.saccades.onsets) && ...
-                        ~isempty(currentResult(n).gaze.fixation.onsetsDisplay)
-                    % find the last saccade to the display
-                    dispSacIdx = find(currentResult(n).gaze.saccades.onsets < currentResult(n).gaze.fixation.onsetsDisplay(end), 1, 'last');
-                    if ~isempty(dispSacIdx)
-                        gazeShiftReturn(n) = (currentResult(n).gaze.saccades.onsets(dispSacIdx) - slotEntry)/.2; % in miliseconds
-                    end
+                if ~isempty(currentResult(n).gaze.fixation.onsetsBall)
+                    ballFixationDuration(n) = mean(currentResult(n).gaze.fixation.durationBall);
+                end
+                if ~isempty(currentResult(n).gaze.fixation.onsetsSlot)
+                    slotFixationDuration(n) = mean(currentResult(n).gaze.fixation.durationSlot);
                 end
             end
         end
         % add two empty columns to have consitent size with dual task
         currentVariable = [participant testID tool dual ...
-            gazeShiftToSlot gazeShiftReturn];
+            gazeShiftToSlot ballFixationDuration slotFixationDuration];
         
         spatiotemporalCoordination = [spatiotemporalCoordination; currentVariable];
         
