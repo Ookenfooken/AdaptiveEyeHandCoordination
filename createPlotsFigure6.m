@@ -1,384 +1,281 @@
+% read in saved gaze data structure
 analysisPath = pwd;
 resultPath = fullfile(pwd,'results\');
 savePath = fullfile(pwd,'R\');
 cd(resultPath)
-% load in data
-load('pulledData.mat')
-cd(analysisPath)
-%% define some colours
-orange = [255,127,0]./255;
-greenFT = [116,196,118]./255;
-greenTW = [0,109,44]./255;
-gray = [99,99,99]./255;
+load('pulledData')
+cd(analysisPath);
+
+%%
 numParticipants = 11;
-shift = 300;
-vectorLength= 600;
+letterChanges = [];
 
-%% plot cumulative ball fixations relative to reach onset, ball aproach,
-% ball grasp, and transport
-blockID = 4; % ball fixations only make sense for tweezer trials
-ballFixOnsetsReach = [];
-ballFixOffsetsReach = [];
-ballFixOnsetsApproach = [];
-ballFixOffsetsApproach = [];
-ballFixOnsetsGrasp = [];
-ballFixOffsetsGrasp = [];
-ballFixOnsetsTransport = [];
-ballFixOffsetsTransport = [];
-for i = 1:numParticipants % loop over subjects
-    currentResult = pulledData{i,blockID};
-    currentParticipant = currentResult(1).info.subject;
-    numTrials = length(currentResult);
-    stopTrial = min([numTrials 30]);
-    % open variable matrices that we want to pull
-    cumulativeOnsetReach = NaN(numTrials,vectorLength);
-    cumulativeOffsetReach = NaN(numTrials,vectorLength);
-    cumulativeOnsetApproach = NaN(numTrials,vectorLength);
-    cumulativeOffsetApproach = NaN(numTrials,vectorLength);
-    cumulativeOnsetGrasp = NaN(numTrials,vectorLength);
-    cumulativeOffsetGrasp = NaN(numTrials,vectorLength);
-    cumulativeOnsetTransport = NaN(numTrials,vectorLength);
-    cumulativeOffsetTransport = NaN(numTrials,vectorLength);
-    for n = 1:stopTrial % loop over trials for current subject & block
-        if currentResult(n).info.dropped
-            stopTrial = min([stopTrial+1 numTrials]);
-            continue
-        end
-        if isempty(currentResult(n).gaze.fixation.onsetsBall)
-            continue
-        end
-        onsetFixBall = currentResult(n).gaze.fixation.onsetsBall(1);
-        offsetFixBall = currentResult(n).gaze.fixation.offsetsBall(1);
-        
-        onsetPhase = currentResult(n).info.phaseStart.primaryReach - currentResult(n).info.trialStart+1;
-        phaseOffset = onsetPhase - shift;
-        fixOn = onsetFixBall - phaseOffset;
-        if fixOn > vectorLength-1
-            fixOn = vectorLength;
-        elseif fixOn < 1
-            fixOn = 1;
-        end
-        cumulativeOnsetReach(n,:) = [zeros(1,fixOn) ones(1,vectorLength-fixOn)];
-        fixOff = offsetFixBall - phaseOffset;
-        if fixOff > vectorLength-1
-            fixOff = vectorLength;
-        elseif fixOff < 1
-            fixOff = 1;
-        end
-        cumulativeOffsetReach(n,:) = [zeros(1,fixOff) ones(1,vectorLength-fixOff)];
-        
-        onsetPhase = currentResult(n).info.phaseStart.ballApproach - currentResult(n).info.trialStart+1;
-        phaseOffset = onsetPhase - shift;
-        fixOn = onsetFixBall - phaseOffset;
-        if fixOn > vectorLength-1
-            fixOn = vectorLength;
-        elseif fixOn < 1
-            fixOn = 1;
-        end
-        cumulativeOnsetApproach(n,:) = [zeros(1,fixOn) ones(1,vectorLength-fixOn)];
-        fixOff = offsetFixBall - phaseOffset;
-        if fixOff > vectorLength-1
-            fixOff = vectorLength;
-        elseif fixOff < 1
-            fixOff = 1;
-        end
-        cumulativeOffsetApproach(n,:) = [zeros(1,fixOff) ones(1,vectorLength-fixOff)];
-        
-        onsetPhase = currentResult(n).info.phaseStart.ballGrasp - currentResult(n).info.trialStart+1;
-        phaseOffset = onsetPhase - shift;
-        fixOn = onsetFixBall - phaseOffset;
-        if fixOn > vectorLength-1
-            fixOn = vectorLength;
-        elseif fixOn < 1
-            fixOn = 1;
-        end
-        cumulativeOnsetGrasp(n,:) = [zeros(1,fixOn) ones(1,vectorLength-fixOn)];
-        fixOff = offsetFixBall - phaseOffset;
-        if fixOff > vectorLength-1
-            fixOff = vectorLength;
-        elseif fixOff < 1
-            fixOff = 1;
-        end
-        cumulativeOffsetGrasp(n,:) = [zeros(1,fixOff) ones(1,vectorLength-fixOff)];
-        
-        onsetPhase = currentResult(n).info.phaseStart.transport - currentResult(n).info.trialStart+1;
-        phaseOffset = onsetPhase - shift;
-        fixOn = onsetFixBall - phaseOffset;
-        if fixOn > vectorLength-1
-            fixOn = vectorLength;
-        elseif fixOn < 1
-            fixOn = 1;
-        end
-        cumulativeOnsetTransport(n,:) = [zeros(1,fixOn) ones(1,vectorLength-fixOn)];
-        fixOff = offsetFixBall - phaseOffset;
-        if fixOff > vectorLength-1
-            continue
-        elseif fixOff < 1
-            fixOff = 1;
-        end
-        cumulativeOffsetTransport(n,:) = [zeros(1,fixOff) ones(1,vectorLength-fixOff)];
-        
-    end
-    currentOnsetReach = nansum(cumulativeOnsetReach);
-    currentOnsetApproach = nansum(cumulativeOnsetApproach);
-    currentOnsetGrasp = nansum(cumulativeOnsetGrasp);
-    currentOnsetTransport = nansum(cumulativeOnsetTransport);
-    
-    ballFixOnsetsReach = [ballFixOnsetsReach; currentOnsetReach];
-    ballFixOnsetsApproach = [ballFixOnsetsApproach; currentOnsetApproach];
-    ballFixOnsetsGrasp = [ballFixOnsetsGrasp; currentOnsetGrasp];
-    ballFixOnsetsTransport = [ballFixOnsetsTransport; currentOnsetTransport];
-    
-    currentOffsetReach = nansum(cumulativeOffsetReach);
-    currentOffsetApproach = nansum(cumulativeOffsetApproach);
-    currentOffsetGrasp = nansum(cumulativeOffsetGrasp);
-    currentOffsetTransport = nansum(cumulativeOffsetTransport);
-    
-    ballFixOffsetsReach = [ballFixOffsetsReach; currentOffsetReach];
-    ballFixOffsetsApproach = [ballFixOffsetsApproach; currentOffsetApproach];
-    ballFixOffsetsGrasp = [ballFixOffsetsGrasp; currentOffsetGrasp];
-    ballFixOffsetsTransport = [ballFixOffsetsTransport; currentOffsetTransport];
-    
-    clear currentOnsetReach currentOffsetReach currentOnsetApproach currentOffsetApproach
-    clear currentOnsetGrasp currentOffsetGrasp currentOnsetTransport currentOffsetTransport
-    clear fixOn fixOff onsetPhase onsetFixBall offsetFixBall phaseOffset
-end
-
-%% plot
-figure(10)
-hold on
-plot(nansum(ballFixOnsetsReach)/max(nansum(ballFixOnsetsReach)), 'Color', orange, 'LineWidth', 2)
-plot(nansum(ballFixOffsetsReach)/max(nansum(ballFixOffsetsReach)), '--', 'Color', orange, 'LineWidth',2)
-line([shift shift], [0 1], 'Color', gray)
-line([0 vectorLength], [.5 .5], 'Color', gray)
-xlim([0 vectorLength])
-xlabel('relative to reach')
-set(gca, 'Xtick', [0 100 200 300 400 500 600], 'XtickLabel', [-1.5 -1 -.5 0 .5 1 1.5])
-ylim([0 1])
-set(gca, 'Ytick', [0 .25 .5 .75 1])
-
-figure(11)
-hold on
-plot(nansum(ballFixOnsetsApproach)/max(nansum(ballFixOnsetsApproach)), 'Color', orange, 'LineWidth', 2)
-plot(nansum(ballFixOffsetsApproach)/max(nansum(ballFixOffsetsApproach)), '--', 'Color', orange, 'LineWidth',2)
-line([shift shift], [0 1], 'Color', gray)
-line([0 vectorLength], [.5 .5], 'Color', gray)
-xlim([0 vectorLength])
-xlabel('relative to ball-approach')
-set(gca, 'Xtick', [0 100 200 300 400 500 600], 'XtickLabel', [-1.5 -1 -.5 0 .5 1 1.5])
-ylim([0 1])
-set(gca, 'Ytick', [0 .25 .5 .75 1])
-
-figure(12)
-hold on
-plot(nansum(ballFixOnsetsGrasp)/max(nansum(ballFixOnsetsGrasp)), 'Color', orange, 'LineWidth', 2)
-plot(nansum(ballFixOffsetsGrasp)/max(nansum(ballFixOffsetsGrasp)), '--', 'Color', orange, 'LineWidth',2)
-line([shift shift], [0 1], 'Color', gray)
-line([0 vectorLength], [.5 .5], 'Color', gray)
-xlim([0 vectorLength])
-xlabel('relative to ball-grasp')
-set(gca, 'Xtick', [0 100 200 300 400 500 600], 'XtickLabel', [-1.5 -1 -.5 0 .5 1 1.5])
-ylim([0 1])
-set(gca, 'Ytick', [0 .25 .5 .75 1])
-
-figure(13)
-hold on
-plot(nansum(ballFixOnsetsTransport)/max(nansum(ballFixOnsetsTransport)), 'Color', orange, 'LineWidth', 2)
-plot(nansum(ballFixOffsetsTransport)/max(nansum(ballFixOffsetsTransport)), '--', 'Color', orange, 'LineWidth',2)
-line([shift shift], [0 1], 'Color', gray)
-line([0 vectorLength], [.5 .5], 'Color', gray)
-xlim([0 vectorLength])
-xlabel('relative transport')
-set(gca, 'Xtick', [0 100 200 300 400 500 600], 'XtickLabel', [-1.5 -1 -.5 0 .5 1 1.5])
-ylim([0 1])
-set(gca, 'Ytick', [0 .25 .5 .75 1])
-
-clear ballFixOnsetsReach ballFixOffsetsReach ballFixOnsetsApproach ballFixOffsetsApproach
-clear ballFixOnsetsGrasp ballFixOffsetsGrasp ballFixOnsetsTransport ballFixOffsetsTransport
-
-%% plot cumulative slot fixations relative to trannsport & slot approach (Panels B-C)
-for j = 3:4
-    blockID = j; % ball fixations only make sense for tweezer trials
-    slotFixOnsetsTransport = [];
-    slotFixOffsetsTransport = [];
-    slotFixOnsetsApproach = [];
-    slotFixOffsetsApproach = [];
-    slotFixOnsetsEntry = [];
-    slotFixOffsetsEntry = [];
-    slotFixOnsetsDrop = [];
-    slotFixOffsetsDrop = [];
-    for i = 1:numParticipants % loop over subjects
-        currentResult = pulledData{i,blockID};
+for j = 1:numParticipants % loop over subjects
+    for blockID = 3:4 % loop over dual task conditions
+        currentResult = pulledData{j,blockID};
         currentParticipant = currentResult(1).info.subject;
         numTrials = length(currentResult);
-        stopTrial = min([numTrials 30]);
         % open variable matrices that we want to pull
-        cumulativeOnsetTransport = NaN(numTrials,vectorLength);
-        cumulativeOffsetTransport = NaN(numTrials,vectorLength);
-        cumulativeOnsetApproach = NaN(numTrials,vectorLength);
-        cumulativeOffsetApproach = NaN(numTrials,vectorLength);
-        cumulativeOnsetEntry = NaN(numTrials,vectorLength);
-        cumulativeOffsetEntry = NaN(numTrials,vectorLength);
-        cumulativeOnsetDrop = NaN(numTrials,vectorLength);
-        cumulativeOffsetDrop = NaN(numTrials,vectorLength);
+        subject = currentParticipant*ones(numTrials, 1);
+        testID = blockID*ones(numTrials,1);
+        letterChange = NaN(numTrials,1);
+        numLetterChange = NaN(numTrials,1);
+        reachOnset = NaN(numTrials,1);
+        displayFixationTime = NaN(numTrials,1);
+        stopTrial = min([numTrials 30]);
         for n = 1:stopTrial % loop over trials for current subject & block
             if currentResult(n).info.dropped
                 stopTrial = min([stopTrial+1 numTrials]);
                 continue
             end
-            if isempty(currentResult(n).gaze.fixation.onsetsSlot)
-                continue
+            startTime = currentResult(n).info.trialStart;
+            letterChange(n) = currentResult(n).dualTask.sampleLetterChange(1);
+            if isnan(currentResult(n).dualTask.sampleLetterChange)
+                numLetterChange(n) = 0;
+            else
+                numLetterChange(n) = numel(currentResult(n).dualTask.sampleLetterChange);
             end
-            onsetFixSlot = currentResult(n).gaze.fixation.onsetsSlot(1);
-            offsetFixSlot = currentResult(n).gaze.fixation.offsetsSlot(1);
-            
-            onsetPhase = currentResult(n).info.phaseStart.transport - currentResult(n).info.trialStart+1;
-            phaseOffset = onsetPhase - shift;
-            fixOn = onsetFixSlot - phaseOffset;
-            if fixOn > vectorLength-1
-                fixOn = vectorLength;
-            elseif fixOn < 1
-                fixOn = 1;
-            end
-            cumulativeOnsetTransport(n,:) = [zeros(1,fixOn) ones(1,vectorLength-fixOn)];
-            fixOff = offsetFixSlot - phaseOffset;
-            if fixOff > vectorLength-1
-                fixOff = vectorLength;
-            elseif fixOff < 1
-                fixOff = 1;
-            end
-            cumulativeOffsetTransport(n,:) = [zeros(1,fixOff) ones(1,vectorLength-fixOff)];
-            
-            onsetPhase = currentResult(n).info.phaseStart.slotApproach - currentResult(n).info.trialStart+1;
-            phaseOffset = onsetPhase - shift;
-            fixOn = onsetFixSlot - phaseOffset;
-            if fixOn > vectorLength-1
-                fixOn = vectorLength;
-            elseif fixOn < 1
-                fixOn = 1;
-            end
-            cumulativeOnsetApproach(n,:) = [zeros(1,fixOn) ones(1,vectorLength-fixOn)];
-            fixOff = offsetFixSlot - phaseOffset;
-            if fixOff > vectorLength-1
-                fixOff = vectorLength;
-            elseif fixOff < 1
-                fixOff = 1;
-            end
-            cumulativeOffsetApproach(n,:) = [zeros(1,fixOff) ones(1,vectorLength-fixOff)];
-            
-            onsetPhase = currentResult(n).info.phaseStart.ballInSlot - currentResult(n).info.trialStart+1;
-            phaseOffset = onsetPhase - shift;
-            fixOn = onsetFixSlot - phaseOffset;
-            if fixOn > vectorLength-1
-                fixOn = vectorLength;
-            elseif fixOn < 1
-                fixOn = 1;
-            end
-            cumulativeOnsetEntry(n,:) = [zeros(1,fixOn) ones(1,vectorLength-fixOn)];
-            fixOff = offsetFixSlot - phaseOffset;
-            if fixOff > vectorLength-1
-                fixOff = vectorLength;
-            elseif fixOff < 1
-                fixOff = 1;
-            end
-            cumulativeOffsetEntry(n,:) = [zeros(1,fixOff) ones(1,vectorLength-fixOff)];
-            
-            onsetPhase = currentResult(n).info.phaseStart.ballDropped - currentResult(n).info.trialStart+1;
-            phaseOffset = onsetPhase - shift;
-            fixOn = onsetFixSlot - phaseOffset;
-            if fixOn > vectorLength-1
-                fixOn = vectorLength;
-            elseif fixOn < 1
-                fixOn = 1;
-            end
-            cumulativeOnsetDrop(n,:) = [zeros(1,fixOn) ones(1,vectorLength-fixOn)];
-            fixOff = offsetFixSlot - phaseOffset;
-            if fixOff > vectorLength-1
-                continue
-            elseif fixOff < 1
-                fixOff = 1;
-            end
-            cumulativeOffsetDrop(n,:) = [zeros(1,fixOff) ones(1,vectorLength-fixOff)];
-            
+            reachOnset(n) = currentResult(n).info.phaseStart.primaryReach; 
+            displayFixationTime(n) = sum(currentResult(n).gaze.fixation.durationDisplay)./...
+                                     (sum(currentResult(n).gaze.fixation.durationBall) + ...
+                                     sum(currentResult(n).gaze.fixation.durationSlot) + ...
+                                     sum(currentResult(n).gaze.fixation.durationDisplay));          
         end
-        currentOnsetTransport = nansum(cumulativeOnsetTransport);
-        currentOnsetApproach = nansum(cumulativeOnsetApproach);
-        currentOnsetEntry = nansum(cumulativeOnsetEntry);
-        currentOnsetDrop = nansum(cumulativeOnsetDrop);
+        currentVariable = [subject testID numLetterChange letterChange ...
+                           reachOnset displayFixationTime];
         
-        slotFixOnsetsTransport = [slotFixOnsetsTransport; currentOnsetTransport];
-        slotFixOnsetsApproach = [slotFixOnsetsApproach; currentOnsetApproach];
-        slotFixOnsetsEntry = [slotFixOnsetsEntry; currentOnsetEntry];
-        slotFixOnsetsDrop = [slotFixOnsetsDrop; currentOnsetDrop];
-        
-        currentOffsetTransport = nansum(cumulativeOffsetTransport);
-        currentOffsetApproach = nansum(cumulativeOffsetApproach);
-        currentOffsetEntry = nansum(cumulativeOffsetEntry);
-        currentOffsetDrop = nansum(cumulativeOffsetDrop);
-        
-        slotFixOffsetsTransport = [slotFixOffsetsTransport; currentOffsetTransport];
-        slotFixOffsetsApproach = [slotFixOffsetsApproach; currentOffsetApproach];
-        slotFixOffsetsEntry = [slotFixOffsetsEntry; currentOffsetEntry];
-        slotFixOffsetsDrop = [slotFixOffsetsDrop; currentOffsetDrop];
-        
-        clear currentOnsetTransport currentOffsetTransport currentOnsetApproach currentOffsetApproach
-        clear currentOnsetEntry currentOffsetEntry currentOnsetDrop currentOffsetDrop
-        clear fixOn fixOff onsetPhase onsetFixSlot offsetFixSlot phaseOffset
+        letterChanges = [letterChanges; currentVariable];
+        clear startTime trialLength
     end
-    % plot
-    if j < 4
-        selectedColour = greenFT;
-    else
-        selectedColour = greenTW;
-    end
-    figure(100)
-    hold on
-    plot(nansum(slotFixOnsetsTransport)/max(nansum(slotFixOnsetsTransport)), 'Color', selectedColour, 'LineWidth', 2)
-    plot(nansum(slotFixOffsetsTransport)/max(nansum(slotFixOffsetsTransport)), '--', 'Color', selectedColour, 'LineWidth',2)
-    line([shift shift], [0 1], 'Color', gray)
-    line([0 vectorLength], [.5 .5], 'Color', gray)
-    xlim([0 vectorLength])
-    xlabel('relative to transport')
-    set(gca, 'Xtick', [0 100 200 300 400 500 600], 'XtickLabel', [-1.5 -1 -.5 0 .5 1 1.5])
-    ylim([0 1])
-    set(gca, 'Ytick', [0 .25 .5 .75 1])
-    
-    figure(110)
-    hold on
-    plot(nansum(slotFixOnsetsApproach)/max(nansum(slotFixOnsetsApproach)), 'Color', selectedColour, 'LineWidth', 2)
-    plot(nansum(slotFixOffsetsApproach)/max(nansum(slotFixOffsetsApproach)), '--', 'Color', selectedColour, 'LineWidth',2)
-    line([shift shift], [0 1], 'Color', gray)
-    line([0 vectorLength], [.5 .5], 'Color', gray)
-    xlim([0 vectorLength])
-    xlabel('relative to slot-approach')
-    set(gca, 'Xtick', [0 100 200 300 400 500 600], 'XtickLabel', [-1.5 -1 -.5 0 .5 1 1.5])
-    ylim([0 1])
-    set(gca, 'Ytick', [0 .25 .5 .75 1])
-    
-    figure(120)
-    hold on
-    plot(nansum(slotFixOnsetsEntry)/max(nansum(slotFixOnsetsEntry)), 'Color', selectedColour, 'LineWidth', 2)
-    plot(nansum(slotFixOffsetsEntry)/max(nansum(slotFixOffsetsEntry)), '--', 'Color', selectedColour, 'LineWidth',2)
-    line([shift shift], [0 1], 'Color', gray)
-    line([0 vectorLength], [.5 .5], 'Color', gray)
-    xlim([0 vectorLength])
-    xlabel('relative to slot-entry')
-    set(gca, 'Xtick', [0 100 200 300 400 500 600], 'XtickLabel', [-1.5 -1 -.5 0 .5 1 1.5])
-    ylim([0 1])
-    set(gca, 'Ytick', [0 .25 .5 .75 1])
-    
-    figure(130)
-    hold on
-    plot(nansum(slotFixOnsetsDrop)/max(nansum(slotFixOnsetsDrop)), 'Color', selectedColour, 'LineWidth', 2)
-    plot(nansum(slotFixOffsetsDrop)/max(nansum(slotFixOffsetsDrop)), '--', 'Color', selectedColour, 'LineWidth',2)
-    line([shift shift], [0 1], 'Color', gray)
-    line([0 vectorLength], [.5 .5], 'Color', gray)
-    xlim([0 vectorLength])
-    xlabel('relative ball drop')
-    set(gca, 'Xtick', [0 100 200 300 400 500 600], 'XtickLabel', [-1.5 -1 -.5 0 .5 1 1.5])
-    ylim([0 1])
-    set(gca, 'Ytick', [0 .25 .5 .75 1])
-    
-    clear slotFixOnsetsReach slotFixOffsetsReach slotFixOnsetsApproach slotFixOffsetsApproach
-    clear slotFixOnsetsGrasp slotFixOffsetsGrasp slotFixOnsetsTransport slotFixOffsetsTransport
 end
+
+%% plot frequency of letter changes in a trial for fintertips and tweezers (Panel A)
+letterChangeNo = NaN(2, 4);
+for j = 1:2 % hand and tweezer
+    currentData = letterChanges(letterChanges(:,2) == j+2, :);
+    currentData = currentData(~isnan(currentData(:,3)),:);
+    allTrials = size(currentData,1);
+    for blockID = 1:4
+        letterChangeNo(j,blockID) = length(currentData(currentData(:,3) == blockID-1,:))/allTrials;
+    end
+    clear allTrials    
+end
+figure(123)
+hold on
+xlim([.5 4.5])
+set(gca, 'Xtick', [1 2 3 4], 'XtickLabel', {'0 letter changes', '1 letter change', '2 letter changes', '3 letter changes'})
+ylim([0 .75])
+set(gca, 'Ytick', [0 .25 .5 .75])
+
+for blockID = 1:4
+    plot(blockID, letterChangeNo(1,blockID), 'o', 'MarkerFaceColor', 'k','MarkerEdgeColor', 'k')
+    plot(blockID, letterChangeNo(2,blockID), 'o', 'MarkerFaceColor', 'none','MarkerEdgeColor', 'k')
+end
+line([1 2], [letterChangeNo(1,1) letterChangeNo(1,2)], 'Color', 'k')
+line([2 3], [letterChangeNo(1,2) letterChangeNo(1,3)], 'Color', 'k')
+line([3 4], [letterChangeNo(1,3) letterChangeNo(1,4)], 'Color', 'k')
+line([1 2], [letterChangeNo(2,1) letterChangeNo(2,2)], 'Color', 'k', 'LineStyle', '--')
+line([2 3], [letterChangeNo(2,2) letterChangeNo(2,3)], 'Color', 'k', 'LineStyle', '--')
+line([3 4], [letterChangeNo(2,3) letterChangeNo(2,4)], 'Color', 'k', 'LineStyle', '--')
+
+%% readout vigilance task performance
+dualTaskPerformance = [];
+dualTaskSamples = [];
+cAll = 1;
+for j = 1:numParticipants % loop over subjects
+    for blockID = 3:4 % loop over blocks/experimental conditions
+        c = 1;
+        currentResult = pulledData{j,blockID};
+        currentParticipant = currentResult(1).info.subject;
+        numTrials = length(currentResult);
+        stopTrial = min([numTrials 30]);
+        for n = 1:stopTrial % loop over trials for current subject & block
+            if currentResult(n).info.dropped
+                stopTrial = min([stopTrial+1 numTrials]);
+                continue
+            end
+            if isnan(currentResult(n).dualTask.tLetterChanges)
+                continue
+            end
+            c = c:c+length(currentResult(n).dualTask.tLetterChanges)-1;
+            changeDetected(c) = currentResult(n).dualTask.changeDetected;
+            changeMissed(c) = currentResult(n).dualTask.changeMissed;
+                        
+            c = c(end) + 1;
+        end
+        currentPerformance = [currentParticipant blockID c-1 sum(changeDetected) sum(changeMissed)];
+        
+        dualTaskPerformance = [dualTaskPerformance; currentPerformance];
+        clear letterChangePhase changeDetected changeMissed currentPerformance
+    end
+end
+clear c 
+%% plot vigilance performance vs. relative time on display (Panel B)
+letterDetectViewTime = NaN(numParticipants,3);
+for i = 1:numParticipants
+    currentDataset = letterChanges(letterChanges(:,1) == i, :);
+    relativeTime = currentDataset(:,6);
+    letterDetectViewTime(i,:) = [i nanmean(relativeTime) ...
+        sum(dualTaskPerformance(dualTaskPerformance(:,1) == i,4))/sum(dualTaskPerformance(dualTaskPerformance(:,1) == i,3))];
+end
+figure(5)
+hold on
+plot(letterDetectViewTime(:,2), letterDetectViewTime(:, 3),...
+    'o', 'MarkerFaceColor', 'k','MarkerEdgeColor', 'k')
+%% plot trend lines
+letterDetectViewTime = NaN(numParticipants*2,4);
+count = 1;
+for j= 3:4
+    currentTool = letterChanges(letterChanges(:,2) == j, :);
+    currentVigilance = dualTaskPerformance(dualTaskPerformance(:,2) == j,:);
+    for i = 1:numParticipants
+        currentDataset = currentTool(currentTool(:,1) == i, :);
+        relativeTime = currentDataset(:,6);
+        letterDetectViewTime(count,:) = [i j nanmean(relativeTime) ...
+            currentVigilance(currentVigilance(:,1) == i,4)/currentVigilance(currentVigilance(:,1) == i,3)];
+        count = count+1;
+    end
+end
+clear count
+figure(5)
+hold on
+% plot fingertip trials
+plot(letterDetectViewTime(letterDetectViewTime(:,2) == 3, 3), letterDetectViewTime(letterDetectViewTime(:,2) == 3, 4),...
+    'o', 'MarkerFaceColor', 'k','MarkerEdgeColor', 'k')
+% plot tool trials
+plot(letterDetectViewTime(letterDetectViewTime(:,2) == 4, 3), letterDetectViewTime(letterDetectViewTime(:,2) == 4, 4),...
+    'o', 'MarkerFaceColor', 'none','MarkerEdgeColor', 'k')
+p_TW = polyfit(letterDetectViewTime(letterDetectViewTime(:,2) == 4, 3),letterDetectViewTime(letterDetectViewTime(:,2) == 4, 4),1);
+y_TW = polyval(p_TW,letterDetectViewTime(letterDetectViewTime(:,2) == 4, 3));
+plot(letterDetectViewTime(letterDetectViewTime(:,2) == 4, 3), y_TW, 'k--')
+
+ylim([0.5 1])
+set(gca, 'Ytick', [.5 .75 1])
+xlim([0.5 1])
+set(gca, 'Xtick', [.5 .75 1])
+
+cd(savePath)
+save('letterDetectViewTime', 'letterDetectViewTime')
+cd(analysisPath)
+clear p_FT y_FT p_TW y_TW
+
+%% plot the response time (reach onset relative to go signal) vs. the time 
+% of the last detected letter change (relative to go) --> Panels C & D
+numParticipants = 11;
+numVariables = 7;
+speedRelativeLetterChange = [];
+
+for j = 1:numParticipants % loop over subjects
+    for blockID = 3:4 % loop over dual task conditions
+        currentResult = pulledData{j,blockID};
+        currentParticipant = currentResult(1).info.subject;
+        numTrials = length(currentResult);
+        % open variable matrices that we want to pull
+        currentVariable = NaN(numTrials,numVariables);
+        stopTrial = min([numTrials 30]);
+        for n = 1:stopTrial % loop over trials for current subject & block
+            if currentResult(n).info.dropped
+                stopTrial = min([stopTrial+1 numTrials]);
+                continue
+            end
+
+            tStart = currentResult(n).info.timeStamp.start;
+            goTime = currentResult(n).info.timeStamp.go;
+            reach = currentResult(n).info.timeStamp.reach;
+            preInterval = 1;
+            earlyTrial = 0;
+            % check whether a letter change was detected in the current
+            % trial
+            if sum(currentResult(n).dualTask.changeDetected) > 0
+                detectedChanges = currentResult(n).dualTask.tLetterChanges(currentResult(n).dualTask.changeDetected);
+                detectedChange = detectedChanges(1);
+            else % otherwise use the previous trial
+                if n > 1 && sum(currentResult(n-1).dualTask.changeDetected) > 0
+                    detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
+                    detectedChange = detectedChanges(end);
+                else
+                    continue
+                end
+            end
+            if reach - detectedChanges(1) > 0 && reach - detectedChanges(1) <= preInterval
+                earlyTrial = 1;
+            end
+            % if the change happened before the reach good
+            if detectedChange <= reach
+                letterChangeBeforeReach = detectedChange - reach;
+                letterChangeRelativeGo = detectedChange - goTime;
+            else % otherwise use the previous trial
+                if n > 1 && sum(currentResult(n-1).dualTask.changeDetected) > 0
+                    detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
+                    letterChangeBeforeReach = detectedChanges(end) - reach;
+                    letterChangeRelativeGo = detectedChanges(end) - goTime;
+                else
+                    continue
+                end
+            end
+
+            goToReach = reach-goTime;
+            reachDuration = currentResult(n).info.phaseDuration.primaryReach/200;
+
+            currentVariable(n,:) = [currentParticipant blockID letterChangeBeforeReach letterChangeRelativeGo ...
+                goToReach reachDuration earlyTrial];
+        end
+
+        speedRelativeLetterChange = [speedRelativeLetterChange; currentVariable];
+    end
+end
+
+%%
+lightGrey = [189,189,189]./255;
+brightCyan = [0 174 239]./255;
+relativeChanges_PG = speedRelativeLetterChange(speedRelativeLetterChange(:,2) == 3,:);
+% plot time of last detected letter change (before reach onset) relative to
+% go signal
+earlyChanges = relativeChanges_PG(relativeChanges_PG(:,end) == 1,4);
+figure(33)
+hold on
+xlim([-6.5 2])
+ylim([-1 2])
+line([0 0],[-1 2], 'Color', lightGrey)
+line([-6.5 2],[0 0], 'Color', lightGrey)
+plot(relativeChanges_PG(:,4), relativeChanges_PG(:,5), '.', 'Color', lightGrey)
+plot(earlyChanges, relativeChanges_PG(relativeChanges_PG(:,end) == 1,5), ...
+    '.', 'Color', brightCyan)
+for i = -6:0.5:2
+    reactBin = median(relativeChanges_PG(relativeChanges_PG(:,4) < i & relativeChanges_PG(:,4) > i-0.5, 5));
+    moveBin = median(relativeChanges_PG(relativeChanges_PG(:,4) < i & relativeChanges_PG(:,4) > i-0.5,6));
+    line([i-.5 i], [reactBin reactBin], 'Color', 'k')
+end
+figure(333)
+set(gcf,'renderer','Painters')
+xlim([-6.5 2])
+hold on
+histogram(relativeChanges_PG(:,4), 'BinWidth', .5, 'facecolor', lightGrey, 'edgecolor', 'none')
+histogram(earlyChanges, 'BinWidth', .5, 'facecolor', brightCyan, 'edgecolor', 'none')
+%%
+relativeChanges_TW = speedRelativeLetterChange(speedRelativeLetterChange(:,2) == 4,:);
+% plot time of last detected letter change (before reach onset) relative to
+% reach onset and movement time in red
+earlyChanges = relativeChanges_TW(relativeChanges_TW(:,end) == 1,4);
+figure(44)
+hold on
+xlim([-6.5 2])
+ylim([-1 2])
+line([0 0],[-1 2], 'Color', lightGrey)
+line([-6.5 2],[0 0], 'Color', lightGrey)
+plot(relativeChanges_TW(:,4), relativeChanges_TW(:,5), '.', 'Color', lightGrey)
+plot(earlyChanges, relativeChanges_TW(relativeChanges_TW(:,end) == 1,5), ...
+    '.', 'Color', brightCyan)
+for i = -6:0.5:2
+    reactBin = median(relativeChanges_TW(relativeChanges_TW(:,4) < i & relativeChanges_TW(:,4) > i-0.5, 5));
+    moveBin = median(relativeChanges_TW(relativeChanges_TW(:,4) < i & relativeChanges_TW(:,4) > i-0.5,6));
+    line([i-.5 i], [reactBin reactBin], 'Color', 'k')
+end
+figure(444)
+set(gcf,'renderer','Painters')
+xlim([-6.5 2])
+ylim([0 50])
+hold on
+histogram(relativeChanges_TW(:,4), 'BinWidth', .5, 'facecolor', lightGrey, 'edgecolor', 'none')
+histogram(earlyChanges, 'BinWidth', .5, 'facecolor', brightCyan, 'edgecolor', 'none')
+

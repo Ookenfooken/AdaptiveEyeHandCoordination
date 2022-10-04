@@ -6,88 +6,17 @@ cd(resultPath)
 load('pulledData')
 cd(analysisPath);
 
-%%
+%% plot the probability of fixation onsets relative to kinematic events
+eventsRelativeLetter = [];
 numParticipants = 11;
-letterChanges = [];
-
+eyeShift = 20;
 for j = 1:numParticipants % loop over subjects
     for blockID = 3:4 % loop over dual task conditions
-        currentResult = pulledData{j,blockID};
-        currentParticipant = currentResult(1).info.subject;
-        numTrials = length(currentResult);
-        % open variable matrices that we want to pull
-        subject = currentParticipant*ones(numTrials, 1);
-        testID = blockID*ones(numTrials,1);
-        letterChange = NaN(numTrials,1);
-        numLetterChange = NaN(numTrials,1);
-        reachOnset = NaN(numTrials,1);
-        displayFixationTime = NaN(numTrials,1);
-        stopTrial = min([numTrials 30]);
-        for n = 1:stopTrial % loop over trials for current subject & block
-            if currentResult(n).info.dropped
-                stopTrial = min([stopTrial+1 numTrials]);
-                continue
-            end
-            startTime = currentResult(n).info.trialStart;
-            letterChange(n) = currentResult(n).dualTask.sampleLetterChange(1);
-            if isnan(currentResult(n).dualTask.sampleLetterChange)
-                numLetterChange(n) = 0;
-            else
-                numLetterChange(n) = numel(currentResult(n).dualTask.sampleLetterChange);
-            end
-            reachOnset(n) = currentResult(n).info.phaseStart.primaryReach; 
-            displayFixationTime(n) = sum(currentResult(n).gaze.fixation.durationDisplay)./...
-                                     (sum(currentResult(n).gaze.fixation.durationBall) + ...
-                                     sum(currentResult(n).gaze.fixation.durationSlot) + ...
-                                     sum(currentResult(n).gaze.fixation.durationDisplay));          
-        end
-        currentVariable = [subject testID numLetterChange letterChange ...
-                           reachOnset displayFixationTime];
-        
-        letterChanges = [letterChanges; currentVariable];
-        clear startTime trialLength
-    end
-end
-
-%% plot frequency of letter changes in a trial for fintertips and tweezers (Panel A)
-letterChangeNo = NaN(2, 4);
-for j = 1:2 % hand and tweezer
-    currentData = letterChanges(letterChanges(:,2) == j+2, :);
-    currentData = currentData(~isnan(currentData(:,3)),:);
-    allTrials = size(currentData,1);
-    for blockID = 1:4
-        letterChangeNo(j,blockID) = length(currentData(currentData(:,3) == blockID-1,:))/allTrials;
-    end
-    clear allTrials    
-end
-figure(123)
-hold on
-xlim([.5 4.5])
-set(gca, 'Xtick', [1 2 3 4], 'XtickLabel', {'0 letter changes', '1 letter change', '2 letter changes', '3 letter changes'})
-ylim([0 .75])
-set(gca, 'Ytick', [0 .25 .5 .75])
-
-for blockID = 1:4
-    plot(blockID, letterChangeNo(1,blockID), 'o', 'MarkerFaceColor', 'k','MarkerEdgeColor', 'k')
-    plot(blockID, letterChangeNo(2,blockID), 'o', 'MarkerFaceColor', 'none','MarkerEdgeColor', 'k')
-end
-line([1 2], [letterChangeNo(1,1) letterChangeNo(1,2)], 'Color', 'k')
-line([2 3], [letterChangeNo(1,2) letterChangeNo(1,3)], 'Color', 'k')
-line([3 4], [letterChangeNo(1,3) letterChangeNo(1,4)], 'Color', 'k')
-line([1 2], [letterChangeNo(2,1) letterChangeNo(2,2)], 'Color', 'k', 'LineStyle', '--')
-line([2 3], [letterChangeNo(2,2) letterChangeNo(2,3)], 'Color', 'k', 'LineStyle', '--')
-line([3 4], [letterChangeNo(2,3) letterChangeNo(2,4)], 'Color', 'k', 'LineStyle', '--')
-
-%% readout vigilance task performance
-dualTaskPerformance = [];
-dualTaskSamples = [];
-cAll = 1;
-for j = 1:numParticipants % loop over subjects
-    for blockID = 3:4 % loop over blocks/experimental conditions
         c = 1;
         currentResult = pulledData{j,blockID};
         currentParticipant = currentResult(1).info.subject;
         numTrials = length(currentResult);
+        % open variable matrices that we want to pull
         stopTrial = min([numTrials 30]);
         for n = 1:stopTrial % loop over trials for current subject & block
             if currentResult(n).info.dropped
@@ -97,185 +26,284 @@ for j = 1:numParticipants % loop over subjects
             if isnan(currentResult(n).dualTask.tLetterChanges)
                 continue
             end
+            reach = currentResult(n).info.timeStamp.reach;
+            % now consider ball and slot fixation onsets relative to
+            % approach phases
+            ballApproach = currentResult(n).info.timeStamp.ballApproach;
+            slotApproach = currentResult(n).info.timeStamp.slotApproach;
+            preInterval = 1.5;
+            % ball fixations
+            if ~isempty(currentResult(n).gaze.fixation.onsetsBall)
+                fixBallOnRelative = currentResult(n).gaze.fixation.onsetsBall(1)/200;
+                fixBallOnset = currentResult(n).info.timeStamp.go + fixBallOnRelative;
+            else
+                fixBallOnset = NaN;
+            end
+            % slot fixations
+            if ~isempty(currentResult(n).gaze.fixation.onsetsSlot)
+                if ~isempty(currentResult(n).gaze.fixation.offsetsBall)
+                    slotIdx = find(currentResult(n).gaze.fixation.onsetsSlot > currentResult(n).gaze.fixation.offsetsBall(1), 1, 'first');
+                else
+                    slotIdx = 1;
+                end
+                fixSlotOnRelative = currentResult(n).gaze.fixation.onsetsSlot(slotIdx)/200;
+                fixSlotOnset = currentResult(n).info.timeStamp.go + fixSlotOnRelative;
+            else
+                fixSlotOnset = NaN;
+            end
             c = c:c+length(currentResult(n).dualTask.tLetterChanges)-1;
             changeDetected(c) = currentResult(n).dualTask.changeDetected;
-            changeMissed(c) = currentResult(n).dualTask.changeMissed;
-                        
+            for i = 1:length(currentResult(n).dualTask.tLetterChanges)
+                currentLetterChange = currentResult(n).dualTask.tLetterChanges(i);
+                if currentResult(n).dualTask.changeDetected(i) && ...
+                        currentLetterChange < reach && currentLetterChange >= reach-1
+                    preReachLC(i) = 1;
+                else
+                    preReachLC(i) = 0;
+                end
+                if currentLetterChange < ballApproach && currentLetterChange >= ballApproach-preInterval
+                    earlyLC(i) = 1;
+                else
+                    earlyLC(i) = 0;
+                end
+                cutoff = max([slotApproach-preInterval ballApproach]);
+                if currentLetterChange < slotApproach && currentLetterChange >= cutoff
+                    lateLC(i) = 1;
+                else
+                    lateLC(i) = 0;
+                end
+            end
+            preReachLCs(c) = preReachLC;
+            earlyLCs(c) = earlyLC;
+            lateLCs(c) = lateLC;
+            clear preReachLC earlyLC lateLC
+            % ball onsets
+            for i = 1:length(currentResult(n).dualTask.tLetterChanges)
+                currentLetterChange = currentResult(n).dualTask.tLetterChanges(i);
+                if currentLetterChange < fixBallOnset
+                    currentBallOnset(i) = fixBallOnset-currentLetterChange;
+                else
+                    if n < stopTrial
+                        if ~isempty(currentResult(n+1).gaze.fixation.onsetsBall)
+                            fixBallOnRelative = currentResult(n+1).gaze.fixation.onsetsBall(1)/200;
+                            currentBallOnset(i) = currentResult(n+1).info.timeStamp.go + fixBallOnRelative - currentLetterChange;
+                        else
+                            currentBallOnset(i) = NaN;
+                        end
+                    else
+                        currentBallOnset(i) = NaN;
+                    end
+                end
+            end
+            ballFixOnsets(c) = currentBallOnset;
+            clear currentBallOnset 
+            for i = 1:length(currentResult(n).dualTask.tLetterChanges)
+                currentLetterChange = currentResult(n).dualTask.tLetterChanges(i);
+                if currentLetterChange < fixSlotOnset
+                    currentSlotOnset(i) = fixSlotOnset-currentLetterChange;
+                else
+                    if n < stopTrial
+                        if ~isempty(currentResult(n+1).gaze.fixation.onsetsSlot)
+                            fixSlotOnRelative = currentResult(n+1).gaze.fixation.onsetsSlot(1)/200;
+                            currentSlotOnset(i) = currentResult(n+1).info.timeStamp.go + fixSlotOnRelative - currentLetterChange;
+                        else
+                            currentSlotOnset(i) = NaN;
+                        end
+                    else
+                        currentSlotOnset(i) = NaN;
+                    end
+                end
+            end
+            slotFixOnsets(c) = currentSlotOnset;
+            clear currentSlotOnset currentLetterChange slotIdx slotOnset
+            clear fixBallOnset fixBallOnRelative fixSlotOnset fixSlotOnRelative
+            % ball and slot fixations during reach and transport phase
+            if numel(currentResult(n).gaze.fixation.onsetsBall) > 1
+                % cannot classify trials in which the ball is fixated multiple times
+                fixationPattern(c) = 99*ones(length(currentResult(n).dualTask.tLetterChanges),1);
+            elseif isempty(currentResult(n).gaze.fixation.onsetsBall) && isempty(currentResult(n).gaze.fixation.onsetsSlot)
+                fixationPattern(c) = zeros(length(currentResult(n).dualTask.tLetterChanges),1);
+            elseif isempty(currentResult(n).gaze.fixation.onsetsBall) && ~isempty(currentResult(n).gaze.fixation.onsetsSlot)
+                fixationPattern(c) = 2*ones(length(currentResult(n).dualTask.tLetterChanges),1);
+            elseif ~isempty(currentResult(n).gaze.fixation.onsetsBall) && isempty(currentResult(n).gaze.fixation.onsetsSlot)
+                fixationPattern(c) = ones(length(currentResult(n).dualTask.tLetterChanges),1);
+            else
+                ballOffset = currentResult(n).gaze.fixation.offsetsBall(1);
+                slotIdx = find(currentResult(n).gaze.fixation.onsetsSlot > ballOffset, 1, 'first');
+                slotOnset = currentResult(n).gaze.fixation.onsetsSlot(slotIdx);
+                if slotOnset-ballOffset < eyeShift
+                    fixationPattern(c) = 3*ones(length(currentResult(n).dualTask.tLetterChanges),1);
+                else
+                    fixationPattern(c) = 4*ones(length(currentResult(n).dualTask.tLetterChanges),1);
+                end
+            end          
             c = c(end) + 1;
         end
-        currentPerformance = [currentParticipant blockID c-1 sum(changeDetected) sum(changeMissed)];
-        
-        dualTaskPerformance = [dualTaskPerformance; currentPerformance];
-        clear letterChangePhase changeDetected changeMissed currentPerformance
-    end
-end
-clear c 
-%% plot vigilance performance vs. relative time on display (Panel B)
-letterDetectViewTime = NaN(numParticipants,3);
-for i = 1:numParticipants
-    currentDataset = letterChanges(letterChanges(:,1) == i, :);
-    relativeTime = currentDataset(:,6);
-    letterDetectViewTime(i,:) = [i nanmean(relativeTime) ...
-        sum(dualTaskPerformance(dualTaskPerformance(:,1) == i,4))/sum(dualTaskPerformance(dualTaskPerformance(:,1) == i,3))];
-end
-figure(5)
-hold on
-plot(letterDetectViewTime(:,2), letterDetectViewTime(:, 3),...
-    'o', 'MarkerFaceColor', 'k','MarkerEdgeColor', 'k')
-%% plot trend lines
-letterDetectViewTime = NaN(numParticipants*2,4);
-count = 1;
-for j= 3:4
-    currentTool = letterChanges(letterChanges(:,2) == j, :);
-    currentVigilance = dualTaskPerformance(dualTaskPerformance(:,2) == j,:);
-    for i = 1:numParticipants
-        currentDataset = currentTool(currentTool(:,1) == i, :);
-        relativeTime = currentDataset(:,6);
-        letterDetectViewTime(count,:) = [i j nanmean(relativeTime) ...
-            currentVigilance(currentVigilance(:,1) == i,4)/currentVigilance(currentVigilance(:,1) == i,3)];
-        count = count+1;
-    end
-end
-clear count
-figure(5)
-hold on
-% plot fingertip trials
-plot(letterDetectViewTime(letterDetectViewTime(:,2) == 3, 3), letterDetectViewTime(letterDetectViewTime(:,2) == 3, 4),...
-    'o', 'MarkerFaceColor', 'k','MarkerEdgeColor', 'k')
-% plot tool trials
-plot(letterDetectViewTime(letterDetectViewTime(:,2) == 4, 3), letterDetectViewTime(letterDetectViewTime(:,2) == 4, 4),...
-    'o', 'MarkerFaceColor', 'none','MarkerEdgeColor', 'k')
-p_TW = polyfit(letterDetectViewTime(letterDetectViewTime(:,2) == 4, 3),letterDetectViewTime(letterDetectViewTime(:,2) == 4, 4),1);
-y_TW = polyval(p_TW,letterDetectViewTime(letterDetectViewTime(:,2) == 4, 3));
-plot(letterDetectViewTime(letterDetectViewTime(:,2) == 4, 3), y_TW, 'k--')
 
-ylim([0.5 1])
-set(gca, 'Ytick', [.5 .75 1])
-xlim([0.5 1])
-set(gca, 'Xtick', [.5 .75 1])
+        currentVariable = [currentParticipant*ones(1,length(fixationPattern))' blockID*ones(1,length(fixationPattern))' ...
+            fixationPattern' changeDetected' ballFixOnsets' slotFixOnsets' ...
+            preReachLCs' earlyLCs' lateLCs'];
 
-cd(savePath)
-save('letterDetectViewTime', 'letterDetectViewTime')
-cd(analysisPath)
-clear p_FT y_FT p_TW y_TW
-
-%% plot the response time (reach onset relative to go signal) vs. the time 
-% of the last detected letter change (relative to go) --> Panels C & D
-numParticipants = 11;
-numVariables = 7;
-speedRelativeLetterChange = [];
-
-for j = 1:numParticipants % loop over subjects
-    for blockID = 3:4 % loop over dual task conditions
-        currentResult = pulledData{j,blockID};
-        currentParticipant = currentResult(1).info.subject;
-        numTrials = length(currentResult);
-        % open variable matrices that we want to pull
-        currentVariable = NaN(numTrials,numVariables);
-        stopTrial = min([numTrials 30]);
-        for n = 1:stopTrial % loop over trials for current subject & block
-            if currentResult(n).info.dropped
-                stopTrial = min([stopTrial+1 numTrials]);
-                continue
-            end
-
-            tStart = currentResult(n).info.timeStamp.start;
-            goTime = currentResult(n).info.timeStamp.go;
-            reach = currentResult(n).info.timeStamp.reach;
-            preInterval = 1;
-            earlyTrial = 0;
-            % check whether a letter change was detected in the current
-            % trial
-            if sum(currentResult(n).dualTask.changeDetected) > 0
-                detectedChanges = currentResult(n).dualTask.tLetterChanges(currentResult(n).dualTask.changeDetected);
-                detectedChange = detectedChanges(1);
-            else % otherwise use the previous trial
-                if n > 1 && sum(currentResult(n-1).dualTask.changeDetected) > 0
-                    detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
-                    detectedChange = detectedChanges(end);
-                else
-                    continue
-                end
-            end
-            if reach - detectedChanges(1) > 0 && reach - detectedChanges(1) <= preInterval
-                earlyTrial = 1;
-            end
-            % if the change happened before the reach good
-            if detectedChange <= reach
-                letterChangeBeforeReach = detectedChange - reach;
-                letterChangeRelativeGo = detectedChange - goTime;
-            else % otherwise use the previous trial
-                if n > 1 && sum(currentResult(n-1).dualTask.changeDetected) > 0
-                    detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
-                    letterChangeBeforeReach = detectedChanges(end) - reach;
-                    letterChangeRelativeGo = detectedChanges(end) - goTime;
-                else
-                    continue
-                end
-            end
-
-            goToReach = reach-goTime;
-            reachDuration = currentResult(n).info.phaseDuration.primaryReach/200;
-
-            currentVariable(n,:) = [currentParticipant blockID letterChangeBeforeReach letterChangeRelativeGo ...
-                goToReach reachDuration earlyTrial];
-        end
-
-        speedRelativeLetterChange = [speedRelativeLetterChange; currentVariable];
+        eventsRelativeLetter = [eventsRelativeLetter; currentVariable];
+        clear fixationPattern changeDetected ballFixOnsets slotFixOnsets preReachLCs earlyLCs lateLCs
     end
 end
 
-%%
+%% Before plotting define some colours
+fixationPatternColors = [[55,126,184]./255;
+    [255,127,0]./255;
+    [77,175,74]./255
+    [158,154,200]./255
+    [77,0,75]./255];
 lightGrey = [189,189,189]./255;
 brightCyan = [0 174 239]./255;
-relativeChanges_PG = speedRelativeLetterChange(speedRelativeLetterChange(:,2) == 3,:);
-% plot time of last detected letter change (before reach onset) relative to
-% go signal
-earlyChanges = relativeChanges_PG(relativeChanges_PG(:,end) == 1,4);
-figure(33)
-hold on
-xlim([-6.5 2])
-ylim([-1 2])
-line([0 0],[-1 2], 'Color', lightGrey)
-line([-6.5 2],[0 0], 'Color', lightGrey)
-plot(relativeChanges_PG(:,4), relativeChanges_PG(:,5), '.', 'Color', lightGrey)
-plot(earlyChanges, relativeChanges_PG(relativeChanges_PG(:,end) == 1,5), ...
-    '.', 'Color', brightCyan)
-for i = -6:0.5:2
-    reactBin = median(relativeChanges_PG(relativeChanges_PG(:,4) < i & relativeChanges_PG(:,4) > i-0.5, 5));
-    moveBin = median(relativeChanges_PG(relativeChanges_PG(:,4) < i & relativeChanges_PG(:,4) > i-0.5,6));
-    line([i-.5 i], [reactBin reactBin], 'Color', 'k')
-end
-figure(333)
+lightBlue = [66,146,198]./255;
+lightRed = [239,59,44]./255;
+upperBound = 5;
+%% plot all ball and slot-only fixations in precision grip trials
+fixations_PG_all = eventsRelativeLetter( eventsRelativeLetter(:,2) == 3,:);
+fixations_PG_detected = fixations_PG_all( fixations_PG_all(:,4) == 1,:);
+fixations_PG_missed = fixations_PG_all( fixations_PG_all(:,4) == 0,:);
+selectedColumn = 5; % ball fixations
+preReach_PG = fixations_PG_detected( fixations_PG_detected(:,end-2) ==1 ,selectedColumn);
+earlyLC_PG = fixations_PG_detected( fixations_PG_detected(:,end-1) ==1 ,selectedColumn);
+lateLC_PG = fixations_PG_detected( fixations_PG_detected(:,end) ==1 ,selectedColumn);
+figure(selectedColumn)
 set(gcf,'renderer','Painters')
-xlim([-6.5 2])
 hold on
-histogram(relativeChanges_PG(:,4), 'BinWidth', .5, 'facecolor', lightGrey, 'edgecolor', 'none')
-histogram(earlyChanges, 'BinWidth', .5, 'facecolor', brightCyan, 'edgecolor', 'none')
-%%
-relativeChanges_TW = speedRelativeLetterChange(speedRelativeLetterChange(:,2) == 4,:);
-% plot time of last detected letter change (before reach onset) relative to
-% reach onset and movement time in red
-earlyChanges = relativeChanges_TW(relativeChanges_TW(:,end) == 1,4);
-figure(44)
-hold on
-xlim([-6.5 2])
-ylim([-1 2])
-line([0 0],[-1 2], 'Color', lightGrey)
-line([-6.5 2],[0 0], 'Color', lightGrey)
-plot(relativeChanges_TW(:,4), relativeChanges_TW(:,5), '.', 'Color', lightGrey)
-plot(earlyChanges, relativeChanges_TW(relativeChanges_TW(:,end) == 1,5), ...
-    '.', 'Color', brightCyan)
-for i = -6:0.5:2
-    reactBin = median(relativeChanges_TW(relativeChanges_TW(:,4) < i & relativeChanges_TW(:,4) > i-0.5, 5));
-    moveBin = median(relativeChanges_TW(relativeChanges_TW(:,4) < i & relativeChanges_TW(:,4) > i-0.5,6));
-    line([i-.5 i], [reactBin reactBin], 'Color', 'k')
-end
-figure(444)
-set(gcf,'renderer','Painters')
-xlim([-6.5 2])
-ylim([0 50])
-hold on
-histogram(relativeChanges_TW(:,4), 'BinWidth', .5, 'facecolor', lightGrey, 'edgecolor', 'none')
-histogram(earlyChanges, 'BinWidth', .5, 'facecolor', brightCyan, 'edgecolor', 'none')
+histogram(fixations_PG_detected(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', lightGrey)
+histogram(earlyLC_PG, 'BinWidth', .25, ...
+    'facecolor', lightBlue, 'edgecolor', 'none')
+histogram(lateLC_PG, 'BinWidth', .25, ...
+    'facecolor', lightRed, 'edgecolor', 'none')
+histogram(preReach_PG, 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', brightCyan)
+histogram(fixations_PG_missed(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', 'k')
+ymax = 25;
+xlim([0 upperBound])
+ylim([0 ymax])
+line([1.5 1.5], [0 ymax], 'Color', lightGrey)
 
+selectedColumn = 6; % slot fixations
+selectedPattern = 2; % slot-only
+fixations_PG = fixations_PG_detected(fixations_PG_detected(:,3) == selectedPattern,:);
+fixations_PG_missed = fixations_PG_missed(fixations_PG_missed(:,3) == selectedPattern,:);
+preReach_PG = fixations_PG( fixations_PG(:,end-2) ==1 ,selectedColumn);
+earlyLC_PG = fixations_PG( fixations_PG(:,end-1) ==1 ,selectedColumn);
+lateLC_PG = fixations_PG( fixations_PG(:,end) ==1 ,selectedColumn);
+figure(selectedColumn)
+set(gcf,'renderer','Painters')
+hold on
+histogram(fixations_PG(:,selectedColumn), 'BinWidth', .25, ...
+    'facecolor', 'none', 'edgecolor', fixationPatternColors(selectedPattern+1,:))
+histogram(earlyLC_PG, 'BinWidth', .25, ...
+    'facecolor', lightBlue, 'edgecolor', 'none')
+histogram(lateLC_PG, 'BinWidth', .25, ...
+    'facecolor', lightRed, 'edgecolor', 'none')
+histogram(preReach_PG, 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', brightCyan)
+histogram(fixations_PG_missed(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', 'k')
+ymax = 25;
+xlim([0 upperBound])
+ylim([0 ymax])
+line([1.5 1.5], [0 ymax], 'Color', lightGrey)
+
+clear fixations_PG preReach_PG earlyLC_PG lateLC_PG
+%% plot ball and slot fixations for different fixation patterns in tweezer trials
+fixations_TW_all = eventsRelativeLetter( eventsRelativeLetter(:,2) == 4,:);
+fixations_TW_detected = fixations_TW_all( fixations_TW_all(:,4) == 1,:);
+fixations_TW_missed = fixations_TW_all( fixations_TW_all(:,4) == 0,:);
+selectedColumn = 5; % ball fixations
+selectedPattern = 3; % ball-slot pattern
+fixations_TW = fixations_TW_detected(fixations_TW_detected(:,3) == selectedPattern,:);
+fixations_missed = fixations_TW_missed(fixations_TW_missed(:,3) == selectedPattern,:);
+preReach_TW = fixations_TW( fixations_TW(:,end-2) ==1 ,selectedColumn);
+earlyLC_TW = fixations_TW( fixations_TW(:,end-1) ==1 ,selectedColumn);
+lateLC_TW = fixations_TW( fixations_TW(:,end) ==1 ,selectedColumn);
+figure(selectedColumn*10)
+set(gcf,'renderer','Painters')
+hold on
+histogram(fixations_TW(:,selectedColumn), 'BinWidth', .25, ...
+    'facecolor', 'none', 'edgecolor', fixationPatternColors(selectedPattern+1,:))
+histogram(earlyLC_TW, 'BinWidth', .25, ...
+    'facecolor', lightBlue, 'edgecolor', 'none')
+histogram(lateLC_TW, 'BinWidth', .25, ...
+    'facecolor', lightRed, 'edgecolor', 'none')
+histogram(preReach_TW, 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', brightCyan)
+histogram(fixations_missed(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', 'k')
+ymax = 25;
+xlim([0 upperBound])
+ylim([0 ymax])
+line([1.5 1.5], [0 ymax], 'Color', lightGrey)
+
+selectedColumn = 6; % slot fixations
+selectedPattern = 3; % ball-slot pattern
+fixations_TW = fixations_TW_detected(fixations_TW_detected(:,3) == selectedPattern,:);
+preReach_TW = fixations_TW( fixations_TW(:,end-2) ==1 ,selectedColumn);
+earlyLC_TW = fixations_TW( fixations_TW(:,end-1) ==1 ,selectedColumn);
+lateLC_TW = fixations_TW( fixations_TW(:,end) ==1 ,selectedColumn);
+figure(selectedColumn*10)
+set(gcf,'renderer','Painters')
+hold on
+histogram(fixations_TW(:,selectedColumn), 'BinWidth', .25, ...
+    'facecolor', 'none', 'edgecolor', fixationPatternColors(selectedPattern+1,:))
+histogram(earlyLC_TW, 'BinWidth', .25, ...
+    'facecolor', lightBlue, 'edgecolor', 'none')
+histogram(lateLC_TW, 'BinWidth', .25, ...
+    'facecolor', lightRed, 'edgecolor', 'none')
+histogram(preReach_TW, 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', brightCyan)
+histogram(fixations_missed(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', 'k')
+ymax = 25;
+xlim([0 upperBound])
+ylim([0 ymax])
+line([1.5 1.5], [0 ymax], 'Color', lightGrey)
+
+selectedColumn = 5; % ball fixations
+selectedPattern = 4; % ball-display-slot pattern
+fixations_missed = fixations_TW_missed(fixations_TW_missed(:,3) == selectedPattern,:);
+fixations_TW = fixations_TW_detected(fixations_TW_detected(:,3) == selectedPattern,:);
+preReach_TW = fixations_TW( fixations_TW(:,end-2) ==1 ,selectedColumn);
+earlyLC_TW = fixations_TW( fixations_TW(:,end-1) ==1 ,selectedColumn);
+lateLC_TW = fixations_TW( fixations_TW(:,end) ==1 ,selectedColumn);
+figure(selectedColumn*100)
+set(gcf,'renderer','Painters')
+hold on
+histogram(fixations_TW(:,selectedColumn), 'BinWidth', .25, ...
+    'facecolor', 'none', 'edgecolor', fixationPatternColors(selectedPattern+1,:))
+histogram(earlyLC_TW, 'BinWidth', .25, ...
+    'facecolor', lightBlue, 'edgecolor', 'none')
+histogram(lateLC_TW, 'BinWidth', .25, ...
+    'facecolor', lightRed, 'edgecolor', 'none')
+histogram(preReach_TW, 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', brightCyan)
+histogram(fixations_missed(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', 'k')
+ymax = 25;
+xlim([0 upperBound])
+ylim([0 ymax])
+line([1.5 1.5], [0 ymax], 'Color', lightGrey)
+
+selectedColumn = 6; % slot fixations
+selectedPattern = 4; % ball-display-slot pattern
+fixations_TW = fixations_TW_detected(fixations_TW_detected(:,3) == selectedPattern,:);
+preReach_TW = fixations_TW( fixations_TW(:,end-2) ==1 ,selectedColumn);
+earlyLC_TW = fixations_TW( fixations_TW(:,end-1) ==1 ,selectedColumn);
+lateLC_TW = fixations_TW( fixations_TW(:,end) ==1 ,selectedColumn);
+figure(selectedColumn*100)
+set(gcf,'renderer','Painters')
+hold on
+histogram(fixations_TW(:,selectedColumn), 'BinWidth', .25, ...
+    'facecolor', 'none', 'edgecolor', fixationPatternColors(selectedPattern+1,:))
+histogram(earlyLC_TW, 'BinWidth', .25, ...
+    'facecolor', lightBlue, 'edgecolor', 'none')
+histogram(lateLC_TW, 'BinWidth', .25, ...
+    'facecolor', lightRed, 'edgecolor', 'none')
+histogram(preReach_TW, 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', brightCyan)
+histogram(fixations_missed(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', 'k')
+ymax = 25;
+xlim([0 upperBound])
+ylim([0 ymax])
+line([1.5 1.5], [0 ymax], 'Color', lightGrey)
+% add slot-only trials in here
+selectedPattern = 2; % ball-display-slot pattern
+fixations_TW = fixations_TW_detected(fixations_TW_detected(:,3) == selectedPattern,:);
+histogram(fixations_TW(:,selectedColumn), 'BinWidth', .25, ...
+    'facecolor', 'none', 'edgecolor', fixationPatternColors(selectedPattern+1,:))
+
+clear fixations_TW preReach_TW earlyLC_TW lateLC_TW

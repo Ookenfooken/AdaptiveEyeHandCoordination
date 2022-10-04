@@ -1,256 +1,384 @@
 analysisPath = pwd;
 resultPath = fullfile(pwd,'results\');
+savePath = fullfile(pwd,'R\');
 cd(resultPath)
 % load in data
 load('pulledData.mat')
 cd(analysisPath)
-%%
-% define some specs
+%% define some colours
 orange = [255,127,0]./255;
-green = [77,175,74]./255;
-purple = [152,0,203]./255;
+greenFT = [116,196,118]./255;
+greenTW = [0,109,44]./255;
+gray = [99,99,99]./255;
 numParticipants = 11;
-%% First create plots for fingertip trials (Panels A & B)
-sortedIndices = [];
-blockID = 3; % fingertips
-% first read out the order of ball and slot phases. Then plot each fixation
-% in each trial
-for j = 1:numParticipants % loop over subjects
-    currentResult = pulledData{j,blockID};
-    numTrials = length(currentResult);
-    currentParticipant = currentResult(1).info.subject*ones(numTrials,1);
-    ballPhase = NaN(numTrials,1);
-    slotPhase = NaN(numTrials,1);
-    stopTrial = min([numTrials 30]);
-    for n = 1:stopTrial % loop over trials for current subject & block
-        if currentResult(n).info.dropped
-            stopTrial = min([stopTrial+1 numTrials]);
-            continue
-        end
-        ballPhase(n,1) = currentResult(n).info.phaseStart.ballGrasp - currentResult(n).info.phaseStart.ballApproach;
-        slotPhase(n,1) = currentResult(n).info.phaseStart.ballInSlot - currentResult(n).info.phaseStart.slotApproach;
-    end
-    currentPhaseLength = [currentParticipant (1:numTrials)' ballPhase slotPhase];
-    sortedIndices = [sortedIndices; currentPhaseLength];
-end
+shift = 300;
+vectorLength= 600;
 
-sortedBalls = [sortrows(sortedIndices, 3) (1:length(sortedIndices))'];
-sortedSlots = [sortrows(sortedIndices, 4) (1:length(sortedIndices))'];
-
-%%
-figure(11) % ball fixations relative to grasp
-set(gcf,'renderer','Painters', 'Position', [20 50 400 600])
-xlim([-550 600])
-ylim([0 350])
-set(gca, 'Xtick', [-400 -200 0 200 400 600 800], 'XtickLabel', [-2 -1 0 1 2 3])
-hold on
-figure(22) % slot fixations relative to slot entry
-set(gcf,'renderer','Painters', 'Position', [20 50 400 600])
-xlim([-550 600])
-ylim([0 350])
-set(gca, 'Xtick', [-400 -200 0 200 400], 'XtickLabel', [-2 -1 0 1 2])
-hold on
-figure(33) % trial order effect
-set(gcf,'renderer','Painters', 'Position', [20 50 400 600])
-hold on
-figure(44) % participant order effect
-set(gcf,'renderer','Painters', 'Position', [20 50 400 600])
-hold on
-for j = 1:numParticipants % loop over subjects
-    currentResult = pulledData{j,blockID};
+%% plot cumulative ball fixations relative to reach onset, ball aproach,
+% ball grasp, and transport
+blockID = 4; % ball fixations only make sense for tweezer trials
+ballFixOnsetsReach = [];
+ballFixOffsetsReach = [];
+ballFixOnsetsApproach = [];
+ballFixOffsetsApproach = [];
+ballFixOnsetsGrasp = [];
+ballFixOffsetsGrasp = [];
+ballFixOnsetsTransport = [];
+ballFixOffsetsTransport = [];
+for i = 1:numParticipants % loop over subjects
+    currentResult = pulledData{i,blockID};
     currentParticipant = currentResult(1).info.subject;
     numTrials = length(currentResult);
-    currentBallIndices = sortedBalls(sortedBalls(:,1) == currentParticipant, 2:end); %last column in matrix indicates position
-    currentSlotIndices = sortedSlots(sortedSlots(:,1) == currentParticipant, 2:end);
     stopTrial = min([numTrials 30]);
+    % open variable matrices that we want to pull
+    cumulativeOnsetReach = NaN(numTrials,vectorLength);
+    cumulativeOffsetReach = NaN(numTrials,vectorLength);
+    cumulativeOnsetApproach = NaN(numTrials,vectorLength);
+    cumulativeOffsetApproach = NaN(numTrials,vectorLength);
+    cumulativeOnsetGrasp = NaN(numTrials,vectorLength);
+    cumulativeOffsetGrasp = NaN(numTrials,vectorLength);
+    cumulativeOnsetTransport = NaN(numTrials,vectorLength);
+    cumulativeOffsetTransport = NaN(numTrials,vectorLength);
     for n = 1:stopTrial % loop over trials for current subject & block
         if currentResult(n).info.dropped
             stopTrial = min([stopTrial+1 numTrials]);
             continue
         end
-        trialStart = currentResult(n).info.trialStart;
-        startReach = currentResult(n).info.phaseStart.primaryReach-trialStart;
-        ballApproach = currentResult(n).info.phaseStart.ballApproach-trialStart;
-        ballGrasp = currentResult(n).info.phaseStart.ballGrasp-trialStart;
-        startTransport = currentResult(n).info.phaseStart.transport-trialStart;
-        slotApproach = currentResult(n).info.phaseStart.slotApproach-trialStart;
-        ballInSlot = currentResult(n).info.phaseStart.ballInSlot-trialStart;
-        reachIndx = find(currentBallIndices(:,1) == n);
-        trialPositionReach = currentBallIndices(reachIndx, end);
-        transportIndx = find(currentSlotIndices(:,1) == n);
-        trialPositionTransport = currentSlotIndices(transportIndx, end);
-        % plot ball and slot fixations during reach and transport phase
-        if ~isempty(currentResult(n).gaze.fixation.onsetsBall)
-            ballOnsets = currentResult(n).gaze.fixation.onsetsBall;
-            ballOffsets = currentResult(n).gaze.fixation.offsetsBall;
-            for k = 1:numel(ballOnsets)
-                figure(11)
-                if k == 1
-                    line([ballOnsets(k)-ballGrasp ballOffsets(k)-ballGrasp],...
-                        [trialPositionReach trialPositionReach], 'Color', orange, 'LineWidth', 1.5)
-                else
-                    line([ballOnsets(k)-ballGrasp ballOffsets(k)-ballGrasp-1],...
-                        [trialPositionReach trialPositionReach], 'Color', purple, 'LineWidth', 1.5)
-                end
-            end
-            trialColourBall = orange;
+        if isempty(currentResult(n).gaze.fixation.onsetsBall)
+            continue
         end
-        if ~isempty(currentResult(n).gaze.fixation.onsetsSlot)
-            slotOnsets = currentResult(n).gaze.fixation.onsetsSlot;
-            slotOffsets = currentResult(n).gaze.fixation.offsetsSlot;
-            for k = 1:numel(slotOnsets)
-                figure(22)
-                if k == 1
-                    line([slotOnsets(k)-ballInSlot slotOffsets(k)-ballInSlot],...
-                        [trialPositionTransport trialPositionTransport], 'Color', green, 'LineWidth', 1.5)
-                else
-                    line([slotOnsets(k)-ballInSlot slotOffsets(k)-ballInSlot],...
-                        [trialPositionTransport trialPositionTransport], 'Color', purple, 'LineWidth', 1.5)
-                end
-            end
-            trialColourSlot = green;
+        onsetFixBall = currentResult(n).gaze.fixation.onsetsBall(1);
+        offsetFixBall = currentResult(n).gaze.fixation.offsetsBall(1);
+        
+        onsetPhase = currentResult(n).info.phaseStart.primaryReach - currentResult(n).info.trialStart+1;
+        phaseOffset = onsetPhase - shift;
+        fixOn = onsetFixBall - phaseOffset;
+        if fixOn > vectorLength-1
+            fixOn = vectorLength;
+        elseif fixOn < 1
+            fixOn = 1;
         end
-        figure(11) % zero indicates ball grasp
-        plot(startReach-ballGrasp, trialPositionReach, 'k|', 'MarkerSize', 3) % start of primary reach
-        plot(ballApproach-ballGrasp, trialPositionReach, 'k.', 'MarkerSize', 10) % ball grasp
-        plot(startTransport-ballGrasp, trialPositionReach, 'k|', 'MarkerSize', 3) % start of transport
-        figure(22)
-        plot(startTransport-ballInSlot, trialPositionTransport, 'k|', 'MarkerSize', 3) %start of transport
-        plot(slotApproach-ballInSlot, trialPositionTransport, 'k.', 'MarkerSize', 10) % ball in slot
-        plot(currentResult(n).info.phaseStart.return-trialStart-ballInSlot, trialPositionTransport, 'k|', 'MarkerSize', 3)
-        % plot trial order
-        figure(33)
-        plot(currentBallIndices(reachIndx,1), trialPositionReach, '.', 'Color', trialColourBall, 'MarkerSize', 8)
-        plot(currentSlotIndices(transportIndx,1)+50, trialPositionTransport, '.', 'Color', trialColourSlot, 'MarkerSize', 8)
-        figure(44)
-        plot(currentParticipant, trialPositionReach, '.', 'Color', trialColourBall, 'MarkerSize', 8)
-        plot(currentParticipant+50, trialPositionTransport, '.', 'Color', trialColourSlot, 'MarkerSize', 8)
-        clear startReach startTransport ballApproach ballGrasp ballInSlot slotApproach
-        clear ballOffsets ballOnsets slotOnsets slotOffsets reachIndx transportIndx
-        clear trialPositionReach trialPositionTransport trialStart
+        cumulativeOnsetReach(n,:) = [zeros(1,fixOn) ones(1,vectorLength-fixOn)];
+        fixOff = offsetFixBall - phaseOffset;
+        if fixOff > vectorLength-1
+            fixOff = vectorLength;
+        elseif fixOff < 1
+            fixOff = 1;
+        end
+        cumulativeOffsetReach(n,:) = [zeros(1,fixOff) ones(1,vectorLength-fixOff)];
+        
+        onsetPhase = currentResult(n).info.phaseStart.ballApproach - currentResult(n).info.trialStart+1;
+        phaseOffset = onsetPhase - shift;
+        fixOn = onsetFixBall - phaseOffset;
+        if fixOn > vectorLength-1
+            fixOn = vectorLength;
+        elseif fixOn < 1
+            fixOn = 1;
+        end
+        cumulativeOnsetApproach(n,:) = [zeros(1,fixOn) ones(1,vectorLength-fixOn)];
+        fixOff = offsetFixBall - phaseOffset;
+        if fixOff > vectorLength-1
+            fixOff = vectorLength;
+        elseif fixOff < 1
+            fixOff = 1;
+        end
+        cumulativeOffsetApproach(n,:) = [zeros(1,fixOff) ones(1,vectorLength-fixOff)];
+        
+        onsetPhase = currentResult(n).info.phaseStart.ballGrasp - currentResult(n).info.trialStart+1;
+        phaseOffset = onsetPhase - shift;
+        fixOn = onsetFixBall - phaseOffset;
+        if fixOn > vectorLength-1
+            fixOn = vectorLength;
+        elseif fixOn < 1
+            fixOn = 1;
+        end
+        cumulativeOnsetGrasp(n,:) = [zeros(1,fixOn) ones(1,vectorLength-fixOn)];
+        fixOff = offsetFixBall - phaseOffset;
+        if fixOff > vectorLength-1
+            fixOff = vectorLength;
+        elseif fixOff < 1
+            fixOff = 1;
+        end
+        cumulativeOffsetGrasp(n,:) = [zeros(1,fixOff) ones(1,vectorLength-fixOff)];
+        
+        onsetPhase = currentResult(n).info.phaseStart.transport - currentResult(n).info.trialStart+1;
+        phaseOffset = onsetPhase - shift;
+        fixOn = onsetFixBall - phaseOffset;
+        if fixOn > vectorLength-1
+            fixOn = vectorLength;
+        elseif fixOn < 1
+            fixOn = 1;
+        end
+        cumulativeOnsetTransport(n,:) = [zeros(1,fixOn) ones(1,vectorLength-fixOn)];
+        fixOff = offsetFixBall - phaseOffset;
+        if fixOff > vectorLength-1
+            continue
+        elseif fixOff < 1
+            fixOff = 1;
+        end
+        cumulativeOffsetTransport(n,:) = [zeros(1,fixOff) ones(1,vectorLength-fixOff)];
+        
     end
+    currentOnsetReach = nansum(cumulativeOnsetReach);
+    currentOnsetApproach = nansum(cumulativeOnsetApproach);
+    currentOnsetGrasp = nansum(cumulativeOnsetGrasp);
+    currentOnsetTransport = nansum(cumulativeOnsetTransport);
     
-end
-
-%% Second create plots for tweezer trials (Panels D & E)
-sortedIndices = [];
-blockID = 4; % tweezers
-% first read out the order of ball and slot phases. Then plot each fixation
-% in each trial
-for j = 1:numParticipants % loop over subjects
-    currentResult = pulledData{j,blockID};
-    numTrials = length(currentResult);
-    currentParticipant = currentResult(1).info.subject*ones(numTrials,1);
-    ballPhase = NaN(numTrials,1);
-    slotPhase = NaN(numTrials,1);
-    stopTrial = min([numTrials 30]);
-    for n = 1:stopTrial % loop over trials for current subject & block
-        if currentResult(n).info.dropped
-            stopTrial = min([stopTrial+1 numTrials]);
-            continue
-        end
-        ballPhase(n,1) = currentResult(n).info.phaseStart.ballGrasp - currentResult(n).info.phaseStart.ballApproach;
-        slotPhase(n,1) = currentResult(n).info.phaseStart.ballInSlot - currentResult(n).info.phaseStart.slotApproach;
-    end
-    currentPhaseLength = [currentParticipant (1:numTrials)' ballPhase slotPhase];
-    sortedIndices = [sortedIndices; currentPhaseLength];
-end
-
-sortedBalls = [sortrows(sortedIndices, 3) (1:length(sortedIndices))'];
-sortedSlots = [sortrows(sortedIndices, 4) (1:length(sortedIndices))'];
-
-%%
-figure(111) % ball fixations relative to grasp
-set(gcf,'renderer','Painters', 'Position', [20 50 400 600])
-xlim([-550 600])
-ylim([0 350])
-set(gca, 'Xtick', [-400 -200 0 200 400 600 800], 'XtickLabel', [-2 -1 0 1 2 3])
-hold on
-figure(222) % slot fixations relative to slot entry
-set(gcf,'renderer','Painters', 'Position', [20 50 400 600])
-xlim([-550 600])
-ylim([0 350])
-set(gca, 'Xtick', [-400 -200 0 200 400], 'XtickLabel', [-2 -1 0 1 2])
-hold on
-figure(333) % trial order effect
-set(gcf,'renderer','Painters', 'Position', [20 50 400 600])
-hold on
-figure(444) % participant order effect
-set(gcf,'renderer','Painters', 'Position', [20 50 400 600])
-hold on
-for j = 1:numParticipants % loop over subjects
-    currentResult = pulledData{j,blockID};
-    currentParticipant = currentResult(1).info.subject;
-    numTrials = length(currentResult);
-    currentBallIndices = sortedBalls(sortedBalls(:,1) == currentParticipant, 2:end); %last column in matrix indicates position
-    currentSlotIndices = sortedSlots(sortedSlots(:,1) == currentParticipant, 2:end);
-    stopTrial = min([numTrials 30]);
-    for n = 1:stopTrial % loop over trials for current subject & block
-        if currentResult(n).info.dropped
-            stopTrial = min([stopTrial+1 numTrials]);
-            continue
-        end
-        trialStart = currentResult(n).info.trialStart;
-        startReach = currentResult(n).info.phaseStart.primaryReach-trialStart;
-        ballApproach = currentResult(n).info.phaseStart.ballApproach-trialStart;
-        ballGrasp = currentResult(n).info.phaseStart.ballGrasp-trialStart;
-        startTransport = currentResult(n).info.phaseStart.transport-trialStart;
-        slotApproach = currentResult(n).info.phaseStart.slotApproach-trialStart;
-        ballInSlot = currentResult(n).info.phaseStart.ballInSlot-trialStart;
-        reachIndx = find(currentBallIndices(:,1) == n);
-        trialPositionReach = currentBallIndices(reachIndx, end);
-        transportIndx = find(currentSlotIndices(:,1) == n);
-        trialPositionTransport = currentSlotIndices(transportIndx, end);
-        % plot ball and slot fixations during reach and transport phase
-        if ~isempty(currentResult(n).gaze.fixation.onsetsBall)
-            ballOnsets = currentResult(n).gaze.fixation.onsetsBall;
-            ballOffsets = currentResult(n).gaze.fixation.offsetsBall;
-            for k = 1:numel(ballOnsets)
-                figure(111)
-                if k == 1
-                    line([ballOnsets(k)-ballGrasp ballOffsets(k)-ballGrasp],...
-                        [trialPositionReach trialPositionReach], 'Color', orange, 'LineWidth', 1.5)
-                else
-                    line([ballOnsets(k)-ballGrasp ballOffsets(k)-ballGrasp-1],...
-                        [trialPositionReach trialPositionReach], 'Color', purple, 'LineWidth', 1.5)
-                end
-            end
-            trialColourBall = orange;
-        end
-        if ~isempty(currentResult(n).gaze.fixation.onsetsSlot)
-            slotOnsets = currentResult(n).gaze.fixation.onsetsSlot;
-            slotOffsets = currentResult(n).gaze.fixation.offsetsSlot;
-            for k = 1:numel(slotOnsets)
-                figure(222)
-                if k == 1
-                    line([slotOnsets(k)-ballInSlot slotOffsets(k)-ballInSlot],...
-                        [trialPositionTransport trialPositionTransport], 'Color', green, 'LineWidth', 1.5)
-                else
-                    line([slotOnsets(k)-ballInSlot slotOffsets(k)-ballInSlot],...
-                        [trialPositionTransport trialPositionTransport], 'Color', purple, 'LineWidth', 1.5)
-                end
-            end
-            trialColourSlot = green;
-        end
-        figure(111) % zero indicates ball grasp
-        plot(startReach-ballGrasp, trialPositionReach, 'k|', 'MarkerSize', 3) % start of primary reach
-        plot(ballApproach-ballGrasp, trialPositionReach, 'k.', 'MarkerSize', 10) % ball grasp
-        plot(startTransport-ballGrasp, trialPositionReach, 'k|', 'MarkerSize', 3) % start of transport
-        figure(222)
-        plot(startTransport-ballInSlot, trialPositionTransport, 'k|', 'MarkerSize', 3) %start of transport
-        plot(slotApproach-ballInSlot, trialPositionTransport, 'k.', 'MarkerSize', 10) % ball in slot
-        plot(currentResult(n).info.phaseStart.return-trialStart-ballInSlot, trialPositionTransport, 'k|', 'MarkerSize', 3)
-        % plot trial order
-        figure(333)
-        plot(currentBallIndices(reachIndx,1), trialPositionReach, '.', 'Color', trialColourBall, 'MarkerSize', 8)
-        plot(currentSlotIndices(transportIndx,1)+50, trialPositionTransport, '.', 'Color', trialColourSlot, 'MarkerSize', 8)
-        figure(444)
-        plot(currentParticipant, trialPositionReach, '.', 'Color', trialColourBall, 'MarkerSize', 8)
-        plot(currentParticipant+50, trialPositionTransport, '.', 'Color', trialColourSlot, 'MarkerSize', 8)
-        clear startReach startTransport ballApproach ballGrasp ballInSlot slotApproach
-        clear ballOffsets ballOnsets slotOnsets slotOffsets reachIndx transportIndx
-        clear trialPositionReach trialPositionTransport trialStart
-    end
+    ballFixOnsetsReach = [ballFixOnsetsReach; currentOnsetReach];
+    ballFixOnsetsApproach = [ballFixOnsetsApproach; currentOnsetApproach];
+    ballFixOnsetsGrasp = [ballFixOnsetsGrasp; currentOnsetGrasp];
+    ballFixOnsetsTransport = [ballFixOnsetsTransport; currentOnsetTransport];
     
+    currentOffsetReach = nansum(cumulativeOffsetReach);
+    currentOffsetApproach = nansum(cumulativeOffsetApproach);
+    currentOffsetGrasp = nansum(cumulativeOffsetGrasp);
+    currentOffsetTransport = nansum(cumulativeOffsetTransport);
+    
+    ballFixOffsetsReach = [ballFixOffsetsReach; currentOffsetReach];
+    ballFixOffsetsApproach = [ballFixOffsetsApproach; currentOffsetApproach];
+    ballFixOffsetsGrasp = [ballFixOffsetsGrasp; currentOffsetGrasp];
+    ballFixOffsetsTransport = [ballFixOffsetsTransport; currentOffsetTransport];
+    
+    clear currentOnsetReach currentOffsetReach currentOnsetApproach currentOffsetApproach
+    clear currentOnsetGrasp currentOffsetGrasp currentOnsetTransport currentOffsetTransport
+    clear fixOn fixOff onsetPhase onsetFixBall offsetFixBall phaseOffset
 end
 
+%% plot
+figure(10)
+hold on
+plot(nansum(ballFixOnsetsReach)/max(nansum(ballFixOnsetsReach)), 'Color', orange, 'LineWidth', 2)
+plot(nansum(ballFixOffsetsReach)/max(nansum(ballFixOffsetsReach)), '--', 'Color', orange, 'LineWidth',2)
+line([shift shift], [0 1], 'Color', gray)
+line([0 vectorLength], [.5 .5], 'Color', gray)
+xlim([0 vectorLength])
+xlabel('relative to reach')
+set(gca, 'Xtick', [0 100 200 300 400 500 600], 'XtickLabel', [-1.5 -1 -.5 0 .5 1 1.5])
+ylim([0 1])
+set(gca, 'Ytick', [0 .25 .5 .75 1])
+
+figure(11)
+hold on
+plot(nansum(ballFixOnsetsApproach)/max(nansum(ballFixOnsetsApproach)), 'Color', orange, 'LineWidth', 2)
+plot(nansum(ballFixOffsetsApproach)/max(nansum(ballFixOffsetsApproach)), '--', 'Color', orange, 'LineWidth',2)
+line([shift shift], [0 1], 'Color', gray)
+line([0 vectorLength], [.5 .5], 'Color', gray)
+xlim([0 vectorLength])
+xlabel('relative to ball-approach')
+set(gca, 'Xtick', [0 100 200 300 400 500 600], 'XtickLabel', [-1.5 -1 -.5 0 .5 1 1.5])
+ylim([0 1])
+set(gca, 'Ytick', [0 .25 .5 .75 1])
+
+figure(12)
+hold on
+plot(nansum(ballFixOnsetsGrasp)/max(nansum(ballFixOnsetsGrasp)), 'Color', orange, 'LineWidth', 2)
+plot(nansum(ballFixOffsetsGrasp)/max(nansum(ballFixOffsetsGrasp)), '--', 'Color', orange, 'LineWidth',2)
+line([shift shift], [0 1], 'Color', gray)
+line([0 vectorLength], [.5 .5], 'Color', gray)
+xlim([0 vectorLength])
+xlabel('relative to ball-grasp')
+set(gca, 'Xtick', [0 100 200 300 400 500 600], 'XtickLabel', [-1.5 -1 -.5 0 .5 1 1.5])
+ylim([0 1])
+set(gca, 'Ytick', [0 .25 .5 .75 1])
+
+figure(13)
+hold on
+plot(nansum(ballFixOnsetsTransport)/max(nansum(ballFixOnsetsTransport)), 'Color', orange, 'LineWidth', 2)
+plot(nansum(ballFixOffsetsTransport)/max(nansum(ballFixOffsetsTransport)), '--', 'Color', orange, 'LineWidth',2)
+line([shift shift], [0 1], 'Color', gray)
+line([0 vectorLength], [.5 .5], 'Color', gray)
+xlim([0 vectorLength])
+xlabel('relative transport')
+set(gca, 'Xtick', [0 100 200 300 400 500 600], 'XtickLabel', [-1.5 -1 -.5 0 .5 1 1.5])
+ylim([0 1])
+set(gca, 'Ytick', [0 .25 .5 .75 1])
+
+clear ballFixOnsetsReach ballFixOffsetsReach ballFixOnsetsApproach ballFixOffsetsApproach
+clear ballFixOnsetsGrasp ballFixOffsetsGrasp ballFixOnsetsTransport ballFixOffsetsTransport
+
+%% plot cumulative slot fixations relative to trannsport & slot approach (Panels B-C)
+for j = 3:4
+    blockID = j; % ball fixations only make sense for tweezer trials
+    slotFixOnsetsTransport = [];
+    slotFixOffsetsTransport = [];
+    slotFixOnsetsApproach = [];
+    slotFixOffsetsApproach = [];
+    slotFixOnsetsEntry = [];
+    slotFixOffsetsEntry = [];
+    slotFixOnsetsDrop = [];
+    slotFixOffsetsDrop = [];
+    for i = 1:numParticipants % loop over subjects
+        currentResult = pulledData{i,blockID};
+        currentParticipant = currentResult(1).info.subject;
+        numTrials = length(currentResult);
+        stopTrial = min([numTrials 30]);
+        % open variable matrices that we want to pull
+        cumulativeOnsetTransport = NaN(numTrials,vectorLength);
+        cumulativeOffsetTransport = NaN(numTrials,vectorLength);
+        cumulativeOnsetApproach = NaN(numTrials,vectorLength);
+        cumulativeOffsetApproach = NaN(numTrials,vectorLength);
+        cumulativeOnsetEntry = NaN(numTrials,vectorLength);
+        cumulativeOffsetEntry = NaN(numTrials,vectorLength);
+        cumulativeOnsetDrop = NaN(numTrials,vectorLength);
+        cumulativeOffsetDrop = NaN(numTrials,vectorLength);
+        for n = 1:stopTrial % loop over trials for current subject & block
+            if currentResult(n).info.dropped
+                stopTrial = min([stopTrial+1 numTrials]);
+                continue
+            end
+            if isempty(currentResult(n).gaze.fixation.onsetsSlot)
+                continue
+            end
+            onsetFixSlot = currentResult(n).gaze.fixation.onsetsSlot(1);
+            offsetFixSlot = currentResult(n).gaze.fixation.offsetsSlot(1);
+            
+            onsetPhase = currentResult(n).info.phaseStart.transport - currentResult(n).info.trialStart+1;
+            phaseOffset = onsetPhase - shift;
+            fixOn = onsetFixSlot - phaseOffset;
+            if fixOn > vectorLength-1
+                fixOn = vectorLength;
+            elseif fixOn < 1
+                fixOn = 1;
+            end
+            cumulativeOnsetTransport(n,:) = [zeros(1,fixOn) ones(1,vectorLength-fixOn)];
+            fixOff = offsetFixSlot - phaseOffset;
+            if fixOff > vectorLength-1
+                fixOff = vectorLength;
+            elseif fixOff < 1
+                fixOff = 1;
+            end
+            cumulativeOffsetTransport(n,:) = [zeros(1,fixOff) ones(1,vectorLength-fixOff)];
+            
+            onsetPhase = currentResult(n).info.phaseStart.slotApproach - currentResult(n).info.trialStart+1;
+            phaseOffset = onsetPhase - shift;
+            fixOn = onsetFixSlot - phaseOffset;
+            if fixOn > vectorLength-1
+                fixOn = vectorLength;
+            elseif fixOn < 1
+                fixOn = 1;
+            end
+            cumulativeOnsetApproach(n,:) = [zeros(1,fixOn) ones(1,vectorLength-fixOn)];
+            fixOff = offsetFixSlot - phaseOffset;
+            if fixOff > vectorLength-1
+                fixOff = vectorLength;
+            elseif fixOff < 1
+                fixOff = 1;
+            end
+            cumulativeOffsetApproach(n,:) = [zeros(1,fixOff) ones(1,vectorLength-fixOff)];
+            
+            onsetPhase = currentResult(n).info.phaseStart.ballInSlot - currentResult(n).info.trialStart+1;
+            phaseOffset = onsetPhase - shift;
+            fixOn = onsetFixSlot - phaseOffset;
+            if fixOn > vectorLength-1
+                fixOn = vectorLength;
+            elseif fixOn < 1
+                fixOn = 1;
+            end
+            cumulativeOnsetEntry(n,:) = [zeros(1,fixOn) ones(1,vectorLength-fixOn)];
+            fixOff = offsetFixSlot - phaseOffset;
+            if fixOff > vectorLength-1
+                fixOff = vectorLength;
+            elseif fixOff < 1
+                fixOff = 1;
+            end
+            cumulativeOffsetEntry(n,:) = [zeros(1,fixOff) ones(1,vectorLength-fixOff)];
+            
+            onsetPhase = currentResult(n).info.phaseStart.ballDropped - currentResult(n).info.trialStart+1;
+            phaseOffset = onsetPhase - shift;
+            fixOn = onsetFixSlot - phaseOffset;
+            if fixOn > vectorLength-1
+                fixOn = vectorLength;
+            elseif fixOn < 1
+                fixOn = 1;
+            end
+            cumulativeOnsetDrop(n,:) = [zeros(1,fixOn) ones(1,vectorLength-fixOn)];
+            fixOff = offsetFixSlot - phaseOffset;
+            if fixOff > vectorLength-1
+                continue
+            elseif fixOff < 1
+                fixOff = 1;
+            end
+            cumulativeOffsetDrop(n,:) = [zeros(1,fixOff) ones(1,vectorLength-fixOff)];
+            
+        end
+        currentOnsetTransport = nansum(cumulativeOnsetTransport);
+        currentOnsetApproach = nansum(cumulativeOnsetApproach);
+        currentOnsetEntry = nansum(cumulativeOnsetEntry);
+        currentOnsetDrop = nansum(cumulativeOnsetDrop);
+        
+        slotFixOnsetsTransport = [slotFixOnsetsTransport; currentOnsetTransport];
+        slotFixOnsetsApproach = [slotFixOnsetsApproach; currentOnsetApproach];
+        slotFixOnsetsEntry = [slotFixOnsetsEntry; currentOnsetEntry];
+        slotFixOnsetsDrop = [slotFixOnsetsDrop; currentOnsetDrop];
+        
+        currentOffsetTransport = nansum(cumulativeOffsetTransport);
+        currentOffsetApproach = nansum(cumulativeOffsetApproach);
+        currentOffsetEntry = nansum(cumulativeOffsetEntry);
+        currentOffsetDrop = nansum(cumulativeOffsetDrop);
+        
+        slotFixOffsetsTransport = [slotFixOffsetsTransport; currentOffsetTransport];
+        slotFixOffsetsApproach = [slotFixOffsetsApproach; currentOffsetApproach];
+        slotFixOffsetsEntry = [slotFixOffsetsEntry; currentOffsetEntry];
+        slotFixOffsetsDrop = [slotFixOffsetsDrop; currentOffsetDrop];
+        
+        clear currentOnsetTransport currentOffsetTransport currentOnsetApproach currentOffsetApproach
+        clear currentOnsetEntry currentOffsetEntry currentOnsetDrop currentOffsetDrop
+        clear fixOn fixOff onsetPhase onsetFixSlot offsetFixSlot phaseOffset
+    end
+    % plot
+    if j < 4
+        selectedColour = greenFT;
+    else
+        selectedColour = greenTW;
+    end
+    figure(100)
+    hold on
+    plot(nansum(slotFixOnsetsTransport)/max(nansum(slotFixOnsetsTransport)), 'Color', selectedColour, 'LineWidth', 2)
+    plot(nansum(slotFixOffsetsTransport)/max(nansum(slotFixOffsetsTransport)), '--', 'Color', selectedColour, 'LineWidth',2)
+    line([shift shift], [0 1], 'Color', gray)
+    line([0 vectorLength], [.5 .5], 'Color', gray)
+    xlim([0 vectorLength])
+    xlabel('relative to transport')
+    set(gca, 'Xtick', [0 100 200 300 400 500 600], 'XtickLabel', [-1.5 -1 -.5 0 .5 1 1.5])
+    ylim([0 1])
+    set(gca, 'Ytick', [0 .25 .5 .75 1])
+    
+    figure(110)
+    hold on
+    plot(nansum(slotFixOnsetsApproach)/max(nansum(slotFixOnsetsApproach)), 'Color', selectedColour, 'LineWidth', 2)
+    plot(nansum(slotFixOffsetsApproach)/max(nansum(slotFixOffsetsApproach)), '--', 'Color', selectedColour, 'LineWidth',2)
+    line([shift shift], [0 1], 'Color', gray)
+    line([0 vectorLength], [.5 .5], 'Color', gray)
+    xlim([0 vectorLength])
+    xlabel('relative to slot-approach')
+    set(gca, 'Xtick', [0 100 200 300 400 500 600], 'XtickLabel', [-1.5 -1 -.5 0 .5 1 1.5])
+    ylim([0 1])
+    set(gca, 'Ytick', [0 .25 .5 .75 1])
+    
+    figure(120)
+    hold on
+    plot(nansum(slotFixOnsetsEntry)/max(nansum(slotFixOnsetsEntry)), 'Color', selectedColour, 'LineWidth', 2)
+    plot(nansum(slotFixOffsetsEntry)/max(nansum(slotFixOffsetsEntry)), '--', 'Color', selectedColour, 'LineWidth',2)
+    line([shift shift], [0 1], 'Color', gray)
+    line([0 vectorLength], [.5 .5], 'Color', gray)
+    xlim([0 vectorLength])
+    xlabel('relative to slot-entry')
+    set(gca, 'Xtick', [0 100 200 300 400 500 600], 'XtickLabel', [-1.5 -1 -.5 0 .5 1 1.5])
+    ylim([0 1])
+    set(gca, 'Ytick', [0 .25 .5 .75 1])
+    
+    figure(130)
+    hold on
+    plot(nansum(slotFixOnsetsDrop)/max(nansum(slotFixOnsetsDrop)), 'Color', selectedColour, 'LineWidth', 2)
+    plot(nansum(slotFixOffsetsDrop)/max(nansum(slotFixOffsetsDrop)), '--', 'Color', selectedColour, 'LineWidth',2)
+    line([shift shift], [0 1], 'Color', gray)
+    line([0 vectorLength], [.5 .5], 'Color', gray)
+    xlim([0 vectorLength])
+    xlabel('relative ball drop')
+    set(gca, 'Xtick', [0 100 200 300 400 500 600], 'XtickLabel', [-1.5 -1 -.5 0 .5 1 1.5])
+    ylim([0 1])
+    set(gca, 'Ytick', [0 .25 .5 .75 1])
+    
+    clear slotFixOnsetsReach slotFixOffsetsReach slotFixOnsetsApproach slotFixOffsetsApproach
+    clear slotFixOnsetsGrasp slotFixOffsetsGrasp slotFixOnsetsTransport slotFixOffsetsTransport
+end
