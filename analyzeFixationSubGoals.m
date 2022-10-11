@@ -4,54 +4,15 @@ cd(resultPath)
 % load in data
 load('pulledData.mat')
 cd(analysisPath)
-%%
-numParticipants = 11;
-numBlocks = size(pulledData,2);
-variables = [];
-numPhases = 8;
-count = 1;
-participantMeans = NaN(numParticipants*2,numPhases+2);
 
-for j = 1:numParticipants % loop over subjects
-    for i = 3:numBlocks % loop over dual blocks 
-        currentResult = pulledData{j,i};
-        currentParticipant = currentResult(i).info.subject;
-        numTrials = length(currentResult);
-        stopTrial = min([numTrials 30]);
-        % save the mean value for each participant
-        participantPhases = NaN(numTrials, numPhases);
-        for n = 1:stopTrial % loop over trials for current subject & block
-            if currentResult(n).info.dropped
-                stopTrial = min([stopTrial+1 numTrials]);
-                continue
-            end
-            trialStart = currentResult(n).info.trialStart;
-            toolVelocity = currentResult(n).effector.velocity;
-            startTransport = currentResult(n).info.phaseStart.transport;
-            startFrame = 1;
-            stopFrame = startTransport-trialStart;
-            if stopFrame <= startFrame
-                continue
-            end
-            reachPeakVel = find(toolVelocity(startFrame:stopFrame) == max(toolVelocity(startFrame:stopFrame))) + trialStart;
-            transportPeakVel = startTransport + find(toolVelocity(stopFrame:currentResult(n).info.phaseStart.slotApproach-trialStart)...
-                == max(toolVelocity(stopFrame:currentResult(n).info.phaseStart.slotApproach-trialStart)), 1, 'first');
-            participantPhases(n,:) = [currentResult(n).info.phaseStart.primaryReach ...
-                reachPeakVel currentResult(n).info.phaseStart.ballApproach ...
-                currentResult(n).info.phaseStart.ballGrasp startTransport ...
-                transportPeakVel currentResult(n).info.phaseStart.slotApproach ...
-                currentResult(n).info.phaseStart.ballInSlot];
-        end
-        participantMeans(count,:) = [i currentParticipant nanmean(participantPhases)];
-        count = count + 1;
-    end
-end
 %% subtract the mean from each phase start for each participant
+variables = [];
+numParticipants = 11;
+numBlocks = 4;
 for j = 1:numParticipants % loop over subjects
     for i = 3:numBlocks % loop over dual blocks 
         currentResult = pulledData{j,i};
         currentParticipant = currentResult(i).info.subject;
-        currentMeans = participantMeans(participantMeans(:,1) == i, :);
         numTrials = length(currentResult);
         stopTrial = min([numTrials 30]);
         % open variable matrices that we want to pull
@@ -87,17 +48,15 @@ for j = 1:numParticipants % loop over subjects
             if stopFrame <= startFrame
                 continue
             end
-            reachOnset(n) = currentResult(n).info.phaseStart.primaryReach - currentMeans(currentMeans(:,2) == currentParticipant, 3);
-            reachPeakVel(n) = find(toolVelocity(startFrame:stopFrame) == max(toolVelocity(startFrame:stopFrame))) + trialStart -...
-                currentMeans(currentMeans(:,2) == currentParticipant, 4);
-            ballApproach(n) = currentResult(n).info.phaseStart.ballApproach-currentMeans(currentMeans(:,2) == currentParticipant, 5);
-            ballGrasp(n) = currentResult(n).info.phaseStart.ballGrasp-currentMeans(currentMeans(:,2) == currentParticipant, 6);
-            transport(n) = startTransport-currentMeans(currentMeans(:,2) == currentParticipant, 7);
+            reachOnset(n) = currentResult(n).info.phaseStart.primaryReach ;
+            reachPeakVel(n) = find(toolVelocity(startFrame:stopFrame) == max(toolVelocity(startFrame:stopFrame))) + trialStart;
+            ballApproach(n) = currentResult(n).info.phaseStart.ballApproach;
+            ballGrasp(n) = currentResult(n).info.phaseStart.ballGrasp;
+            transport(n) = startTransport;
             transportPeakVel(n) = startTransport + find(toolVelocity(stopFrame:currentResult(n).info.phaseStart.slotApproach-trialStart)...
-                == max(toolVelocity(stopFrame:currentResult(n).info.phaseStart.slotApproach-trialStart)), 1, 'first') - ...
-                currentMeans(currentMeans(:,2) == currentParticipant, 8);
-            slotApproach(n) = currentResult(n).info.phaseStart.slotApproach - currentMeans(currentMeans(:,2) == currentParticipant, 9);
-            slotEntry(n) = currentResult(n).info.phaseStart.ballInSlot - currentMeans(currentMeans(:,2) == currentParticipant, 10);
+                == max(toolVelocity(stopFrame:currentResult(n).info.phaseStart.slotApproach-trialStart)), 1, 'first');
+            slotApproach(n) = currentResult(n).info.phaseStart.slotApproach;
+            slotEntry(n) = currentResult(n).info.phaseStart.ballInSlot;
             if ~isempty(currentResult(n).gaze.fixation.onsetsBall)
                 ballFixations(n) = 1;
                 ballOnsets(n) = currentResult(n).gaze.fixation.onsetsBall(1)+trialStart;
@@ -136,10 +95,35 @@ for j = 1:numParticipants % loop over subjects
         
     end
 end
+%% separate data into conditions
+ballFixations = [variables(:,1:2) variables(:,11) variables(:,3:10) variables(:,12:14)]; % paste relevant ball data
+ballFixations = ballFixations(ballFixations(:,3) > 0, :);
+ballFixations_adjusted = [];
+for tool = 3:4
+    currentTool = ballFixations(ballFixations(:,2) == tool, :);
+    for i = 1:numParticipants
+        currentParticipant = currentTool(currentTool(:,1) == i, :);
+        currentPhases = currentParticipant(:,4:11) - mean(currentParticipant(:,4:11));
+        ballFixations_adjusted = [ballFixations_adjusted; ...
+            [currentParticipant(:,1:3) currentPhases currentParticipant(:,12:14)]];
+    end
+end
 
-glmData_ball = [variables(:,1:2) variables(:,11) variables(:,3:10) variables(:,12:14)]; % paste relevant ball data
-glmData_slot = [variables(:,1:2) variables(:,15) variables(:,3:10) variables(:,16:18)]; % paste relevatn slot data
+slotFixations = [variables(:,1:2) variables(:,15) variables(:,3:10) variables(:,16:18)]; % paste relevatn slot data
+slotFixations = slotFixations(slotFixations(:,3) > 0, :);
+slotFixations_adjusted = [];
+for tool = 3:4
+    currentTool = slotFixations(slotFixations(:,2) == tool, :);
+    for i = 1:numParticipants
+        currentParticipant = currentTool(currentTool(:,1) == i, :);
+        currentPhases = currentParticipant(:,4:11) - mean(currentParticipant(:,4:11));
+        slotFixations_adjusted = [slotFixations_adjusted; ...
+            [currentParticipant(:,1:3) currentPhases currentParticipant(:,12:14)]];
+    end
+end
 %%
+glmData_ball = ballFixations_adjusted;
+glmData_slot = slotFixations_adjusted;
 cd(fullfile(pwd,'R\'))
 save('glmData_ball', 'glmData_ball')
 save('glmData_slot', 'glmData_slot')

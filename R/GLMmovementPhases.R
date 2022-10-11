@@ -14,10 +14,9 @@ colnames(ballFixData) <- c("participant", "testID", "ballFix", "reachOnset", "re
 ballFixData$participant <- as.factor(ballFixData$participant)
 ballFixData$testID <- as.factor(ballFixData$testID)
 
-ballFixations = ballFixData[ballFixData$ballFix == 1,]
-ballFixations$ballFix <- NULL
-ballFixations_FT <- na.omit(ballFixations[ballFixations$testID == 3,]) # fingertips
-ballFixations_TW <- na.omit(ballFixations[ballFixations$testID == 4,]) # tweezers
+ballFixData$ballFix <- NULL
+ballFixations_FT <- ballFixData[ballFixData$testID == 3,] # fingertips
+ballFixations_TW <- ballFixData[ballFixData$testID == 4,] # tweezers
 ballFix.FT.onset <- lmer(fixationOnset ~ reachOnset + reachPeakVel + ballApproach + ballGrasp + transport +
                        transportPeakVel + slotApproach + slotEntry + (1|participant), data = ballFixations_FT)
 ballFix.TW.onset <- lmer(fixationOnset ~  reachOnset + reachPeakVel + ballApproach + ballGrasp + transport +
@@ -35,10 +34,9 @@ colnames(slotFixData) <- c("participant", "testID", "slotFix", "reachOnset", "re
 slotFixData$participant <- as.factor(slotFixData$participant)
 slotFixData$testID <- as.factor(slotFixData$testID)
 
-slotFixations = slotFixData[slotFixData$slotFix == 1,]
-slotFixations$slotFix <- NULL
-slotFixations_FT <- na.omit(slotFixations[slotFixations$testID == 3,]) # fingertips
-slotFixations_TW <- na.omit(slotFixations[slotFixations$testID == 4,]) # tweezers
+slotFixData$slotFix <- NULL
+slotFixations_FT <- slotFixData[slotFixData$testID == 3,] # fingertips
+slotFixations_TW <- slotFixData[slotFixData$testID == 4,] # tweezers
 slotFix.FT.onset <- lmer(fixationOnset ~ reachOnset + reachPeakVel + ballApproach + ballGrasp + transport +
                          transportPeakVel + slotApproach + slotEntry + (1|participant), data = slotFixations_FT)
 slotFix.TW.onset <- lmer(fixationOnset ~ reachOnset + reachPeakVel + ballApproach + ballGrasp + transport +
