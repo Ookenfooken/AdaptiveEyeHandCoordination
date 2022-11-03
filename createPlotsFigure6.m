@@ -234,25 +234,18 @@ relativeChanges_PG = speedRelativeLetterChange(speedRelativeLetterChange(:,2) ==
 earlyChanges = relativeChanges_PG(relativeChanges_PG(:,end) == 1,4);
 figure(33)
 hold on
-xlim([-6.5 2])
+xlim([-5 2])
 ylim([-1 2])
 line([0 0],[-1 2], 'Color', lightGrey)
 line([-5 2],[0 0], 'Color', lightGrey)
 plot(relativeChanges_PG(:,4), relativeChanges_PG(:,5), '.', 'Color', lightGrey)
 plot(earlyChanges, relativeChanges_PG(relativeChanges_PG(:,end) == 1,5), ...
     '.', 'Color', brightCyan)
-for i = -6:0.5:2
+for i = -5:0.5:2
     reactBin = median(relativeChanges_PG(relativeChanges_PG(:,4) < i & relativeChanges_PG(:,4) > i-0.5, 5));
     moveBin = median(relativeChanges_PG(relativeChanges_PG(:,4) < i & relativeChanges_PG(:,4) > i-0.5,6));
     line([i-.5 i], [reactBin reactBin], 'Color', 'k')
 end
-figure(333)
-set(gcf,'renderer','Painters')
-xlim([-6.5 2])
-hold on
-histogram(relativeChanges_PG(:,4), 'BinWidth', .5, 'facecolor', lightGrey, 'edgecolor', 'none')
-histogram(earlyChanges, 'BinWidth', .5, 'facecolor', brightCyan, 'edgecolor', 'none')
-[h,p_FT, ks2stat_FT] = kstest(relativeChanges_PG(:,4));
 %%
 relativeChanges_TW = speedRelativeLetterChange(speedRelativeLetterChange(:,2) == 4,:);
 % plot time of last detected letter change (before reach onset) relative to
@@ -260,24 +253,15 @@ relativeChanges_TW = speedRelativeLetterChange(speedRelativeLetterChange(:,2) ==
 earlyChanges = relativeChanges_TW(relativeChanges_TW(:,end) == 1,4);
 figure(44)
 hold on
-xlim([-6.5 2])
+xlim([-5 2])
 ylim([-1 2])
 line([0 0],[-1 2], 'Color', lightGrey)
-line([-6.5 2],[0 0], 'Color', lightGrey)
+line([-5 2],[0 0], 'Color', lightGrey)
 plot(relativeChanges_TW(:,4), relativeChanges_TW(:,5), '.', 'Color', lightGrey)
 plot(earlyChanges, relativeChanges_TW(relativeChanges_TW(:,end) == 1,5), ...
     '.', 'Color', brightCyan)
-for i = -6:0.5:2
+for i = -5:0.5:2
     reactBin = median(relativeChanges_TW(relativeChanges_TW(:,4) < i & relativeChanges_TW(:,4) > i-0.5, 5));
     moveBin = median(relativeChanges_TW(relativeChanges_TW(:,4) < i & relativeChanges_TW(:,4) > i-0.5,6));
     line([i-.5 i], [reactBin reactBin], 'Color', 'k')
 end
-figure(444)
-set(gcf,'renderer','Painters')
-xlim([-6.5 2])
-ylim([0 50])
-hold on
-histogram(relativeChanges_TW(:,4), 'BinWidth', .5, 'facecolor', lightGrey, 'edgecolor', 'none')
-histogram(earlyChanges, 'BinWidth', .5, 'facecolor', brightCyan, 'edgecolor', 'none')
-[h,p_TW, ks2stat_TW] = kstest(relativeChanges_PG(:,4));
-
