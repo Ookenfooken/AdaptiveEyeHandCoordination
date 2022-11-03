@@ -237,7 +237,7 @@ hold on
 xlim([-6.5 2])
 ylim([-1 2])
 line([0 0],[-1 2], 'Color', lightGrey)
-line([-6.5 2],[0 0], 'Color', lightGrey)
+line([-5 2],[0 0], 'Color', lightGrey)
 plot(relativeChanges_PG(:,4), relativeChanges_PG(:,5), '.', 'Color', lightGrey)
 plot(earlyChanges, relativeChanges_PG(relativeChanges_PG(:,end) == 1,5), ...
     '.', 'Color', brightCyan)
@@ -252,6 +252,7 @@ xlim([-6.5 2])
 hold on
 histogram(relativeChanges_PG(:,4), 'BinWidth', .5, 'facecolor', lightGrey, 'edgecolor', 'none')
 histogram(earlyChanges, 'BinWidth', .5, 'facecolor', brightCyan, 'edgecolor', 'none')
+[h,p_FT, ks2stat_FT] = kstest(relativeChanges_PG(:,4));
 %%
 relativeChanges_TW = speedRelativeLetterChange(speedRelativeLetterChange(:,2) == 4,:);
 % plot time of last detected letter change (before reach onset) relative to
@@ -278,4 +279,5 @@ ylim([0 50])
 hold on
 histogram(relativeChanges_TW(:,4), 'BinWidth', .5, 'facecolor', lightGrey, 'edgecolor', 'none')
 histogram(earlyChanges, 'BinWidth', .5, 'facecolor', brightCyan, 'edgecolor', 'none')
+[h,p_TW, ks2stat_TW] = kstest(relativeChanges_PG(:,4));
 
