@@ -162,7 +162,7 @@ clear p_FT y_FT p_TW y_TW
 %% plot the response time (reach onset relative to go signal) vs. the time 
 % of the last detected letter change (relative to go) --> Panels C & D
 numParticipants = 11;
-numVariables = 7;
+numVariables = 6;
 speedRelativeLetterChange = [];
 
 for j = 1:numParticipants % loop over subjects
@@ -179,7 +179,6 @@ for j = 1:numParticipants % loop over subjects
                 continue
             end
 
-            tStart = currentResult(n).info.timeStamp.start;
             goTime = currentResult(n).info.timeStamp.go;
             reach = currentResult(n).info.timeStamp.reach;
             preInterval = 1;
@@ -197,27 +196,25 @@ for j = 1:numParticipants % loop over subjects
                     continue
                 end
             end
-            if reach - detectedChanges(1) > 0 && reach - detectedChanges(1) <= preInterval
-                earlyTrial = 1;
-            end
-            % if the change happened before the reach good
-            if detectedChange <= reach
-                letterChangeBeforeReach = detectedChange - reach;
+            % if the change happened before the go-signal good
+            if detectedChange <= goTime
                 letterChangeRelativeGo = detectedChange - goTime;
             else % otherwise use the previous trial
                 if n > 1 && sum(currentResult(n-1).dualTask.changeDetected) > 0
                     detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
-                    letterChangeBeforeReach = detectedChanges(end) - reach;
                     letterChangeRelativeGo = detectedChanges(end) - goTime;
                 else
                     continue
                 end
             end
-
+            
+            if reach - detectedChanges(1) > 0 && reach - detectedChanges(1) <= preInterval
+                earlyTrial = 1;
+            end
             goToReach = reach-goTime;
             reachDuration = currentResult(n).info.phaseDuration.primaryReach/200;
 
-            currentVariable(n,:) = [currentParticipant blockID letterChangeBeforeReach letterChangeRelativeGo ...
+            currentVariable(n,:) = [currentParticipant blockID letterChangeRelativeGo ...
                 goToReach reachDuration earlyTrial];
         end
 
@@ -231,37 +228,37 @@ brightCyan = [0 174 239]./255;
 relativeChanges_PG = speedRelativeLetterChange(speedRelativeLetterChange(:,2) == 3,:);
 % plot time of last detected letter change (before reach onset) relative to
 % go signal
-earlyChanges = relativeChanges_PG(relativeChanges_PG(:,end) == 1,4);
+earlyChanges = relativeChanges_PG(relativeChanges_PG(:,end) == 1,3);
 figure(33)
 hold on
-xlim([-5 2])
+%xlim([-5 2])
 ylim([-1 2])
 line([0 0],[-1 2], 'Color', lightGrey)
 line([-5 2],[0 0], 'Color', lightGrey)
-plot(relativeChanges_PG(:,4), relativeChanges_PG(:,5), '.', 'Color', lightGrey)
+plot(relativeChanges_PG(:,3), relativeChanges_PG(:,4), '.', 'Color', lightGrey)
 plot(earlyChanges, relativeChanges_PG(relativeChanges_PG(:,end) == 1,5), ...
     '.', 'Color', brightCyan)
-for i = -5:0.5:2
-    reactBin = median(relativeChanges_PG(relativeChanges_PG(:,4) < i & relativeChanges_PG(:,4) > i-0.5, 5));
-    moveBin = median(relativeChanges_PG(relativeChanges_PG(:,4) < i & relativeChanges_PG(:,4) > i-0.5,6));
+for i = -6.5:0.5:2
+    reactBin = median(relativeChanges_PG(relativeChanges_PG(:,3) < i & relativeChanges_PG(:,3) > i-0.5, 5));
+    moveBin = median(relativeChanges_PG(relativeChanges_PG(:,3) < i & relativeChanges_PG(:,3) > i-0.5,6));
     line([i-.5 i], [reactBin reactBin], 'Color', 'k')
 end
 %%
 relativeChanges_TW = speedRelativeLetterChange(speedRelativeLetterChange(:,2) == 4,:);
 % plot time of last detected letter change (before reach onset) relative to
 % reach onset and movement time in red
-earlyChanges = relativeChanges_TW(relativeChanges_TW(:,end) == 1,4);
+earlyChanges = relativeChanges_TW(relativeChanges_TW(:,end) == 1,3);
 figure(44)
 hold on
 xlim([-5 2])
 ylim([-1 2])
 line([0 0],[-1 2], 'Color', lightGrey)
 line([-5 2],[0 0], 'Color', lightGrey)
-plot(relativeChanges_TW(:,4), relativeChanges_TW(:,5), '.', 'Color', lightGrey)
+plot(relativeChanges_TW(:,3), relativeChanges_TW(:,4), '.', 'Color', lightGrey)
 plot(earlyChanges, relativeChanges_TW(relativeChanges_TW(:,end) == 1,5), ...
     '.', 'Color', brightCyan)
 for i = -5:0.5:2
-    reactBin = median(relativeChanges_TW(relativeChanges_TW(:,4) < i & relativeChanges_TW(:,4) > i-0.5, 5));
-    moveBin = median(relativeChanges_TW(relativeChanges_TW(:,4) < i & relativeChanges_TW(:,4) > i-0.5,6));
+    reactBin = median(relativeChanges_TW(relativeChanges_TW(:,3) < i & relativeChanges_TW(:,3) > i-0.5, 5));
+    moveBin = median(relativeChanges_TW(relativeChanges_TW(:,3) < i & relativeChanges_TW(:,3) > i-0.5,6));
     line([i-.5 i], [reactBin reactBin], 'Color', 'k')
 end
