@@ -181,7 +181,6 @@ for j = 1:numParticipants % loop over subjects
 
             goTime = currentResult(n).info.timeStamp.go;
             reach = currentResult(n).info.timeStamp.reach;
-            ballApproach = currentResult(n).info.timeStamp.reach; 
             preInterval = 1;
             nextChange = 0;
             % check whether a letter change was detected in the current
@@ -225,7 +224,7 @@ for j = 1:numParticipants % loop over subjects
                     continue
                 end
             end
-            if nextChangeLC > goTime && nextChangeLC-goTime <= ballApproach - goTime
+            if nextChangeLC > goTime && nextChangeLC-goTime <= reach - goTime
                 nextChange = 1;
             end
             goToReach = reach-goTime;
