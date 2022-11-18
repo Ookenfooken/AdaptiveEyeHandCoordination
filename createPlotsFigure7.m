@@ -77,6 +77,21 @@ for j = 1:numParticipants % loop over subjects
             earlyLCs(c) = earlyLC;
             lateLCs(c) = lateLC;
             clear preReachLC earlyLC lateLC
+            % reach onsets
+            for i = 1:length(currentResult(n).dualTask.tLetterChanges)
+                currentLetterChange = currentResult(n).dualTask.tLetterChanges(i);
+                if currentLetterChange < reach
+                    currentReachOnset(i) = reach-currentLetterChange;
+                else
+                    if n < stopTrial
+                        currentReachOnset(i) = currentResult(n+1).info.timeStamp.reach - currentLetterChange;
+                    else
+                        currentReachOnset(i) = NaN;
+                    end
+                end
+            end
+            reachOnsets(c) = currentReachOnset;
+            clear currentReachOnset
             % ball onsets
             for i = 1:length(currentResult(n).dualTask.tLetterChanges)
                 currentLetterChange = currentResult(n).dualTask.tLetterChanges(i);
@@ -97,6 +112,7 @@ for j = 1:numParticipants % loop over subjects
             end
             ballFixOnsets(c) = currentBallOnset;
             clear currentBallOnset 
+            % slot onsets
             for i = 1:length(currentResult(n).dualTask.tLetterChanges)
                 currentLetterChange = currentResult(n).dualTask.tLetterChanges(i);
                 if currentLetterChange < fixSlotOnset
@@ -141,11 +157,11 @@ for j = 1:numParticipants % loop over subjects
         end
 
         currentVariable = [currentParticipant*ones(1,length(fixationPattern))' blockID*ones(1,length(fixationPattern))' ...
-            fixationPattern' changeDetected' ballFixOnsets' slotFixOnsets' ...
+            fixationPattern' changeDetected' ballFixOnsets' slotFixOnsets' reachOnsets'...
             preReachLCs' earlyLCs' lateLCs'];
 
         eventsRelativeLetter = [eventsRelativeLetter; currentVariable];
-        clear fixationPattern changeDetected ballFixOnsets slotFixOnsets preReachLCs earlyLCs lateLCs
+        clear fixationPattern changeDetected ballFixOnsets slotFixOnsets preReachLCs earlyLCs lateLCs reachOnsets
     end
 end
 
@@ -156,14 +172,11 @@ fixationPatternColors = [[55,126,184]./255;
     [158,154,200]./255
     [77,0,75]./255];
 lightGrey = [189,189,189]./255;
-brightCyan = [0 174 239]./255;
 lightBlue = [66,146,198]./255;
 lightRed = [239,59,44]./255;
-upperBound = 5;
+
 %% plot all ball and slot-only fixations in precision grip trials
-fixations_PG_all = eventsRelativeLetter( eventsRelativeLetter(:,2) == 3,:);
-fixations_PG_detected = fixations_PG_all( fixations_PG_all(:,4) == 1,:);
-fixations_PG_missed = fixations_PG_all( fixations_PG_all(:,4) == 0,:);
+upperBound = 5;
 selectedColumn = 5; % ball fixations
 preReach_PG = fixations_PG_detected( fixations_PG_detected(:,end-2) ==1 ,selectedColumn);
 earlyLC_PG = fixations_PG_detected( fixations_PG_detected(:,end-1) ==1 ,selectedColumn);
@@ -208,9 +221,6 @@ line([1.5 1.5], [0 ymax], 'Color', lightGrey)
 
 clear fixations_PG preReach_PG earlyLC_PG lateLC_PG
 %% plot ball and slot fixations for different fixation patterns in tweezer trials
-fixations_TW_all = eventsRelativeLetter( eventsRelativeLetter(:,2) == 4,:);
-fixations_TW_detected = fixations_TW_all( fixations_TW_all(:,4) == 1,:);
-fixations_TW_missed = fixations_TW_all( fixations_TW_all(:,4) == 0,:);
 selectedColumn = 5; % ball fixations
 selectedPattern = 3; % ball-slot pattern
 fixations_TW = fixations_TW_detected(fixations_TW_detected(:,3) == selectedPattern,:);

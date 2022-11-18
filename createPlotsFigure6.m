@@ -162,7 +162,7 @@ clear p_FT y_FT p_TW y_TW
 %% plot the response time (reach onset relative to go signal) vs. the time 
 % of the last detected letter change (relative to go) --> Panels C & D
 numParticipants = 11;
-numVariables = 5;
+numVariables = 6;
 speedRelativeLetterChange = [];
 
 for j = 1:numParticipants % loop over subjects
@@ -212,6 +212,7 @@ for j = 1:numParticipants % loop over subjects
             % if the change happened before the go-signal good
             if detectedChange <= goTime
                 letterChangeRelativeGo = detectedChange - goTime;
+                nextLCRelativeGo = nextChangeLC - goTime;
             else % otherwise use the previous trial
                 if n > 1 && sum(currentResult(n-1).dualTask.changeDetected) > 0
                     detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
@@ -219,6 +220,7 @@ for j = 1:numParticipants % loop over subjects
                     if sum(currentResult(n).dualTask.changeDetected) > 0
                         nextLCs = currentResult(n).dualTask.tLetterChanges(currentResult(n).dualTask.changeDetected);
                         nextChangeLC = nextLCs(1);
+                        nextLCRelativeGo = nextChangeLC - goTime;
                     end
                 else
                     continue
@@ -230,7 +232,7 @@ for j = 1:numParticipants % loop over subjects
             goToReach = reach-goTime;
 
             currentVariable(n,:) = [currentParticipant blockID letterChangeRelativeGo ...
-                goToReach nextChange];
+                goToReach nextLCRelativeGo nextChange];
         end
 
         speedRelativeLetterChange = [speedRelativeLetterChange; currentVariable];
@@ -239,14 +241,14 @@ end
 
 %%
 lightGrey = [189,189,189]./255;
-brightCyan = [0 174 239]./255; % [141 189 221]./255;
+red = [1 0 0]; % [141 189 221]./255;
 orange = [255,127,0]./255;
 relativeChanges_PG = speedRelativeLetterChange(speedRelativeLetterChange(:,2) == 3,:);
 % plot time of last detected letter change (before reach onset) relative to
 % go signal
 nextChanges = relativeChanges_PG(relativeChanges_PG(:,end) == 1,3);
 lowerLimit = -5;
-upperLimit = 0;
+upperLimit = 1.5;
 figure(33)
 set(gcf,'renderer','Painters', 'Position', [50 100 436 364])
 hold on
@@ -256,7 +258,7 @@ ylim([-1 1.5])
 line([0 0],[-1 2], 'Color', lightGrey)
 plot(relativeChanges_PG(:,3), relativeChanges_PG(:,4), '.', 'Color', lightGrey)
 plot(nextChanges, relativeChanges_PG(relativeChanges_PG(:,end) == 1,4), ...
-    '.', 'Color', brightCyan)
+    '.', 'Color', red)
 for i = lowerLimit+.5:0.5:upperLimit+.5
     reactBin = median(relativeChanges_PG(relativeChanges_PG(:,3) < i & relativeChanges_PG(:,3) > i-0.5, 4));
     line([i-.5 i], [reactBin reactBin], 'Color', 'k')
@@ -275,8 +277,84 @@ ylim([-1 1.5])
 line([0 0],[-1 2], 'Color', lightGrey)
 plot(relativeChanges_TW(:,3), relativeChanges_TW(:,4), '.', 'Color', lightGrey)
 plot(nextChanges, relativeChanges_TW(relativeChanges_TW(:,end) == 1,4), ...
-    '.', 'Color', brightCyan)
+    '.', 'Color', red)
 for i = lowerLimit+.5:0.5:upperLimit+.5
     reactBin = median(relativeChanges_TW(relativeChanges_TW(:,3) < i & relativeChanges_TW(:,3) > i-0.5, 4));
     line([i-.5 i], [reactBin reactBin], 'Color', 'k')
 end
+
+%%
+reachRelativeLetter = [];
+numParticipants = 11;
+
+for j = 1:numParticipants % loop over subjects
+    for blockID = 3:4 % loop over dual task conditions
+        currentResult = pulledData{j,blockID};
+        currentParticipant = currentResult(1).info.subject;
+        numTrials = length(currentResult);
+        % open variable matrices that we want to pull
+        stopTrial = min([numTrials 30]);
+        letterChangeRelativeReach = NaN(numTrials,1);
+        for n = 1:stopTrial % loop over trials for current subject & block
+            if currentResult(n).info.dropped
+                stopTrial = min([stopTrial+1 numTrials]);
+                continue
+            end
+            reach = currentResult(n).info.timeStamp.reach;
+            if sum(currentResult(n).dualTask.changeDetected) > 0
+                detectedChanges = currentResult(n).dualTask.tLetterChanges(currentResult(n).dualTask.changeDetected);
+                detectedChange = detectedChanges(1);
+            else % otherwise use the previous trial
+                if n > 1 && sum(currentResult(n-1).dualTask.changeDetected) > 0
+                    detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
+                    detectedChange = detectedChanges(end);
+                else
+                    continue
+                end
+            end
+
+            % if the change happened before the reach good
+            if detectedChange <= reach
+                letterChangeRelativeReach(n) = reach - detectedChange ;
+            else % otherwise use the previous trial
+                if n > 1 && sum(currentResult(n-1).dualTask.changeDetected) > 0
+                    detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
+                    letterChangeRelativeReach(n) = reach - detectedChanges(end);
+                else
+                    continue
+                end
+            end            
+        end
+
+        currentVariable = [blockID*ones(numTrials,1) ...
+            letterChangeRelativeReach];
+
+        reachRelativeLetter = [reachRelativeLetter; currentVariable];
+    end
+end
+
+%% plot reach onset relative to letter change for PG and TW
+fixations_PG_all = reachRelativeLetter( reachRelativeLetter(:,1) == 3,:);
+fixations_PG_detected = fixations_PG_all(~isnan(fixations_PG_all(:,2)),:);
+[p_PG, ks2statPG] = kstest(fixations_PG_detected(:,2));
+
+fixations_TW_all = reachRelativeLetter( reachRelativeLetter(:,1) == 4,:);
+fixations_TW_detected = fixations_TW_all(~isnan(fixations_TW_all(:,1)),:);
+[p_TW, ks2statTW] = kstest(fixations_TW_detected(:,2));
+
+selectedColumn = 2; % reach onset
+upperBound = 6.5;
+reaches_PG = fixations_PG_detected(fixations_PG_detected(:,selectedColumn) < upperBound, selectedColumn);
+reaches_TW = fixations_TW_detected(fixations_TW_detected(:,selectedColumn) < upperBound, selectedColumn);
+figure(selectedColumn)
+set(gcf,'renderer','Painters')
+histogram(reaches_PG, 'BinWidth', .25, 'facecolor', lightGrey, 'edgecolor', 'none')
+xlim([0 upperBound])
+ylim([0 50])
+box off
+figure(selectedColumn*10)
+set(gcf,'renderer','Painters')
+histogram(reaches_TW, 'BinWidth', .25, 'facecolor', lightGrey, 'edgecolor', 'none')
+xlim([0 upperBound])
+ylim([0 50])
+box off
