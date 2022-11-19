@@ -283,7 +283,7 @@ for i = lowerLimit+.5:0.5:upperLimit+.5
     line([i-.5 i], [reactBin reactBin], 'Color', 'k')
 end
 
-%%
+%% Histograms in Panel E&F
 reachRelativeLetter = [];
 numParticipants = 11;
 
