@@ -129,7 +129,7 @@ for j = 1:numParticipants % loop over subjects
         currentResult = pulledData{j,blockID};
         currentParticipant = currentResult(1).info.subject;
         numTrials = length(currentResult);
-        numMeasures = 7;
+        numMeasures = 6;
         currentVariable = NaN(numTrials,numMeasures);
         % open variable matrices that we want to pull
         stopTrial = min([numTrials 30]);
@@ -157,38 +157,47 @@ for j = 1:numParticipants % loop over subjects
                 continue
             end
             if ~isnan(currentResult(n).dualTask.tLetterChanges(1))
-                currentLetterChange = currentResult(n).dualTask.tLetterChanges(1);
+                detectedChanges = currentResult(n).dualTask.tLetterChanges(currentResult(n).dualTask.changeDetected);
+                if numel(detectedChanges) > 0
+                    currentLetterChange = detectedChanges(1);
+                else
+                    if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
+                        detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
+                        if numel(detectedChanges) > 0
+                            currentLetterChange = detectedChanges(end);
+                        else
+                            continue
+                        end
+                    end
+                end
+                % check if letter change is before fixation onset
                 if currentLetterChange < fixSlotOnset
                     letterChangeRelativeSlotFix = fixSlotOnset - currentLetterChange;
-                    if currentResult(n).dualTask.changeDetected
-                        changeDetected = 1;
-                    else
-                        changeDetected = 0;
-                    end
                 else % otherwise use the previous trial
                     if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
-                        currentLetterChange = currentResult(n-1).dualTask.tLetterChanges(end);
-                        letterChangeRelativeSlotFix = fixSlotOnset - currentLetterChange;
-                        if currentResult(n-1).dualTask.changeDetected(end)
-                            changeDetected = 1;
+                        detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
+                        if numel(detectedChanges) > 0
+                            currentLetterChange = detectedChanges(end);
                         else
-                            changeDetected = 0;
+                            continue
                         end
+                        letterChangeRelativeSlotFix = fixSlotOnset - currentLetterChange;
                     else
                         continue
                     end
                 end
-            elseif n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
-                currentLetterChange = currentResult(n-1).dualTask.tLetterChanges(end);
-                letterChangeRelativeSlotFix = fixSlotOnset - currentLetterChange;
-                if currentResult(n-1).dualTask.changeDetected(end)
-                    changeDetected = 1;
+            elseif n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(end))
+                detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
+                if numel(detectedChanges) > 0
+                    currentLetterChange = detectedChanges(end);
                 else
-                    changeDetected = 0;
+                    continue
                 end
+                letterChangeRelativeSlotFix = fixSlotOnset - currentLetterChange;
             else
                 continue
             end
+            
             % label early and late letter changes for plotting    
             if currentLetterChange < ballApproach && currentLetterChange >= ballApproach-preInterval
                 earlyLC = 1;
@@ -223,12 +232,13 @@ for j = 1:numParticipants % loop over subjects
             end 
             
         currentVariable(n,:) = [currentParticipant blockID fixationPattern ... 
-             changeDetected letterChangeRelativeSlotFix earlyLC lateLC];
+             letterChangeRelativeSlotFix earlyLC lateLC];
+
         end
         currentVariable = currentVariable(~isnan(currentVariable(:,1)),:);
         slotFixationReLetter = [slotFixationReLetter; currentVariable];
         clear fixationPattern changeDetected letterChangeRelativeSlotFix earlyLC lateLC  ballOffset
-        clear fixSlotOnRelative fixSlotOnRelative slotIdx slotOnset cutoff ballApproach slotApproach
+        clear fixSlotOnRelative fixSlotOnset slotIdx slotOnset cutoff ballApproach slotApproach
     end
 end
 
@@ -247,11 +257,9 @@ selectedColumn = 4; % fixation onsets
 
 %% plot all ball and slot-only fixations in precision grip trials
 ballFixations_PG = ballFixationReLetter(ballFixationReLetter(:,2) == 3, :);
-%ballFixation_PG_detected = ballFixations_PG(ballFixations_PG(:,4) == 1, :);
-%ballFixation_PG_missed = ballFixations_PG(ballFixations_PG(:,4) == 0, :);
 earlyLC_PG = ballFixations_PG( ballFixations_PG(:,end-1) ==1 ,selectedColumn);
 lateLC_PG = ballFixations_PG( ballFixations_PG(:,end) ==1 ,selectedColumn);
-figure(selectedColumn)
+figure(1)
 set(gcf,'renderer','Painters')
 hold on
 histogram(ballFixations_PG(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', lightGrey)
@@ -259,7 +267,6 @@ histogram(earlyLC_PG, 'BinWidth', .25, ...
     'facecolor', lightBlue, 'edgecolor', 'none')
 histogram(lateLC_PG, 'BinWidth', .25, ...
     'facecolor', lightRed, 'edgecolor', 'none')
-%histogram(ballFixation_PG_missed(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', 'k')
 xlim([0 upperBound])
 ylim([0 ymax])
 set(gca, 'Ytick', [0 5 10 15 20])
@@ -267,11 +274,8 @@ line([1.5 1.5], [0 ymax], 'Color', lightGrey)
 
 %%
 slotFixations_PG = slotFixationReLetter(slotFixationReLetter(:,2) == 3, :);
-slotFixation_PG_detected = slotFixations_PG(slotFixations_PG(:,4) == 1, :);
-slotFixation_PG_missed = slotFixations_PG(slotFixations_PG(:,4) == 0, :);
 selectedPattern = 2; % slot-only
-fixations_PG = slotFixation_PG_detected(slotFixation_PG_detected(:,3) == selectedPattern,:);
-fixations_PG_missed = slotFixation_PG_missed(slotFixation_PG_missed(:,3) == selectedPattern,:);
+fixations_PG = slotFixations_PG(slotFixations_PG(:,3) == selectedPattern,:);
 earlyLC_PG = fixations_PG( fixations_PG(:,end-1) ==1 ,selectedColumn);
 lateLC_PG = fixations_PG( fixations_PG(:,end) ==1 ,selectedColumn);
 figure(selectedPattern)
@@ -283,13 +287,12 @@ histogram(earlyLC_PG, 'BinWidth', .25, ...
     'facecolor', lightBlue, 'edgecolor', 'none')
 histogram(lateLC_PG, 'BinWidth', .25, ...
     'facecolor', lightRed, 'edgecolor', 'none')
-histogram(fixations_PG_missed(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', 'k')
 xlim([0 upperBound])
 ylim([0 ymax])
 set(gca, 'Ytick', [0 5 10 15 20])
 line([1.5 1.5], [0 ymax], 'Color', lightGrey)
 
-clear fixations_PG fixations_PG_missed earlyLC_PG lateLC_PG
+clear fixations_PG earlyLC_PG lateLC_PG
 %% plot ball fixations for different fixation patterns in tweezer trials
 ballFixations_TW = ballFixationReLetter(ballFixationReLetter(:,2) == 4, :);
 selectedPattern = 3; % ball-slot pattern
@@ -305,22 +308,27 @@ histogram(earlyLC_TW, 'BinWidth', .25, ...
     'facecolor', lightBlue, 'edgecolor', 'none')
 histogram(lateLC_TW, 'BinWidth', .25, ...
     'facecolor', lightRed, 'edgecolor', 'none')
-%histogram(fixations_TW_missed(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', 'k')
 xlim([0 upperBound])
 ylim([0 ymax])
 set(gca, 'Ytick', [0 5 10 15 20])
 line([1.5 1.5], [0 ymax], 'Color', lightGrey)
-
 clear fixations_TW earlyLC_TW lateLC_TW
+
 % add ball-only trials in here
 selectedPattern = 1; % ball-only pattern
-fixations_TW = ballFixation_TW_detected(ballFixation_TW_detected(:,3) == selectedPattern,:);
+fixations_TW = ballFixations_TW(ballFixations_TW(:,3) == selectedPattern,:);
+earlyLC_TW = fixations_TW( fixations_TW(:,end-1) ==1 ,selectedColumn);
+lateLC_TW = fixations_TW( fixations_TW(:,end) ==1 ,selectedColumn);
 histogram(fixations_TW(:,selectedColumn), 'BinWidth', .25, ...
     'facecolor', 'none', 'edgecolor', fixationPatternColors(selectedPattern+1,:))
+histogram(earlyLC_TW, 'BinWidth', .25, ...
+    'facecolor', lightBlue, 'edgecolor', 'none')
+histogram(lateLC_TW, 'BinWidth', .25, ...
+    'facecolor', lightRed, 'edgecolor', 'none')
+clear fixations_TW
 %%
 selectedPattern = 4; % ball-display-slot pattern
-fixations_TW = ballFixation_TW_detected(ballFixation_TW_detected(:,3) == selectedPattern,:);
-fixations_TW_missed = ballFixation_TW_missed(ballFixation_TW_missed(:,3) == selectedPattern,:);
+fixations_TW = ballFixations_TW(ballFixations_TW(:,3) == selectedPattern,:);
 earlyLC_TW = fixations_TW( fixations_TW(:,end-1) ==1 ,selectedColumn);
 lateLC_TW = fixations_TW( fixations_TW(:,end) ==1 ,selectedColumn);
 figure(selectedPattern)
@@ -332,19 +340,15 @@ histogram(earlyLC_TW, 'BinWidth', .25, ...
     'facecolor', lightBlue, 'edgecolor', 'none')
 histogram(lateLC_TW, 'BinWidth', .25, ...
     'facecolor', lightRed, 'edgecolor', 'none')
-histogram(fixations_TW_missed(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', 'k')
 xlim([0 upperBound])
 ylim([0 ymax])
 set(gca, 'Ytick', [0 5 10 15 20])
 line([1.5 1.5], [0 ymax], 'Color', lightGrey)
-clear fixations_TW fixations_TW_missed earlyLC_TW lateLC_TW
+clear fixations_TW earlyLC_TW lateLC_TW
 %%
 slotFixations_TW = slotFixationReLetter(slotFixationReLetter(:,2) == 4, :);
-slotFixation_TW_detected = slotFixations_TW(slotFixations_TW(:,4) == 1, :);
-slotFixation_TW_missed = slotFixations_TW(slotFixations_TW(:,4) == 0, :);
 selectedPattern = 3; % ball-slot pattern
-fixations_TW = slotFixation_TW_detected(slotFixation_TW_detected(:,3) == selectedPattern,:);
-fixations_TW_missed = slotFixation_TW_missed(slotFixation_TW_missed(:,3) == selectedPattern,:);
+fixations_TW = slotFixations_TW(slotFixations_TW(:,3) == selectedPattern,:);
 earlyLC_TW = fixations_TW( fixations_TW(:,end-1) ==1 ,selectedColumn);
 lateLC_TW = fixations_TW( fixations_TW(:,end) ==1 ,selectedColumn);
 figure(selectedPattern*10)
@@ -356,36 +360,42 @@ histogram(earlyLC_TW, 'BinWidth', .25, ...
     'facecolor', lightBlue, 'edgecolor', 'none')
 histogram(lateLC_TW, 'BinWidth', .25, ...
     'facecolor', lightRed, 'edgecolor', 'none')
-histogram(fixations_TW_missed(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', 'k')
 xlim([0 upperBound])
 ylim([0 ymax])
 set(gca, 'Ytick', [0 5 10 15 20])
 line([1.5 1.5], [0 ymax], 'Color', lightGrey)
-clear fixations_TW fixations_TW_missed earlyLC_TW lateLC_TW
-%%
-selectedPattern = 4; % ball-display-slot pattern
-fixations_TW = slotFixation_TW_detected(slotFixation_TW_detected(:,3) == selectedPattern,:);
-fixations_TW_missed = slotFixation_TW_missed(slotFixation_TW_missed(:,3) == selectedPattern,:);
-earlyLC_TW = fixations_TW( fixations_TW(:,end-1) ==1 ,selectedColumn);
-lateLC_TW = fixations_TW( fixations_TW(:,end) ==1 ,selectedColumn);
-figure(selectedPattern*10)
-set(gcf,'renderer','Painters')
-hold on
-histogram(fixations_TW(:,selectedColumn), 'BinWidth', .25, ...
-    'facecolor', 'none', 'edgecolor', fixationPatternColors(selectedPattern+1,:))
-histogram(earlyLC_TW, 'BinWidth', .25, ...
-    'facecolor', lightBlue, 'edgecolor', 'none')
-histogram(lateLC_TW, 'BinWidth', .25, ...
-    'facecolor', lightRed, 'edgecolor', 'none')
-histogram(fixations_TW_missed(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', 'k')
-xlim([0 upperBound])
-ylim([0 ymax])
-set(gca, 'Ytick', [0 5 10 15 20])
-line([1.5 1.5], [0 ymax], 'Color', lightGrey)
-clear fixations_TW fixations_TW_missed earlyLC_TW lateLC_TW
+clear fixations_TW earlyLC_TW lateLC_TW
+
 % add slot-only trials in here
 selectedPattern = 2; % ball-display-slot pattern
-fixations_TW = slotFixation_TW_detected(slotFixation_TW_detected(:,3) == selectedPattern,:);
+fixations_TW = slotFixations_TW(slotFixations_TW(:,3) == selectedPattern,:);
 histogram(fixations_TW(:,selectedColumn), 'BinWidth', .25, ...
     'facecolor', 'none', 'edgecolor', fixationPatternColors(selectedPattern+1,:))
+earlyLC_TW = fixations_TW( fixations_TW(:,end-1) ==1 ,selectedColumn);
+lateLC_TW = fixations_TW( fixations_TW(:,end) ==1 ,selectedColumn);
+histogram(earlyLC_TW, 'BinWidth', .25, ...
+    'facecolor', lightBlue, 'edgecolor', 'none')
+histogram(lateLC_TW, 'BinWidth', .25, ...
+    'facecolor', lightRed, 'edgecolor', 'none')
+clear fixations_TW
+%%
+selectedPattern = 4; % ball-display-slot pattern
+fixations_TW = slotFixations_TW(slotFixations_TW(:,3) == selectedPattern,:);
+earlyLC_TW = fixations_TW( fixations_TW(:,end-1) ==1 ,selectedColumn);
+lateLC_TW = fixations_TW( fixations_TW(:,end) ==1 ,selectedColumn);
+figure(selectedPattern*10)
+set(gcf,'renderer','Painters')
+hold on
+histogram(fixations_TW(:,selectedColumn), 'BinWidth', .25, ...
+    'facecolor', 'none', 'edgecolor', fixationPatternColors(selectedPattern+1,:))
+histogram(earlyLC_TW, 'BinWidth', .25, ...
+    'facecolor', lightBlue, 'edgecolor', 'none')
+histogram(lateLC_TW, 'BinWidth', .25, ...
+    'facecolor', lightRed, 'edgecolor', 'none')
+xlim([0 upperBound])
+ylim([0 ymax])
+set(gca, 'Ytick', [0 5 10 15 20])
+line([1.5 1.5], [0 ymax], 'Color', lightGrey)
+clear fixations_TW earlyLC_TW lateLC_TW
+
 
