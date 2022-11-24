@@ -26,8 +26,8 @@ for j = 1:numParticipants % loop over subjects
             end
             % now consider ball and slot fixation onsets relative to
             % approach phases
-            ballApproach = currentResult(n).info.timeStamp.ballApproach;
-            slotApproach = currentResult(n).info.timeStamp.slotApproach;
+            ballGrasp = currentResult(n).info.timeStamp.ballGrasp;
+            slotEntry = currentResult(n).info.timeStamp.ballInSlot;
             preInterval = 1.5;
             % ball fixations
             if ~isempty(currentResult(n).gaze.fixation.onsetsBall)
@@ -78,13 +78,13 @@ for j = 1:numParticipants % loop over subjects
                 continue
             end
             % label early and late letter changes for plotting    
-            if currentLetterChange < ballApproach && currentLetterChange >= ballApproach-preInterval
+            if currentLetterChange < ballGrasp && currentLetterChange >= ballGrasp-preInterval
                 earlyLC = 1;
             else
                 earlyLC = 0;
             end
-            cutoff = max([slotApproach-preInterval ballApproach]);
-            if currentLetterChange < slotApproach && currentLetterChange >= cutoff
+            cutoff = max([slotEntry-preInterval ballGrasp]);
+            if currentLetterChange < slotEntry && currentLetterChange >= cutoff
                 lateLC = 1;
             else
                 lateLC = 0;
@@ -116,7 +116,7 @@ for j = 1:numParticipants % loop over subjects
         currentVariable = currentVariable(~isnan(currentVariable(:,1)),:);
         ballFixationReLetter = [ballFixationReLetter; currentVariable];
         clear fixationPattern letterChangeRelativeBallFix earlyLC lateLC 
-        clear fixBallOnRelative fixBallOnset cutoff ballApproach slotApproach slotIdx slotOnset ballOffset
+        clear fixBallOnRelative fixBallOnset cutoff ballGrasp slotEntry slotIdx slotOnset ballOffset
     end
 end
 %% calculate slot fixation onsets relative to letter changes
@@ -142,8 +142,8 @@ for j = 1:numParticipants % loop over subjects
             missedChange = NaN;
             % now consider ball and slot fixation onsets relative to
             % approach phases
-            ballApproach = currentResult(n).info.timeStamp.ballApproach;
-            slotApproach = currentResult(n).info.timeStamp.slotApproach;
+            ballGrasp = currentResult(n).info.timeStamp.ballGrasp;
+            slotEntry = currentResult(n).info.timeStamp.ballInSlot;
             % slot fixations
             if ~isempty(currentResult(n).gaze.fixation.onsetsSlot)
                 if ~isempty(currentResult(n).gaze.fixation.offsetsBall)
@@ -199,13 +199,13 @@ for j = 1:numParticipants % loop over subjects
             end
             
             % label early and late letter changes for plotting    
-            if currentLetterChange < ballApproach && currentLetterChange >= ballApproach-preInterval
+            if currentLetterChange < ballGrasp && currentLetterChange >= ballGrasp-preInterval
                 earlyLC = 1;
             else
                 earlyLC = 0;
             end
-            cutoff = max([slotApproach-preInterval ballApproach]);
-            if currentLetterChange < slotApproach && currentLetterChange >= cutoff
+            cutoff = max([slotEntry-preInterval ballGrasp]);
+            if currentLetterChange < slotEntry && currentLetterChange >= cutoff
                 lateLC = 1;
             else
                 lateLC = 0;
@@ -238,7 +238,7 @@ for j = 1:numParticipants % loop over subjects
         currentVariable = currentVariable(~isnan(currentVariable(:,1)),:);
         slotFixationReLetter = [slotFixationReLetter; currentVariable];
         clear fixationPattern changeDetected letterChangeRelativeSlotFix earlyLC lateLC  ballOffset
-        clear fixSlotOnRelative fixSlotOnset slotIdx slotOnset cutoff ballApproach slotApproach
+        clear fixSlotOnRelative fixSlotOnset slotIdx slotOnset cutoff ballGrasp slotEntry
     end
 end
 
@@ -257,12 +257,14 @@ selectedColumn = 4; % fixation onsets
 
 %% plot all ball and slot-only fixations in precision grip trials
 ballFixations_PG = ballFixationReLetter(ballFixationReLetter(:,2) == 3, :);
-earlyLC_PG = ballFixations_PG( ballFixations_PG(:,end-1) ==1 ,selectedColumn);
-lateLC_PG = ballFixations_PG( ballFixations_PG(:,end) ==1 ,selectedColumn);
+selectedPattern = 1; % exclude ball-only
+fixations_PG = ballFixations_PG(ballFixations_PG(:,3) ~= selectedPattern,:);
+earlyLC_PG = fixations_PG( fixations_PG(:,end-1) ==1 ,selectedColumn);
+lateLC_PG = fixations_PG( fixations_PG(:,end) ==1 ,selectedColumn);
 figure(1)
 set(gcf,'renderer','Painters')
 hold on
-histogram(ballFixations_PG(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', lightGrey)
+histogram(fixations_PG(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', lightGrey)
 histogram(earlyLC_PG, 'BinWidth', .25, ...
     'facecolor', lightBlue, 'edgecolor', 'none')
 histogram(lateLC_PG, 'BinWidth', .25, ...
@@ -271,7 +273,7 @@ xlim([0 upperBound])
 ylim([0 ymax])
 set(gca, 'Ytick', [0 5 10 15 20])
 line([1.5 1.5], [0 ymax], 'Color', lightGrey)
-
+clear fixations_PG earlyLC_PG lateLC_PG
 %%
 slotFixations_PG = slotFixationReLetter(slotFixationReLetter(:,2) == 3, :);
 selectedPattern = 2; % slot-only
@@ -314,18 +316,6 @@ set(gca, 'Ytick', [0 5 10 15 20])
 line([1.5 1.5], [0 ymax], 'Color', lightGrey)
 clear fixations_TW earlyLC_TW lateLC_TW
 
-% add ball-only trials in here
-selectedPattern = 1; % ball-only pattern
-fixations_TW = ballFixations_TW(ballFixations_TW(:,3) == selectedPattern,:);
-earlyLC_TW = fixations_TW( fixations_TW(:,end-1) ==1 ,selectedColumn);
-lateLC_TW = fixations_TW( fixations_TW(:,end) ==1 ,selectedColumn);
-histogram(fixations_TW(:,selectedColumn), 'BinWidth', .25, ...
-    'facecolor', 'none', 'edgecolor', fixationPatternColors(selectedPattern+1,:))
-histogram(earlyLC_TW, 'BinWidth', .25, ...
-    'facecolor', lightBlue, 'edgecolor', 'none')
-histogram(lateLC_TW, 'BinWidth', .25, ...
-    'facecolor', lightRed, 'edgecolor', 'none')
-clear fixations_TW
 %%
 selectedPattern = 4; % ball-display-slot pattern
 fixations_TW = ballFixations_TW(ballFixations_TW(:,3) == selectedPattern,:);
@@ -364,20 +354,8 @@ xlim([0 upperBound])
 ylim([0 ymax])
 set(gca, 'Ytick', [0 5 10 15 20])
 line([1.5 1.5], [0 ymax], 'Color', lightGrey)
-clear fixations_TW earlyLC_TW lateLC_TW
 
-% add slot-only trials in here
-selectedPattern = 2; % ball-display-slot pattern
-fixations_TW = slotFixations_TW(slotFixations_TW(:,3) == selectedPattern,:);
-histogram(fixations_TW(:,selectedColumn), 'BinWidth', .25, ...
-    'facecolor', 'none', 'edgecolor', fixationPatternColors(selectedPattern+1,:))
-earlyLC_TW = fixations_TW( fixations_TW(:,end-1) ==1 ,selectedColumn);
-lateLC_TW = fixations_TW( fixations_TW(:,end) ==1 ,selectedColumn);
-histogram(earlyLC_TW, 'BinWidth', .25, ...
-    'facecolor', lightBlue, 'edgecolor', 'none')
-histogram(lateLC_TW, 'BinWidth', .25, ...
-    'facecolor', lightRed, 'edgecolor', 'none')
-clear fixations_TW
+clear fixations_TW earlyLC_TW lateLC_TW
 %%
 selectedPattern = 4; % ball-display-slot pattern
 fixations_TW = slotFixations_TW(slotFixations_TW(:,3) == selectedPattern,:);
@@ -396,6 +374,26 @@ xlim([0 upperBound])
 ylim([0 ymax])
 set(gca, 'Ytick', [0 5 10 15 20])
 line([1.5 1.5], [0 ymax], 'Color', lightGrey)
-clear fixations_TW earlyLC_TW lateLC_TW
 
+clear fixations_TW earlyLC_TW lateLC_TW
+%% 
+selectedPattern = 2; % ball-display-slot pattern
+fixations_TW = slotFixations_TW(slotFixations_TW(:,3) == selectedPattern,:);
+earlyLC_TW = fixations_TW( fixations_TW(:,end-1) ==1 ,selectedColumn);
+lateLC_TW = fixations_TW( fixations_TW(:,end) ==1 ,selectedColumn);
+figure(selectedPattern*10)
+set(gcf,'renderer','Painters')
+hold on
+histogram(fixations_TW(:,selectedColumn), 'BinWidth', .25, ...
+    'facecolor', 'none', 'edgecolor', fixationPatternColors(selectedPattern+1,:))
+histogram(earlyLC_TW, 'BinWidth', .25, ...
+    'facecolor', lightBlue, 'edgecolor', 'none')
+histogram(lateLC_TW, 'BinWidth', .25, ...
+    'facecolor', lightRed, 'edgecolor', 'none')
+xlim([0 upperBound])
+ylim([0 ymax])
+set(gca, 'Ytick', [0 5 10 15 20])
+line([1.5 1.5], [0 ymax], 'Color', lightGrey)
+
+clear fixations_TW earlyLC_TW lateLC_TW
 
