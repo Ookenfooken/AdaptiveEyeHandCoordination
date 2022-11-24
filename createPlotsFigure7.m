@@ -15,7 +15,7 @@ for j = 1:numParticipants % loop over subjects
         currentResult = pulledData{j,blockID};
         currentParticipant = currentResult(1).info.subject;
         numTrials = length(currentResult);
-        numMeasures = 7;
+        numMeasures = 6;
         currentVariable = NaN(numTrials,numMeasures);
         % open variable matrices that we want to pull
         stopTrial = min([numTrials 30]);
@@ -24,8 +24,6 @@ for j = 1:numParticipants % loop over subjects
                 stopTrial = min([stopTrial+1 numTrials]);
                 continue
             end
-            detectedChange = NaN;
-            missedChange = NaN;
             % now consider ball and slot fixation onsets relative to
             % approach phases
             ballApproach = currentResult(n).info.timeStamp.ballApproach;
@@ -39,35 +37,43 @@ for j = 1:numParticipants % loop over subjects
                 continue
             end
             if ~isnan(currentResult(n).dualTask.tLetterChanges(1))
-                currentLetterChange = currentResult(n).dualTask.tLetterChanges(1);
+                detectedChanges = currentResult(n).dualTask.tLetterChanges(currentResult(n).dualTask.changeDetected);
+                if numel(detectedChanges) > 0
+                    currentLetterChange = detectedChanges(1);
+                else
+                    if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
+                        detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
+                        if numel(detectedChanges) > 0
+                            currentLetterChange = detectedChanges(end);
+                        else
+                            continue
+                        end
+                    end
+                end
+                % check if letter change is before fixation onset
                 if currentLetterChange < fixBallOnset
                     letterChangeRelativeBallFix = fixBallOnset - currentLetterChange;
-                    if currentResult(n).dualTask.changeDetected
-                        changeDetected = 1;
-                    else
-                        changeDetected = 0;
-                    end
                 else % otherwise use the previous trial
                     if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
-                        currentLetterChange = currentResult(n-1).dualTask.tLetterChanges(end);
-                        letterChangeRelativeBallFix = fixBallOnset - currentLetterChange;
-                        if currentResult(n-1).dualTask.changeDetected(end)
-                            changeDetected = 1;
+                        detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
+                        if numel(detectedChanges) > 0
+                            currentLetterChange = detectedChanges(end);
                         else
-                            changeDetected = 0;
+                            continue
                         end
+                        letterChangeRelativeBallFix = fixBallOnset - currentLetterChange;
                     else
                         continue
                     end
                 end
-            elseif n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
-                currentLetterChange = currentResult(n-1).dualTask.tLetterChanges(end);
-                letterChangeRelativeBallFix = fixBallOnset - currentLetterChange;
-                if currentResult(n-1).dualTask.changeDetected(end)
-                    changeDetected = 1;
+            elseif n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(end))
+                detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
+                if numel(detectedChanges) > 0
+                    currentLetterChange = detectedChanges(end);
                 else
-                    changeDetected = 0;
+                    continue
                 end
+                letterChangeRelativeBallFix = fixBallOnset - currentLetterChange;
             else
                 continue
             end
@@ -105,11 +111,11 @@ for j = 1:numParticipants % loop over subjects
             end 
             
         currentVariable(n,:) = [currentParticipant blockID fixationPattern ... 
-             changeDetected letterChangeRelativeBallFix earlyLC lateLC];
+             letterChangeRelativeBallFix earlyLC lateLC];
         end
         currentVariable = currentVariable(~isnan(currentVariable(:,1)),:);
         ballFixationReLetter = [ballFixationReLetter; currentVariable];
-        clear fixationPattern changeDetected letterChangeRelativeBallFix earlyLC lateLC 
+        clear fixationPattern letterChangeRelativeBallFix earlyLC lateLC 
         clear fixBallOnRelative fixBallOnset cutoff ballApproach slotApproach slotIdx slotOnset ballOffset
     end
 end
@@ -237,23 +243,23 @@ lightBlue = [66,146,198]./255;
 lightRed = [239,59,44]./255;
 upperBound = 5;
 ymax = 20;
-selectedColumn = 5; % fixation onsets
+selectedColumn = 4; % fixation onsets
 
 %% plot all ball and slot-only fixations in precision grip trials
 ballFixations_PG = ballFixationReLetter(ballFixationReLetter(:,2) == 3, :);
-ballFixation_PG_detected = ballFixations_PG(ballFixations_PG(:,4) == 1, :);
-ballFixation_PG_missed = ballFixations_PG(ballFixations_PG(:,4) == 0, :);
-earlyLC_PG = ballFixation_PG_detected( ballFixation_PG_detected(:,end-1) ==1 ,selectedColumn);
-lateLC_PG = ballFixation_PG_detected( ballFixation_PG_detected(:,end) ==1 ,selectedColumn);
+%ballFixation_PG_detected = ballFixations_PG(ballFixations_PG(:,4) == 1, :);
+%ballFixation_PG_missed = ballFixations_PG(ballFixations_PG(:,4) == 0, :);
+earlyLC_PG = ballFixations_PG( ballFixations_PG(:,end-1) ==1 ,selectedColumn);
+lateLC_PG = ballFixations_PG( ballFixations_PG(:,end) ==1 ,selectedColumn);
 figure(selectedColumn)
 set(gcf,'renderer','Painters')
 hold on
-histogram(ballFixation_PG_detected(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', lightGrey)
+histogram(ballFixations_PG(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', lightGrey)
 histogram(earlyLC_PG, 'BinWidth', .25, ...
     'facecolor', lightBlue, 'edgecolor', 'none')
 histogram(lateLC_PG, 'BinWidth', .25, ...
     'facecolor', lightRed, 'edgecolor', 'none')
-histogram(ballFixation_PG_missed(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', 'k')
+%histogram(ballFixation_PG_missed(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', 'k')
 xlim([0 upperBound])
 ylim([0 ymax])
 set(gca, 'Ytick', [0 5 10 15 20])
@@ -286,11 +292,8 @@ line([1.5 1.5], [0 ymax], 'Color', lightGrey)
 clear fixations_PG fixations_PG_missed earlyLC_PG lateLC_PG
 %% plot ball fixations for different fixation patterns in tweezer trials
 ballFixations_TW = ballFixationReLetter(ballFixationReLetter(:,2) == 4, :);
-ballFixation_TW_detected = ballFixations_TW(ballFixations_TW(:,4) == 1, :);
-ballFixation_TW_missed = ballFixations_TW(ballFixations_TW(:,4) == 0, :);
 selectedPattern = 3; % ball-slot pattern
-fixations_TW = ballFixation_TW_detected(ballFixation_TW_detected(:,3) == selectedPattern,:);
-fixations_TW_missed = ballFixation_TW_missed(ballFixation_TW_missed(:,3) == selectedPattern,:);
+fixations_TW = ballFixations_TW(ballFixations_TW(:,3) == selectedPattern,:);
 earlyLC_TW = fixations_TW( fixations_TW(:,end-1) ==1 ,selectedColumn);
 lateLC_TW = fixations_TW( fixations_TW(:,end) ==1 ,selectedColumn);
 figure(selectedPattern)
@@ -302,13 +305,18 @@ histogram(earlyLC_TW, 'BinWidth', .25, ...
     'facecolor', lightBlue, 'edgecolor', 'none')
 histogram(lateLC_TW, 'BinWidth', .25, ...
     'facecolor', lightRed, 'edgecolor', 'none')
-histogram(fixations_TW_missed(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', 'k')
+%histogram(fixations_TW_missed(:,selectedColumn), 'BinWidth', .25, 'facecolor', 'none', 'edgecolor', 'k')
 xlim([0 upperBound])
 ylim([0 ymax])
 set(gca, 'Ytick', [0 5 10 15 20])
 line([1.5 1.5], [0 ymax], 'Color', lightGrey)
 
-clear fixations_TW fixations_TW_missed earlyLC_TW lateLC_TW
+clear fixations_TW earlyLC_TW lateLC_TW
+% add ball-only trials in here
+selectedPattern = 1; % ball-only pattern
+fixations_TW = ballFixation_TW_detected(ballFixation_TW_detected(:,3) == selectedPattern,:);
+histogram(fixations_TW(:,selectedColumn), 'BinWidth', .25, ...
+    'facecolor', 'none', 'edgecolor', fixationPatternColors(selectedPattern+1,:))
 %%
 selectedPattern = 4; % ball-display-slot pattern
 fixations_TW = ballFixation_TW_detected(ballFixation_TW_detected(:,3) == selectedPattern,:);
@@ -330,11 +338,6 @@ ylim([0 ymax])
 set(gca, 'Ytick', [0 5 10 15 20])
 line([1.5 1.5], [0 ymax], 'Color', lightGrey)
 clear fixations_TW fixations_TW_missed earlyLC_TW lateLC_TW
-% add ball-only trials in here
-selectedPattern = 1; % ball-only pattern
-fixations_TW = ballFixation_TW_detected(ballFixation_TW_detected(:,3) == selectedPattern,:);
-histogram(fixations_TW(:,selectedColumn), 'BinWidth', .25, ...
-    'facecolor', 'none', 'edgecolor', fixationPatternColors(selectedPattern+1,:))
 %%
 slotFixations_TW = slotFixationReLetter(slotFixationReLetter(:,2) == 4, :);
 slotFixation_TW_detected = slotFixations_TW(slotFixations_TW(:,4) == 1, :);
