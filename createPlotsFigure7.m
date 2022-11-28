@@ -295,6 +295,24 @@ set(gca, 'Ytick', [0 5 10 15 20])
 line([1.5 1.5], [0 ymax], 'Color', lightGrey)
 
 clear fixations_PG earlyLC_PG lateLC_PG
+%%
+selectedPattern = 2; % slot-only
+fixations_PG = slotFixations_PG(slotFixations_PG(:,3) ~= selectedPattern,:);
+earlyLC_PG = fixations_PG( fixations_PG(:,end-1) ==1 ,selectedColumn);
+lateLC_PG = fixations_PG( fixations_PG(:,end) ==1 ,selectedColumn);
+figure(selectedPattern-1)
+set(gcf,'renderer','Painters')
+hold on
+histogram(fixations_PG(:,selectedColumn), 'BinWidth', .25, ...
+    'facecolor', 'none', 'edgecolor', 'k')
+histogram(earlyLC_PG, 'BinWidth', .25, ...
+    'facecolor', lightBlue, 'edgecolor', 'none')
+histogram(lateLC_PG, 'BinWidth', .25, ...
+    'facecolor', lightRed, 'edgecolor', 'none')
+xlim([0 upperBound])
+ylim([0 ymax])
+set(gca, 'Ytick', [0 5 10 15 20])
+line([1.5 1.5], [0 ymax], 'Color', lightGrey)
 %% plot ball fixations for different fixation patterns in tweezer trials
 ballFixations_TW = ballFixationReLetter(ballFixationReLetter(:,2) == 4, :);
 selectedPattern = 3; % ball-slot pattern
