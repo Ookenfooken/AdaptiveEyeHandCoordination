@@ -144,3 +144,110 @@ histogram(slotFix_PG, 'BinWidth', .25, 'facecolor', green, 'edgecolor', 'none')
 xlim([0 upperBound])
 ylim([0 20])
 box off
+%%
+
+changesPhases = [];
+for j = 1:numParticipants % loop over subjects
+    for blockID = 3:4 % loop over blocks/experimental conditions
+        c = 1;
+        currentResult = pulledData{j,blockID};
+        currentParticipant = currentResult(1).info.subject;
+        numTrials = length(currentResult);
+        stopTrial = min([numTrials 30]);
+        for n = 1:stopTrial % loop over trials for current subject & block
+            if currentResult(n).info.dropped
+                stopTrial = min([stopTrial+1 numTrials]);
+                continue
+            end
+            if isnan(currentResult(n).dualTask.tLetterChanges)
+                continue
+            end
+            reach = currentResult(n).info.timeStamp.reach;
+            ballApproach = currentResult(n).info.timeStamp.ballApproach;
+            grasp = currentResult(n).info.timeStamp.ballGrasp;
+            transport = currentResult(n).info.timeStamp.transport;
+            slotApproach = currentResult(n).info.timeStamp.slotApproach;
+            slotEntry = currentResult(n).info.timeStamp.ballInSlot;
+            returnOn = currentResult(n).info.timeStamp.return;
+            trialEnd = currentResult(n).info.timeStamp.trialEnd;
+            phase0 = 0;
+            phase1 = 0;
+            phase2 = 0;
+            phase3 = 0;
+            phase4 = 0;
+            phase5 = 0;
+            phase6 = 0;
+            ohase7 = 0;
+            
+            if n < stopTrial
+                nextReach = currentResult(n+1).info.timeStamp.reach;
+            else
+                nextReach = trialEnd;
+            end
+            
+            for i = 1:length(currentResult(n).dualTask.tLetterChanges)
+                if currentResult(n).dualTask.tLetterChanges(i) <= reach
+                    phase0 = 1;
+                elseif currentResult(n).dualTask.tLetterChanges(i) > reach && ...
+                        currentResult(n).dualTask.tLetterChanges(i) <= ballApproach
+                    phase1 = 1;
+                elseif currentResult(n).dualTask.tLetterChanges(i) > ballApproach && ...
+                        currentResult(n).dualTask.tLetterChanges(i) <= grasp
+                    phase2 = 1;
+                elseif currentResult(n).dualTask.tLetterChanges(i) > grasp && ...
+                        currentResult(n).dualTask.tLetterChanges(i) <= transport
+                    phase3 = 1;
+                elseif currentResult(n).dualTask.tLetterChanges(i) > transport && ...
+                        currentResult(n).dualTask.tLetterChanges(i) <= slotApproach
+                    phase4 = 1;
+                elseif currentResult(n).dualTask.tLetterChanges(i) > slotApproach && ...
+                        currentResult(n).dualTask.tLetterChanges(i) <= slotEntry
+                    phase5 = 1;
+                elseif currentResult(n).dualTask.tLetterChanges(i) > slotEntry && ...
+                        currentResult(n).dualTask.tLetterChanges(i) <= returnOn
+                    phase6 = 1;
+                elseif currentResult(n).dualTask.tLetterChanges(i) > returnOn && ...
+                        currentResult(n).dualTask.tLetterChanges(i) <= nextReach
+                    phase7 = 1;
+                end
+                currentPerformance(c+i-1,:) = [currentParticipant blockID ...
+                    currentResult(n).dualTask.changeDetected(i) ...
+                    phase0 phase1 phase2 phase3 phase4 phase5 phase6 phase7];
+                c = c + 1;
+            end
+                          
+        end
+        
+        changesPhases = [changesPhases; currentPerformance];
+        clear currentPerformance
+    end
+end
+clear c 
+%%
+letterChanges_PG = changesPhases(changesPhases(:,2) == 3, :);
+detected_PG = letterChanges_PG(letterChanges_PG(:,3) == 1, :);
+missed_PG = letterChanges_PG(letterChanges_PG(:,3) == 0, :);
+PG_misses_relative = sum(missed_PG(:, 4:end));%./sum(letterChanges_PG(:, 4:end));
+
+letterChanges_TW = changesPhases(changesPhases(:,2) == 4, :);
+detected_TW = letterChanges_TW(letterChanges_TW(:,3) == 1, :);
+missed_TW = letterChanges_TW(letterChanges_TW(:,3) == 0, :);
+TW_misses_relative = sum(missed_TW(:, 4:end));%./sum(letterChanges_TW(:, 4:end));
+
+barData = [PG_misses_relative' TW_misses_relative'];
+
+figure(13)
+set(gcf,'renderer','Painters')
+hold on
+xlim([0.5 8.5])
+set(gca, 'Xtick', [1 2 3 4 5 6 7 8], 'Xticklabel', ...
+    {'reach', 'ball approach', 'grasp', 'transport', ...
+    'slot approach', 'slot', 'return', 'ITI'})
+b = bar(barData);
+box off
+b(1).FaceColor = 'none';
+b(1).EdgeColor = 'k';
+b(2).FaceColor = 'k';
+b(2).FaceAlpha = 0.5;
+b(2).EdgeColor = 'none';
+legend('fingertips', 'tweezers')
