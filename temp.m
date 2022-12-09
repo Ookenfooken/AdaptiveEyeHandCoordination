@@ -1,3 +1,4 @@
+
 %% Histograms in Panel E&F
 ballFixRelativeLetter = [];
 numParticipants = 11;
@@ -251,3 +252,44 @@ b(2).FaceColor = 'k';
 b(2).FaceAlpha = 0.5;
 b(2).EdgeColor = 'none';
 legend('fingertips', 'tweezers')
+
+%% histograms of different fixatin durations in different functional zones
+selectedColumn = 7; % 7: fixReachDuration; 8: fixBallDuration; 9: fixTransportDuration
+upperBound = 1000;
+ymax = 40;
+figure(selectedColumn)
+set(gcf,'renderer','Painters')
+hold on
+fixations = ballFixFunctions(ballFixFunctions(:,selectedColumn) ~= 0,:);
+histogram(fixations(fixations(:,2) == 4, selectedColumn), 'BinWidth', 50, ...
+    'facecolor', lightGrey, 'edgecolor', 'none')
+histogram(fixations(fixations(:,2) == 3, selectedColumn), 'BinWidth', 50, ...
+    'facecolor', darkGrey, 'edgecolor', 'none')
+xlim([0 upperBound])
+set(gca, 'Xtick', [0 200 400 600 800 1000])
+ylim([0 ymax])
+set(gca, 'Ytick', [0 10 20 30 40])
+box off
+%title('reach fixations')
+%title('ball approach & grasp fixations')
+title('transport fixations')
+%%
+selectedColumn = 7; % 7: fixTransportDuration; 8: fixSlotDuration; 9: fixReturnDuration
+upperBound = 1000;
+ymax = 40;
+figure(selectedColumn*10)
+set(gcf,'renderer','Painters')
+hold on
+fixations = slotFixFunctions(slotFixFunctions(:,selectedColumn) ~= 0,:);
+histogram(fixations(fixations(:,2) == 4, selectedColumn), 'BinWidth', 50, ...
+    'facecolor', lightGrey, 'edgecolor', 'none')
+histogram(fixations(fixations(:,2) == 3, selectedColumn), 'BinWidth', 50, ...
+    'facecolor', darkGrey, 'edgecolor', 'none')
+xlim([0 upperBound])
+set(gca, 'Xtick', [0 200 400 600 800 1000])
+ylim([0 ymax])
+set(gca, 'Ytick', [0 10 20 30 40])
+box off
+%title('transport fixations')
+%title('slot approach & slot fixations')
+title('return fixations')

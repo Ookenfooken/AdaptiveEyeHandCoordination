@@ -8,7 +8,7 @@ cd(analysisPath)
 numParticipants = 11;
 numBlocks = 4;
 preApproachMarker = 20; % 20 samples = 100 ms
-minGuideDuration = 40; % 40 samples = 200 ms
+minGuideDuration = 20; % 20 samples = 100 ms
 
 %% assign functions to each ball fixation
 ballFixFunctions = [];
@@ -308,26 +308,56 @@ ballFixFunction = [3*ones(numParticipants,1) participantBallDots(:,end) ...
     2*ones(numParticipants,1) ones(numParticipants,1) participantBallDots(:,4); ...
     4*ones(numParticipants,1) participantBallDots(:,end) ...
     3*ones(numParticipants,1) ones(numParticipants,1) participantBallDots(:,6)];
-%%
-selectedColumn = 7; % 7: fixReachDuration; 8: fixBallDuration; 9: fixTransportDuration
-upperBound = 1000;
-ymax = 40;
-figure(selectedColumn)
+
+%% single function
+ballSingleFunction_PG = ballFixFunctions_PG(ballFixFunctions_PG(:,3) == 1,:);
+ballSingleFunction_TW = ballFixFunctions_TW(ballFixFunctions_TW(:,3) == 1,:);
+
+figure(111)
 set(gcf,'renderer','Painters')
 hold on
-fixations = ballFixFunctions(ballFixFunctions(:,selectedColumn) ~= 0,:);
-histogram(fixations(fixations(:,2) == 4, selectedColumn), 'BinWidth', 50, ...
-    'facecolor', lightGrey, 'edgecolor', 'none')
-histogram(fixations(fixations(:,2) == 3, selectedColumn), 'BinWidth', 50, ...
-    'facecolor', darkGrey, 'edgecolor', 'none')
-xlim([0 upperBound])
-set(gca, 'Xtick', [0 200 400 600 800 1000])
-ylim([0 ymax])
-set(gca, 'Ytick', [0 10 20 30 40])
+xlim([0.5 3.5])
+set(gca, 'Xtick', [1 2 3], 'Xticklabel', {'directing', 'guiding', 'checking'})
+set(gca, 'Ytick', [0 .25 .5 .75 1])
+
+singleBallDots = NaN(numParticipants,7);
+for pat = 1:numParticipants
+    directPG = sum(ballSingleFunction_PG(ballSingleFunction_PG(:,1) == pat,4))/ ...
+        length(ballFixFunctions_PG(ballFixFunctions_PG(:,1) == pat,4));
+    directTW = sum(ballSingleFunction_TW(ballSingleFunction_TW(:,1) == pat,4))/ ...
+        length(ballFixFunctions_TW(ballFixFunctions_TW(:,1) == pat,4));
+    guidePG = sum(ballSingleFunction_PG(ballSingleFunction_PG(:,1) == pat,5))/ ...
+        length(ballFixFunctions_PG(ballFixFunctions_PG(:,1) == pat,4));
+    guideTW = sum(ballSingleFunction_TW(ballSingleFunction_TW(:,1) == pat,5))/ ...
+        length(ballFixFunctions_TW(ballFixFunctions_TW(:,1) == pat,4));
+    checkPG = sum(ballSingleFunction_PG(ballSingleFunction_PG(:,1) == pat,6))/ ...
+        length(ballFixFunctions_PG(ballFixFunctions_PG(:,1) == pat,4));
+    checkTW = sum(ballSingleFunction_TW(ballSingleFunction_TW(:,1) == pat,6))/ ...
+        length(ballFixFunctions_TW(ballFixFunctions_TW(:,1) == pat,4));
+    plot(0.85, directPG, 'o', 'MarkerEdgeColor', orange, 'MarkerFaceColor', 'none')
+    plot(1.15, directTW, 'o', 'MarkerEdgeColor', 'none', 'MarkerFaceColor', orange)
+    plot(1.85, guidePG, 'o', 'MarkerEdgeColor', orange, 'MarkerFaceColor', 'none')
+    plot(2.15, guideTW, 'o', 'MarkerEdgeColor', 'none', 'MarkerFaceColor', orange)
+    plot(2.85, checkPG, 'o', 'MarkerEdgeColor', orange, 'MarkerFaceColor', 'none')
+    plot(3.15, checkTW, 'o', 'MarkerEdgeColor', 'none', 'MarkerFaceColor', orange)
+    singleBallDots(pat,:) = [directPG directTW guidePG guideTW ...
+        checkPG checkTW pat];
+end
+
+ballBarData = [nanmean(singleBallDots(:,1)) ...
+    nanmean(singleBallDots(:,2)); ...
+    nanmean(singleBallDots(:,3)) ...
+    nanmean(singleBallDots(:,4)); ...
+    nanmean(singleBallDots(:,5)) ...
+    nanmean(singleBallDots(:,6))];
+
+b = bar(ballBarData);
 box off
-%title('reach fixations')
-%title('ball approach & grasp fixations')
-title('transport fixations')
+b(1).FaceColor = 'none';
+b(1).EdgeColor = orange;
+b(2).FaceColor = orange;
+b(2).FaceAlpha = 0.5;
+b(2).EdgeColor = 'none';
 %%
 slotFixFunctions = slotFixFunctions(~isnan(slotFixFunctions(:,1)),:);
 slotFixFunctions_PG = slotFixFunctions(slotFixFunctions(:,2) == 3,:);
@@ -391,28 +421,58 @@ slotFixFunction = [3*ones(numParticipants,1) participantSlotDots(:,end) ...
     2*ones(numParticipants,1) 2*ones(numParticipants,1) participantSlotDots(:,4); ...
     4*ones(numParticipants,1) participantSlotDots(:,end) ...
     3*ones(numParticipants,1) 2*ones(numParticipants,1) participantSlotDots(:,6)];
-%%
-selectedColumn = 7; % 7: fixTransportDuration; 8: fixSlotDuration; 9: fixReturnDuration
-upperBound = 1000;
-ymax = 40;
-figure(selectedColumn*10)
+
+%% slot fixations single function
+slotSingleFunction_PG = slotFixFunctions_PG(slotFixFunctions_PG(:,3) == 1,:);
+slotSingleFunction_TW = slotFixFunctions_TW(slotFixFunctions_TW(:,3) == 1,:);
+
+figure(222)
 set(gcf,'renderer','Painters')
 hold on
-fixations = slotFixFunctions(slotFixFunctions(:,selectedColumn) ~= 0,:);
-histogram(fixations(fixations(:,2) == 4, selectedColumn), 'BinWidth', 50, ...
-    'facecolor', lightGrey, 'edgecolor', 'none')
-histogram(fixations(fixations(:,2) == 3, selectedColumn), 'BinWidth', 50, ...
-    'facecolor', darkGrey, 'edgecolor', 'none')
-xlim([0 upperBound])
-set(gca, 'Xtick', [0 200 400 600 800 1000])
-ylim([0 ymax])
-set(gca, 'Ytick', [0 10 20 30 40])
-box off
-%title('transport fixations')
-%title('slot approach & slot fixations')
-title('return fixations')
+xlim([0.5 3.5])
+set(gca, 'Xtick', [1 2 3], 'Xticklabel', {'directing', 'guiding', 'checking'})
+set(gca, 'Ytick', [0 .25 .5 .75 1])
 
-%%
+singleSlotDots = NaN(numParticipants,7);
+for pat = 1:numParticipants
+    directPG = sum(slotSingleFunction_PG(slotSingleFunction_PG(:,1) == pat,4))/ ...
+        length(slotFixFunctions_PG(slotFixFunctions_PG(:,1) == pat,4));
+    directTW = sum(slotSingleFunction_TW(slotSingleFunction_TW(:,1) == pat,4))/ ...
+        length(slotFixFunctions_TW(slotFixFunctions_TW(:,1) == pat,4));
+    guidePG = sum(slotSingleFunction_PG(slotSingleFunction_PG(:,1) == pat,5))/ ...
+        length(slotFixFunctions_PG(slotFixFunctions_PG(:,1) == pat,4));
+    guideTW = sum(slotSingleFunction_TW(slotSingleFunction_TW(:,1) == pat,5))/ ...
+        length(slotFixFunctions_TW(slotFixFunctions_TW(:,1) == pat,4));
+    checkPG = sum(slotSingleFunction_PG(slotSingleFunction_PG(:,1) == pat,6))/ ...
+        length(slotFixFunctions_PG(slotFixFunctions_PG(:,1) == pat,4));
+    checkTW = sum(slotSingleFunction_TW(slotSingleFunction_TW(:,1) == pat,6))/ ...
+        length(slotFixFunctions_TW(slotFixFunctions_TW(:,1) == pat,4));
+    plot(0.85, directPG, 'o', 'MarkerEdgeColor', green, 'MarkerFaceColor', 'none')
+    plot(1.15, directTW, 'o', 'MarkerEdgeColor', 'none', 'MarkerFaceColor', green)
+    plot(1.85, guidePG, 'o', 'MarkerEdgeColor', green, 'MarkerFaceColor', 'none')
+    plot(2.15, guideTW, 'o', 'MarkerEdgeColor', 'none', 'MarkerFaceColor', green)
+    plot(2.85, checkPG, 'o', 'MarkerEdgeColor', green, 'MarkerFaceColor', 'none')
+    plot(3.15, checkTW, 'o', 'MarkerEdgeColor', 'none', 'MarkerFaceColor', green)
+    singleSlotDots(pat,:) = [directPG directTW guidePG guideTW ...
+        checkPG checkTW pat];
+end
+
+slotBarData = [nanmean(singleSlotDots(:,1)) ...
+    nanmean(singleSlotDots(:,2)); ...
+    nanmean(singleSlotDots(:,3)) ...
+    nanmean(singleSlotDots(:,4)); ...
+    nanmean(singleSlotDots(:,5)) ...
+    nanmean(singleSlotDots(:,6))];
+
+b = bar(slotBarData);
+box off
+b(1).FaceColor = 'none';
+b(1).EdgeColor = green;
+b(2).FaceColor = green;
+b(2).FaceAlpha = 0.5;
+b(2).EdgeColor = 'none';
+
+%% save the data for stats
 cd(savePath)
 save('ballFixFunction', 'ballFixFunction')
 save('slotFixFunction', 'slotFixFunction')
