@@ -137,7 +137,7 @@ green = [77,175,74]./255;
 
 fixations_PG_all = slotFixRelativeLetter( slotFixRelativeLetter(:,1) == 3,:);
 fixations_PG_detected = fixations_PG_all(~isnan(fixations_PG_all(:,2)),:);
-[p_PG, ks2statPG] = kstest(fixations_PG_detected(:,2));
+[h_PG, p_PG, ks2statPG] = kstest(fixations_PG_detected(:,2));
 slotFix_PG = fixations_PG_detected(fixations_PG_detected(:,selectedColumn) < upperBound, selectedColumn);
 figure(selectedColumn)
 set(gcf,'renderer','Painters')
