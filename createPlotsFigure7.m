@@ -487,3 +487,103 @@ rangeVector = min(fixations_TW(:,selectedColumn)):stepSize:...
 [h,p_H,ks2stat] = kstest2(fixations_TW(:,selectedColumn), rangeVector);
 clear fixations_TW earlyLC_TW lateLC_TW preReach_TW
 
+%%
+LCbetweenFixations = [];
+
+for j = 1:numParticipants % loop over subjects
+    for blockID = 3:4 % loop over dual task conditions
+        currentResult = pulledData{j,blockID};
+        currentParticipant = currentResult(1).info.subject;
+        numTrials = length(currentResult);
+        numMeasures = 2;
+        currentVariable = NaN(numTrials,numMeasures);
+        % open variable matrices that we want to pull
+        stopTrial = min([numTrials 30]);
+        for n = 1:stopTrial % loop over trials for current subject & block
+            if currentResult(n).info.dropped
+                stopTrial = min([stopTrial+1 numTrials]);
+                continue
+            end
+
+            if ~isempty(currentResult(n).gaze.fixation.onsetsBall) && ~isempty(currentResult(n).gaze.fixation.onsetsSlot) && ...
+                    numel(currentResult(n).gaze.fixation.onsetsBall) < 2
+                fixBallOnRelative = currentResult(n).gaze.fixation.onsetsBall(1)/200;
+                fixBallOnset = currentResult(n).info.timeStamp.go + fixBallOnRelative;
+                if ~isempty(currentResult(n).gaze.fixation.offsetsBall)
+                    slotIdx = find(currentResult(n).gaze.fixation.onsetsSlot > currentResult(n).gaze.fixation.offsetsBall(1), 1, 'first');
+                else
+                    slotIdx = 1;
+                end
+                fixSlotOnRelative = currentResult(n).gaze.fixation.onsetsSlot(slotIdx)/200;
+                fixSlotOnset = currentResult(n).info.timeStamp.go + fixSlotOnRelative;
+            else
+                continue
+            end
+            % find "current" letter change
+            if ~isnan(currentResult(n).dualTask.tLetterChanges(1))
+                detectedChanges = currentResult(n).dualTask.tLetterChanges(currentResult(n).dualTask.changeDetected);
+                if numel(detectedChanges) > 0
+                    currentLetterChange = detectedChanges(1);
+                    if numel(detectedChanges) > 1
+                        nextLetterChange = detectedChanges(2);
+                    else
+                        nextLetterChange = NaN;
+                    end
+                else
+                    if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
+                        detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
+                        if numel(detectedChanges) > 0
+                            currentLetterChange = detectedChanges(end);
+                            nextLetterChange = NaN;
+                        else
+                            continue
+                        end
+                    else
+                        continue
+                    end
+                end
+            else
+                if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
+                    detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
+                    if numel(detectedChanges) > 0
+                        currentLetterChange = detectedChanges(end);
+                        nextLetterChange = NaN;
+                    else
+                        continue
+                    end
+                else
+                    continue
+                end
+            end
+            % check if letter change is before fixation onset
+
+            if currentLetterChange > fixBallOnset
+                nextLetterChange = currentLetterChange;
+                % update current letter change
+                if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
+                    detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
+                    if numel(detectedChanges) > 0
+                        currentLetterChange = detectedChanges(end);
+                    else
+                        continue
+                    end
+                else
+                    continue
+                end
+            end
+            if nextLetterChange < fixSlotOnset 
+                LCbetween = 1;
+            elseif currentLetterChange < fixBallOnset
+                LCbetween = 0;
+            else
+                LCbetween = 99;
+            end
+
+            currentVariable(n,:) = [blockID LCbetween];
+        end
+        currentVariable = currentVariable(~isnan(currentVariable(:,1)),:);
+        LCbetweenFixations = [LCbetweenFixations; currentVariable];
+        clear currentLetterChange nextLetterChange fixBallOnRelative fixBallOnset
+        clear fixSlotOnRelative fixSlotOnRelative LCbetween slotIdx
+    end
+end
