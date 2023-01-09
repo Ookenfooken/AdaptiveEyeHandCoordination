@@ -504,6 +504,7 @@ for j = 1:numParticipants % loop over subjects
                 stopTrial = min([stopTrial+1 numTrials]);
                 continue
             end
+            reach = currentResult(n).info.timeStamp.reach;
 
             if ~isempty(currentResult(n).gaze.fixation.onsetsBall) && ~isempty(currentResult(n).gaze.fixation.onsetsSlot) && ...
                     numel(currentResult(n).gaze.fixation.onsetsBall) < 2
@@ -571,9 +572,9 @@ for j = 1:numParticipants % loop over subjects
                     continue
                 end
             end
-            if nextLetterChange < fixSlotOnset 
+            if currentLetterChange >= reach-1 && nextLetterChange < fixSlotOnset 
                 LCbetween = 1;
-            elseif currentLetterChange < fixBallOnset
+            elseif currentLetterChange < fixBallOnset && currentLetterChange >= reach-1
                 LCbetween = 0;
             else
                 LCbetween = 99;
@@ -587,3 +588,7 @@ for j = 1:numParticipants % loop over subjects
         clear fixSlotOnRelative fixSlotOnRelative LCbetween slotIdx
     end
 end
+%% count trials in which LC happens >= 1 second before reach and the next 
+% letter change happens after ball fixation and before slot fixation onset
+earlyLCs = LCbetweenFixations(LCbetweenFixations(:,2) ~= 99 ,:);
+1- sum(earlyLCs(:,2))/length(earlyLCs)
