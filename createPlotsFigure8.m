@@ -162,7 +162,7 @@ for blockID = 3:4
                 if numel(detectedChanges) > 0
                     currentLetterChange = detectedChanges(1);
                     if currentLetterChange < decisionPoint
-                        graspDifference = currentLetterChange-relevantEvent;
+                        eventDifference = currentLetterChange-relevantEvent;
                         LCused = 1;
                     end
                 end
@@ -173,7 +173,7 @@ for blockID = 3:4
                     if numel(detectedChanges) > 0
                         currentLetterChange = detectedChanges(end);
                         if currentLetterChange < decisionPoint
-                            graspDifference = currentLetterChange-relevantEvent;
+                            eventDifference = currentLetterChange-relevantEvent;
                             LCused = 1;
                         end
                     end
@@ -185,7 +185,7 @@ for blockID = 3:4
                     if numel(detectedChanges) > 0
                         currentLetterChange = detectedChanges(end);
                         if currentLetterChange < decisionPoint
-                            graspDifference = currentLetterChange-relevantEvent;
+                            eventDifference = currentLetterChange-relevantEvent;
                             LCused = 1;
                         end
                     end
@@ -195,7 +195,7 @@ for blockID = 3:4
                 continue
             end
             
-            currentGazeSequence(n,3:4) = [fixationPattern graspDifference];
+            currentGazeSequence(n,3:4) = [fixationPattern eventDifference];
             
         end
         gazeSequence = [gazeSequence; currentGazeSequence];
@@ -222,21 +222,20 @@ phaseOnsetsGrasp(2,:) = mean(phaseOnsetsPat(phaseOnsetsPat(:,1) == 4, 2:end));
 %% plot probability of letter change in fingertip trials relative to grasp (Panel A)
 blockID = 3;
 currentTool = gazeSequence(gazeSequence(:,1) == blockID,:);
-selectedColumn = 4; % 4: grasp
+selectedColumn = 4; % 4: event column
 stepSize = .5;
 lowerBound = -medianFixDurations(1,3)-.1-9*stepSize+stepSize/2;
 upperBound = -medianFixDurations(1,3)-.1;
-figure(blockID*selectedColumn) % relative to ball grasp
+figure(blockID) % relative to slot entry
 set(gcf,'renderer','Painters')
 hold on
-probabilities = NaN(3,9);
+probabilities = NaN(2,9);
 t = 1;
 for timePoint = lowerBound:stepSize:upperBound
     currentTimeWindow = currentTool(currentTool(:,selectedColumn) > timePoint-stepSize/2 & ...
         currentTool(:,selectedColumn) < timePoint+stepSize/2, 3);
     probabilities(1,t) = sum(currentTimeWindow == 0);%/length(currentTimeWindow);
     probabilities(2,t) = sum(currentTimeWindow == 2);%/length(currentTimeWindow);
-    %probabilities(3,t) = sum(currentTimeWindow > 2)/length(currentTimeWindow);
     t = t+1;
 end
 
@@ -253,61 +252,93 @@ for n = 1:2
     b.FaceColor = pickedColour;
     b.FaceAlpha = .5;
 end
-line([0 0], [0 1], 'Color', 'r')
-%ylim([0 1])
-set(gca, 'Ytick', [0 .25 .5 .75 1])
+ymax = 40;
+line([0 0], [0 ymax], 'Color', 'r')
+ylim([0 ymax])
+%set(gca, 'Ytick', [0 .25 .5 .75 1])
+set(gca, 'Ytick', [0 10 20 30 40])
 clear probabilities
 
 % add kinematic events
 % reach
-line([phaseOnsetsGrasp(1,2) phaseOnsetsGrasp(1,2)], [0 1], ...
+line([phaseOnsetsGrasp(1,2) phaseOnsetsGrasp(1,2)], [0 ymax], ...
      'Color', gray, 'LineStyle', '--')
 % transport
-line([phaseOnsetsGrasp(1,3) phaseOnsetsGrasp(1,3)], [0 1], ...
+line([phaseOnsetsGrasp(1,3) phaseOnsetsGrasp(1,3)], [0 ymax], ...
      'Color', gray, 'LineStyle', '--')
-% slot entry
-line([phaseOnsetsGrasp(1,4) phaseOnsetsGrasp(1,4)], [0 1], ...
+% % slot entry
+% line([phaseOnsetsGrasp(1,4) phaseOnsetsGrasp(1,4)], [0 ymax], ...
+%      'Color', gray, 'LineStyle', '--')
+
+%% plot ball fixation trials in fingertip trials
+blockID = 3;
+currentTool = gazeSequence(gazeSequence(:,1) == blockID,:);
+selectedColumn = 4; % 4: event column
+lowerBound = -medianFixDurations(1,2)-.1-9*stepSize+stepSize/2;
+upperBound = -medianFixDurations(1,2)-.1;
+figure(blockID*10) % relative to ball grasp
+set(gcf,'renderer','Painters')
+hold on
+probabilities = NaN(1,9);
+t = 1;
+for timePoint = lowerBound:stepSize:upperBound
+    currentTimeWindow = currentTool(currentTool(:,selectedColumn) > timePoint-stepSize/2 & ...
+        currentTool(:,selectedColumn) < timePoint+stepSize/2, 3);
+    probabilities(1,t) = sum(currentTimeWindow > 2);%/length(currentTimeWindow);
+    t = t+1;
+end
+
+pickedColour = gray;
+b = bar(lowerBound:.5:upperBound, probabilities(1,:), 1);
+b.EdgeColor = 'none';
+b.FaceColor = pickedColour;
+b.FaceAlpha = .5;
+
+ymax = 40;
+line([0 0], [0 ymax], 'Color', 'r')
+ylim([0 ymax])
+%set(gca, 'Ytick', [0 .25 .5 .75 1])
+set(gca, 'Ytick', [0 10 20 30 40])
+
+% add kinematic events
+% reach
+line([phaseOnsetsGrasp(2,1) phaseOnsetsGrasp(2,1)], [0 ymax], ...
      'Color', gray, 'LineStyle', '--')
  
 clear probabilities
 %% plot probability of letter change in tweezer trials relative to grasp (Panel C)
 blockID = 4;
 currentTool = gazeSequence(gazeSequence(:,1) == blockID,:);
-selectedColumn = 4; % 4: grasp, 5: slot entry
+selectedColumn = 4; % 4: selected event
 lowerBound = -medianFixDurations(2,2)-.1-9*stepSize+stepSize/2;
 upperBound = -medianFixDurations(2,2)-.1;
-figure(blockID*selectedColumn) % relative to ball grasp
+figure(blockID) % relative to ball grasp
 set(gcf,'renderer','Painters')
 hold on
-probabilities = NaN(3,9);
+probabilities = NaN(2,9);
 t = 1;
 for timePoint = lowerBound:.5:upperBound
     currentTimeWindow = currentTool(currentTool(:,selectedColumn) > timePoint-.25 & ...
         currentTool(:,selectedColumn) < timePoint+.25, 3);
-    probabilities(1,t) = sum(currentTimeWindow == 2)/length(currentTimeWindow);
-    probabilities(2,t) = sum(currentTimeWindow == 3)/length(currentTimeWindow);
-    probabilities(3,t) = sum(currentTimeWindow == 4)/length(currentTimeWindow);
+    probabilities(1,t) = sum(currentTimeWindow == 3);%/length(currentTimeWindow);
+    probabilities(2,t) = sum(currentTimeWindow == 4);%/length(currentTimeWindow);
     t = t+1;
 end
-for n = 1:3
+for n = 1:2
     b = bar(lowerBound:.5:upperBound, probabilities(n,:), 1);
     b.EdgeColor = 'none';
-    b.FaceColor = fixationPatternColors(n+2,:);
+    b.FaceColor = fixationPatternColors(n+3,:);
     b.FaceAlpha = .5;
 end
-line([0 0], [0 1], 'Color', 'r')
-%ylim([0 1])
-set(gca, 'Ytick', [0 .25 .5 .75 1])
-
+ymax = 40;
+line([0 0], [0 ymax], 'Color', 'r')
+ylim([0 ymax])
+%set(gca, 'Ytick', [0 .25 .5 .75 1])
+set(gca, 'Ytick', [0 10 20 30 40])
+ 
 % add kinematic events
 % reach
-line([phaseOnsetsGrasp(2,1) phaseOnsetsGrasp(2,1)], [0 1], ...
+line([phaseOnsetsGrasp(2,1) phaseOnsetsGrasp(2,1)], [0 ymax], ...
      'Color', gray, 'LineStyle', '--')
-% % transport
-% line([phaseOnsetsGrasp(2,2) phaseOnsetsGrasp(2,2)], [0 1], ...
-%      'Color', gray, 'LineStyle', '--')
-% % slot entry
-% line([phaseOnsetsGrasp(2,3) phaseOnsetsGrasp(2,3)], [0 1], ...
-%      'Color', gray, 'LineStyle', '--')
  
 clear probabilities
