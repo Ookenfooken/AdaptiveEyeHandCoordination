@@ -47,24 +47,39 @@ for blockID = 3:4
             ballGrasp = currentResult(n).info.phaseStart.ballGrasp-startTime;
             slotEntry = currentResult(n).info.phaseStart.ballInSlot-startTime;
             if ~isempty(currentResult(n).gaze.fixation.onsetsBall)
-                ballFixRelGrasp = (ballGrasp - currentResult(n).gaze.fixation.onsetsBall(1))/200;
+                ballFixOnset = currentResult(n).gaze.fixation.onsetsBall(1);
+                sacIdx = find(currentResult(n).gaze.saccades.onsets < ceil(ballFixOnset), 1, 'last');
+                sacOnset = currentResult(n).gaze.saccades.onsets(sacIdx);
+                if isempty(sacOnset)
+                    sacOnset = currentResult(n).gaze.fixation.onsetsBall(1) - 20; % ball onset minus 100 ms
+                end
+                ballFixRelGrasp = (ballGrasp - sacOnset)/200;
             else
                 ballFixRelGrasp = NaN;
             end
             if ~isempty(currentResult(n).gaze.fixation.offsetsBall) && ~isempty(currentResult(n).gaze.fixation.onsetsSlot)
                 ballOffset = currentResult(n).gaze.fixation.offsetsBall(1);
                 slotIdx = find(currentResult(n).gaze.fixation.onsetsSlot > ballOffset, 1, 'first');
+                slotFixOnset = currentResult(n).gaze.fixation.onsetsSlot(slotIdx);
+                sacIdx = find(currentResult(n).gaze.saccades.onsets < ceil(slotFixOnset), 1, 'last');
+                sacOnset = currentResult(n).gaze.saccades.onsets(sacIdx);
+                if isempty(sacOnset)
+                    sacOnset = currentResult(n).gaze.fixation.onsetsSlot(slotIdx) - 20; % ball onset minus 100 ms
+                end
+                slotFixRelEntry = (slotEntry - sacOnset)/200;
+            elseif ~isempty(currentResult(n).gaze.fixation.onsetsSlot)
+                slotFixOnset = currentResult(n).gaze.fixation.onsetsSlot(1);
+                sacIdx = find(currentResult(n).gaze.saccades.onsets < ceil(slotFixOnset), 1, 'last');
+                sacOnset = currentResult(n).gaze.saccades.onsets(sacIdx);
+                if isempty(sacOnset)
+                    sacOnset = currentResult(n).gaze.fixation.onsetsSlot(1) - 20; % ball onset minus 100 ms
+                end
+                slotFixRelEntry = (slotEntry - sacOnset)/200;
             else
-                slotIdx = 1;
-            end
-            if ~isempty(currentResult(n).gaze.fixation.onsetsSlot)
-                slotOnset = currentResult(n).gaze.fixation.onsetsSlot(slotIdx);
-                slotFixRelGrasp = (slotEntry - slotOnset)/200;
-            else
-                slotFixRelGrasp = NaN;
+                slotFixRelEntry = NaN;
             end
             currentFixations(n,:) = [blockID fixationPattern ballFixRelGrasp ...
-                slotFixRelGrasp];
+                slotFixRelEntry];
 
         end
         fixationDurations = [fixationDurations; currentFixations];
@@ -94,11 +109,12 @@ for blockID = 3:4
             end
             LCused = 0;
             ballGrasp = currentResult(n).info.timeStamp.ballGrasp;
+            slotEntry = currentResult(n).info.timeStamp.ballInSlot;
             currentGazeSequence(n,1:2) = [blockID currentParticipant];
             currentGazeSequence(n,5) = currentResult(n).info.timeStamp.reach - ballGrasp;
-            currentGazeSequence(n,6) = currentResult(n).info.timeStamp.transport - ballGrasp;
-            currentGazeSequence(n,7) = currentResult(n).info.timeStamp.ballInSlot - ballGrasp;
-            currentGazeSequence(n,8) = currentResult(n).info.timeStamp.return - ballGrasp;
+            currentGazeSequence(n,6) = currentResult(n).info.timeStamp.reach - slotEntry;
+            currentGazeSequence(n,7) = currentResult(n).info.timeStamp.transport - slotEntry;
+            currentGazeSequence(n,8) = currentResult(n).info.timeStamp.ballInSlot - slotEntry;
             % cannot classify trials in which the ball is fixated multiple times
             if numel(currentResult(n).gaze.fixation.onsetsBall) > 1
                 continue
@@ -124,15 +140,18 @@ for blockID = 3:4
             % for ball patterns use ball-contact - median(ball_fixation_onset)
             if blockID == 3
                 if fixationPattern == 2 || fixationPattern == 0
-                    decisionPoint = currentResult(n).info.timeStamp.ballInSlot - medianFixDurations(1,3);
+                    relevantEvent = slotEntry;
+                    decisionPoint = slotEntry - medianFixDurations(1,3)-.1;
                 elseif fixationPattern > 2
-                    decisionPoint = currentResult(n).info.timeStamp.ballGrasp - medianFixDurations(1,2);
+                    decisionPoint = ballGrasp - medianFixDurations(1,2)-.1;
+                    relevantEvent = ballGrasp;
                 else
                     continue
                 end
             else
                 if fixationPattern > 2
                     decisionPoint = currentResult(n).info.timeStamp.ballGrasp - medianFixDurations(2,3);
+                    relevantEvent = ballGrasp;
                 else
                     continue
                 end
@@ -143,7 +162,7 @@ for blockID = 3:4
                 if numel(detectedChanges) > 0
                     currentLetterChange = detectedChanges(1);
                     if currentLetterChange < decisionPoint
-                        graspDifference = currentLetterChange-ballGrasp;
+                        graspDifference = currentLetterChange-relevantEvent;
                         LCused = 1;
                     end
                 end
@@ -154,7 +173,7 @@ for blockID = 3:4
                     if numel(detectedChanges) > 0
                         currentLetterChange = detectedChanges(end);
                         if currentLetterChange < decisionPoint
-                            graspDifference = currentLetterChange-ballGrasp;
+                            graspDifference = currentLetterChange-relevantEvent;
                             LCused = 1;
                         end
                     end
@@ -166,7 +185,7 @@ for blockID = 3:4
                     if numel(detectedChanges) > 0
                         currentLetterChange = detectedChanges(end);
                         if currentLetterChange < decisionPoint
-                            graspDifference = currentLetterChange-ballGrasp;
+                            graspDifference = currentLetterChange-relevantEvent;
                             LCused = 1;
                         end
                     end
@@ -204,23 +223,24 @@ phaseOnsetsGrasp(2,:) = mean(phaseOnsetsPat(phaseOnsetsPat(:,1) == 4, 2:end));
 blockID = 3;
 currentTool = gazeSequence(gazeSequence(:,1) == blockID,:);
 selectedColumn = 4; % 4: grasp
-lowerBound = -4;
-upperBound = 0.75;
+stepSize = .5;
+lowerBound = -medianFixDurations(1,3)-.1-9*stepSize+stepSize/2;
+upperBound = -medianFixDurations(1,3)-.1;
 figure(blockID*selectedColumn) % relative to ball grasp
 set(gcf,'renderer','Painters')
 hold on
 probabilities = NaN(3,9);
 t = 1;
-for timePoint = lowerBound:.5:upperBound
-    currentTimeWindow = currentTool(currentTool(:,selectedColumn) > timePoint-.25 & ...
-        currentTool(:,selectedColumn) < timePoint+.25, 3);
-    probabilities(1,t) = sum(currentTimeWindow == 0)/length(currentTimeWindow);
-    probabilities(2,t) = sum(currentTimeWindow == 2)/length(currentTimeWindow);
-    probabilities(3,t) = sum(currentTimeWindow > 2)/length(currentTimeWindow);
+for timePoint = lowerBound:stepSize:upperBound
+    currentTimeWindow = currentTool(currentTool(:,selectedColumn) > timePoint-stepSize/2 & ...
+        currentTool(:,selectedColumn) < timePoint+stepSize/2, 3);
+    probabilities(1,t) = sum(currentTimeWindow == 0);%/length(currentTimeWindow);
+    probabilities(2,t) = sum(currentTimeWindow == 2);%/length(currentTimeWindow);
+    %probabilities(3,t) = sum(currentTimeWindow > 2)/length(currentTimeWindow);
     t = t+1;
 end
 
-for n = 1:3
+for n = 1:2
     if n == 1
         pickedColour = fixationPatternColors(1,:);
     elseif n == 2
@@ -234,19 +254,19 @@ for n = 1:3
     b.FaceAlpha = .5;
 end
 line([0 0], [0 1], 'Color', 'r')
-ylim([0 1])
+%ylim([0 1])
 set(gca, 'Ytick', [0 .25 .5 .75 1])
 clear probabilities
 
 % add kinematic events
 % reach
-line([phaseOnsetsGrasp(1,1) phaseOnsetsGrasp(1,1)], [0 1], ...
-     'Color', gray, 'LineStyle', '--')
-% transport
 line([phaseOnsetsGrasp(1,2) phaseOnsetsGrasp(1,2)], [0 1], ...
      'Color', gray, 'LineStyle', '--')
-% slot entry
+% transport
 line([phaseOnsetsGrasp(1,3) phaseOnsetsGrasp(1,3)], [0 1], ...
+     'Color', gray, 'LineStyle', '--')
+% slot entry
+line([phaseOnsetsGrasp(1,4) phaseOnsetsGrasp(1,4)], [0 1], ...
      'Color', gray, 'LineStyle', '--')
  
 clear probabilities
@@ -254,8 +274,8 @@ clear probabilities
 blockID = 4;
 currentTool = gazeSequence(gazeSequence(:,1) == blockID,:);
 selectedColumn = 4; % 4: grasp, 5: slot entry
-lowerBound = -4.5;
-upperBound = 0;
+lowerBound = -medianFixDurations(2,2)-.1-9*stepSize+stepSize/2;
+upperBound = -medianFixDurations(2,2)-.1;
 figure(blockID*selectedColumn) % relative to ball grasp
 set(gcf,'renderer','Painters')
 hold on
@@ -276,7 +296,7 @@ for n = 1:3
     b.FaceAlpha = .5;
 end
 line([0 0], [0 1], 'Color', 'r')
-ylim([0 1])
+%ylim([0 1])
 set(gca, 'Ytick', [0 .25 .5 .75 1])
 
 % add kinematic events
