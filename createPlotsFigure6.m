@@ -55,7 +55,7 @@ for j = 1:2 % hand and tweezer
     currentData = letterChanges(letterChanges(:,2) == j+2, :);
     currentData = currentData(~isnan(currentData(:,3)),:);
     allTrials = size(currentData,1);
-    for blockID = 1:4
+    for blockID = 3:4
         letterChangeNo(j,blockID) = length(currentData(currentData(:,3) == blockID-1,:))/allTrials;
     end
     clear allTrials    

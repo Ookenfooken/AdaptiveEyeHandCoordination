@@ -1,6 +1,5 @@
 analysisPath = pwd;
 resultPath = fullfile(pwd,'results\');
-savePath = fullfile(pwd,'R\');
 cd(resultPath)
 % load in data
 load('pulledData.mat')

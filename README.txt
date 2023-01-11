@@ -36,35 +36,33 @@ Analyzes gaze shifts from ball to slot in single task and from the slot back to 
 Stats are then calculated in R (compareGazeShifts.R).
 
 - createPlotFigure2and3.m
-Generates matlab plots of fixation probabilities and tool speed in a normalized time frame. Requires normalizeMovementsPhases.m
-
-- createPlotsFigure4.m
-Generates matlab plot of fixation pattern probability for different grasp modes (Figure 4B) and histograms of ball and 
-slot fixations in dual task condition (4C). Histograms require histf.m.
+Generates matlab plots of fixation probabilities and tool speed in a normalized time frame for single task condition (2A&D) and
+dual task condition (3C&D). Requires normalizeMovementsPhases.m. Also plots distribution of fixation patterns (3F).
 
 - analyzeFixationSubGoals.m
 Reads out ball and slot fixation onsets relative to reach onset and saves matlab structure for the general linear model (GLM)
 GLM is then run in R (GLMmovementPhases.R).
 
+- createPlotsFigure4.m
+Generates matlab plots of ball and slot fixation timing relative to ball contact and slot entry, respectively, separate for 
+fingertips (4A&C) and tweezers (4B&D). Timing of all kinematic events is also indicated. 
+
 - createPlotsFigure5.m
-Generates matlab plots of fixation timing and duration relative to contact events in dual task condition separate for fingertips (5A)
-and tweezers (5B). 
+Generates matlab plots of fixation onset and offset relative to contact events in dual task condition (5A-H) and plots indicating
+the function gaze served in fingertip and tweezer trials (5I-K). 
 
 - createPlotsFigure6.m
-Generates cumulative plots of ball and slot fixation on and offsets relative to events.
+Generates information about letter change detection task (6A&B), detected letter changes relative to the time of cue (6C&D), and
+distribution of reach onsets relative to last detected letter change (6E&F). Saves 'letterDetectViewTime.mat' to analyze relationship
+between perception task performance and fixation time on display in R (compareDetectionTask.R).
 
 - createPlotsFigure7.m
-Generates matlab plots of letter change occurance and letter detection task performance (panels A & B). 
-Saves matlab structure to compare detection task performance in R (compareDetectionTask.R).
-Creates the response time as a function of the last detected letter change before reach onset relative to the go signal (panels C & D)
+Generates matlab plots of distributions of ball and slot fixation onsets relative to last detected letter change for fingertip (7A-D)
+and tweezer (7E-H) trials. Panels indicate different fixation patterns. Distributions are tested with ks-test for uniformity. 
 
 - createPlotsFigure8.m
-Generates matlab plots of the frequency of ball and slot fixations relative to the letter change for different fixation patterns. 
-
-- createPlotsFigure9.m
-Generates matlab plots of the probabilities to see or miss a letter change or be in the silent period and of 
-ball and slot fixations relative to kinematicevents. Panels C-D focus on trials, in which letter changes occurred within 1 s before reach.
-Panels E-F break down different fixation pattern.
+Generates matlab plots of distributions of fixation patterns relative to letter changes that are detected prior to slot entry (8A) or
+ball contact (8B&C).  
 
 - analyzePhasesFixationPattern.m
 Reads out participant-wise phase lengths of each kinematic phase separated by the two most common fixation pattern for each grasp mode.
