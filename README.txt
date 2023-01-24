@@ -52,9 +52,9 @@ Generates matlab plots of fixation onset and offset relative to contact events i
 the function gaze served in fingertip and tweezer trials (5I-K). 
 
 - createPlotsFigure6.m
-Generates information about letter change detection task (6A&B), detected letter changes relative to the time of cue (6C&D), and
-distribution of reach onsets relative to last detected letter change (6E&F). Saves 'letterDetectViewTime.mat' to analyze relationship
-between perception task performance and fixation time on display in R (compareDetectionTask.R).
+Generates matlab plot of detected letter changes relative to the time of cue (6A&B), and distribution of reach onsets relative to 
+last detected letter change (6C&D). Saves 'letterDetectViewTime.mat' to analyze relationship between perception task performance and 
+fixation time on display in R (compareDetectionTask.R).
 
 - createPlotsFigure7.m
 Generates matlab plots of distributions of ball and slot fixation onsets relative to last detected letter change for fingertip (7A-D)

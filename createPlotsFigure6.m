@@ -6,7 +6,7 @@ cd(resultPath)
 load('pulledData')
 cd(analysisPath);
 
-%%
+%% calculate letter changes per trial
 numParticipants = 11;
 letterChanges = [];
 
@@ -49,36 +49,16 @@ for j = 1:numParticipants % loop over subjects
     end
 end
 
-%% plot frequency of letter changes in a trial for fintertips and tweezers (Panel A)
-letterChangeNo = NaN(2, 4);
-for j = 1:2 % hand and tweezer
-    currentData = letterChanges(letterChanges(:,2) == j+2, :);
-    currentData = currentData(~isnan(currentData(:,3)),:);
-    allTrials = size(currentData,1);
-    for blockID = 3:4
-        letterChangeNo(j,blockID) = length(currentData(currentData(:,3) == blockID-1,:))/allTrials;
-    end
-    clear allTrials    
-end
-figure(123)
-hold on
-xlim([.5 4.5])
-set(gca, 'Xtick', [1 2 3 4], 'XtickLabel', {'0 letter changes', '1 letter change', '2 letter changes', '3 letter changes'})
-ylim([0 .75])
-set(gca, 'Ytick', [0 .25 .5 .75])
-
-for blockID = 1:4
-    plot(blockID, letterChangeNo(1,blockID), 'o', 'MarkerFaceColor', 'k','MarkerEdgeColor', 'k')
-    plot(blockID, letterChangeNo(2,blockID), 'o', 'MarkerFaceColor', 'none','MarkerEdgeColor', 'k')
-end
-line([1 2], [letterChangeNo(1,1) letterChangeNo(1,2)], 'Color', 'k')
-line([2 3], [letterChangeNo(1,2) letterChangeNo(1,3)], 'Color', 'k')
-line([3 4], [letterChangeNo(1,3) letterChangeNo(1,4)], 'Color', 'k')
-line([1 2], [letterChangeNo(2,1) letterChangeNo(2,2)], 'Color', 'k', 'LineStyle', '--')
-line([2 3], [letterChangeNo(2,2) letterChangeNo(2,3)], 'Color', 'k', 'LineStyle', '--')
-line([3 4], [letterChangeNo(2,3) letterChangeNo(2,4)], 'Color', 'k', 'LineStyle', '--')
+letterChanges_FT = letterChanges(letterChanges(:,2) == 3,:);
+letterChanges_TW = letterChanges(letterChanges(:,2) == 4,:);
+numChanges = 1; % specificy percentage for 0, 1, 2, or 3 changes
+numFT = length(letterChanges_FT(letterChanges_FT(:,3) == numChanges, 3)) /  ...
+    length(letterChanges_FT(letterChanges_FT(:,3) >= 0,3));
+numTW = length(letterChanges_TW(letterChanges_TW(:,3) == numChanges, 3)) /  ...
+    length(letterChanges_TW(letterChanges_TW(:,3) >= 0,3));
 
 %% readout vigilance task performance
+numParticipants = 11;
 dualTaskPerformance = [];
 dualTaskSamples = [];
 cAll = 1;
@@ -110,55 +90,26 @@ for j = 1:numParticipants % loop over subjects
     end
 end
 clear c 
-%% plot vigilance performance vs. relative time on display (Panel B)
-letterDetectViewTime = NaN(numParticipants,3);
-for i = 1:numParticipants
-    currentDataset = letterChanges(letterChanges(:,1) == i, :);
-    relativeTime = currentDataset(:,6);
-    letterDetectViewTime(i,:) = [i nanmean(relativeTime) ...
-        sum(dualTaskPerformance(dualTaskPerformance(:,1) == i,4))/sum(dualTaskPerformance(dualTaskPerformance(:,1) == i,3))];
-end
-figure(5)
-hold on
-plot(letterDetectViewTime(:,2), letterDetectViewTime(:, 3),...
-    'o', 'MarkerFaceColor', 'k','MarkerEdgeColor', 'k')
-%% plot trend lines
-letterDetectViewTime = NaN(numParticipants*2,4);
-count = 1;
-for j= 3:4
-    currentTool = letterChanges(letterChanges(:,2) == j, :);
-    currentVigilance = dualTaskPerformance(dualTaskPerformance(:,2) == j,:);
-    for i = 1:numParticipants
-        currentDataset = currentTool(currentTool(:,1) == i, :);
-        relativeTime = currentDataset(:,6);
-        letterDetectViewTime(count,:) = [i j nanmean(relativeTime) ...
-            currentVigilance(currentVigilance(:,1) == i,4)/currentVigilance(currentVigilance(:,1) == i,3)];
-        count = count+1;
-    end
-end
-clear count
-figure(5)
-hold on
-% plot fingertip trials
-plot(letterDetectViewTime(letterDetectViewTime(:,2) == 3, 3), letterDetectViewTime(letterDetectViewTime(:,2) == 3, 4),...
-    'o', 'MarkerFaceColor', 'k','MarkerEdgeColor', 'k')
-% plot tool trials
-plot(letterDetectViewTime(letterDetectViewTime(:,2) == 4, 3), letterDetectViewTime(letterDetectViewTime(:,2) == 4, 4),...
-    'o', 'MarkerFaceColor', 'none','MarkerEdgeColor', 'k')
-p_TW = polyfit(letterDetectViewTime(letterDetectViewTime(:,2) == 4, 3),letterDetectViewTime(letterDetectViewTime(:,2) == 4, 4),1);
-y_TW = polyval(p_TW,letterDetectViewTime(letterDetectViewTime(:,2) == 4, 3));
-plot(letterDetectViewTime(letterDetectViewTime(:,2) == 4, 3), y_TW, 'k--')
 
-ylim([0.5 1])
-set(gca, 'Ytick', [.5 .75 1])
-xlim([0.5 1])
-set(gca, 'Xtick', [.5 .75 1])
+%% average and save vigilance task performance 
+letterDetectAverage_FT = NaN(numParticipants,3);
+selectedData = dualTaskPerformance(dualTaskPerformance(:,2) == 3,:);
+for i = 1:numParticipants
+    letterDetectAverage_FT(i,:) = [i 3 sum(selectedData(selectedData(:,1) == i,4))/...
+        sum(selectedData(selectedData(:,1) == i,3))];
+end
+letterDetectAverage_TW = NaN(numParticipants,3);
+selectedData = dualTaskPerformance(dualTaskPerformance(:,2) == 4,:);
+for i = 1:numParticipants
+    letterDetectAverage_TW(i,:) = [i 4 sum(selectedData(selectedData(:,1) == i,4))/...
+        sum(selectedData(selectedData(:,1) == i,3))];
+end
+
+letterDetectAverage = [letterDetectAverage_FT; letterDetectAverage_TW];
 
 cd(savePath)
-save('letterDetectViewTime', 'letterDetectViewTime')
+save('letterDetectAverage', 'letterDetectAverage')
 cd(analysisPath)
-clear p_FT y_FT p_TW y_TW
-
 %% plot the response time (reach onset relative to go signal) vs. the time 
 % of the last detected letter change (relative to go) --> Panels C & D
 numParticipants = 11;
