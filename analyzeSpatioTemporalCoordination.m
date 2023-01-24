@@ -46,6 +46,12 @@ for j = 1:numSubjects % loop over subjects
                         gazeShiftToSlot(n) = (currentResult(n).gaze.saccades.onsets(slotSacIdx) - ballGrasp)/.2; % in miliseconds
                     end
                 end
+                if ~isempty(currentResult(n).gaze.fixation.onsetsBall)
+                    ballFixationDuration(n) = mean(currentResult(n).gaze.fixation.durationBall);
+                end
+                if ~isempty(currentResult(n).gaze.fixation.onsetsSlot)
+                    slotFixationDuration(n) = mean(currentResult(n).gaze.fixation.durationSlot);
+                end
             else % dual task condition
                 dual(n) = 1;
                 if ~isempty(currentResult(n).gaze.fixation.onsetsBall)

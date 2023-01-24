@@ -33,7 +33,7 @@ conditions (comparePhaseDurations.R) and to use for normalized fixation probabil
 
 -analyzeSpatioTemporalCoordination.m
 Analyzes gaze shifts from ball to slot in single task and from the slot back to the display in dual task condition.
-Stats are then calculated in R (compareGazeShifts.R).
+Stats are then calculated in R (compareGazeShiftsAndDurations.R).
 
 - createPlotFigure2and3.m
 Generates matlab plots of fixation probabilities and tool speed in a normalized time frame for single task condition (2A&D) and
