@@ -197,7 +197,7 @@ orange = [255,127,0]./255;
 relativeChanges_PG = speedRelativeLetterChange(speedRelativeLetterChange(:,2) == 3,:);
 % plot time of last detected letter change (before reach onset) relative to
 % go signal
-nextChanges = relativeChanges_PG(relativeChanges_PG(:,end) == 1,3);
+%nextChanges = relativeChanges_PG(relativeChanges_PG(:,end) == 1,3);
 lowerLimit = -5;
 upperLimit = 1.5;
 figure(33)
@@ -208,8 +208,8 @@ line([lowerLimit upperLimit],[0 0], 'Color', lightGrey)
 ylim([-1 1.5])
 line([0 0],[-1 2], 'Color', lightGrey)
 plot(relativeChanges_PG(:,3), relativeChanges_PG(:,4), '.', 'Color', lightGrey)
-plot(nextChanges, relativeChanges_PG(relativeChanges_PG(:,end) == 1,4), ...
-    '.', 'Color', red)
+% plot(nextChanges, relativeChanges_PG(relativeChanges_PG(:,end) == 1,4), ...
+%     '.', 'Color', red)
 for i = lowerLimit+.5:0.5:upperLimit+.5
     reactBin = median(relativeChanges_PG(relativeChanges_PG(:,3) < i & relativeChanges_PG(:,3) > i-0.5, 4));
     line([i-.5 i], [reactBin reactBin], 'Color', 'k')
@@ -218,7 +218,7 @@ end
 relativeChanges_TW = speedRelativeLetterChange(speedRelativeLetterChange(:,2) == 4,:);
 % plot time of last detected letter change (before reach onset) relative to
 % reach onset and movement time in red
-nextChanges = relativeChanges_TW(relativeChanges_TW(:,end) == 1,3);
+%nextChanges = relativeChanges_TW(relativeChanges_TW(:,end) == 1,3);
 figure(44)
 set(gcf,'renderer','Painters', 'Position', [50 100 436 364])
 hold on
@@ -227,8 +227,8 @@ line([lowerLimit upperLimit],[0 0], 'Color', lightGrey)
 ylim([-1 1.5])
 line([0 0],[-1 2], 'Color', lightGrey)
 plot(relativeChanges_TW(:,3), relativeChanges_TW(:,4), '.', 'Color', lightGrey)
-plot(nextChanges, relativeChanges_TW(relativeChanges_TW(:,end) == 1,4), ...
-    '.', 'Color', red)
+% plot(nextChanges, relativeChanges_TW(relativeChanges_TW(:,end) == 1,4), ...
+%     '.', 'Color', red)
 for i = lowerLimit+.5:0.5:upperLimit+.5
     reactBin = median(relativeChanges_TW(relativeChanges_TW(:,3) < i & relativeChanges_TW(:,3) > i-0.5, 4));
     line([i-.5 i], [reactBin reactBin], 'Color', 'k')
