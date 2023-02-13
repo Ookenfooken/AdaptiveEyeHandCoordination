@@ -51,11 +51,9 @@ end
 
 letterChanges_FT = letterChanges(letterChanges(:,2) == 3,:);
 letterChanges_TW = letterChanges(letterChanges(:,2) == 4,:);
-numChanges = 1; % specificy percentage for 0, 1, 2, or 3 changes
-numFT = length(letterChanges_FT(letterChanges_FT(:,3) == numChanges, 3)) /  ...
-    length(letterChanges_FT(letterChanges_FT(:,3) >= 0,3));
-numTW = length(letterChanges_TW(letterChanges_TW(:,3) == numChanges, 3)) /  ...
-    length(letterChanges_TW(letterChanges_TW(:,3) >= 0,3));
+% to calculate mean number of changes run:
+% nanmean(letterChanges_FT(:,3))
+% nanmean(letterChanges_TW(:,3))
 
 %% readout vigilance task performance
 numParticipants = 11;
