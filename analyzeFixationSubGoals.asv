@@ -87,12 +87,10 @@ for j = 1:numParticipants % loop over subjects
     end
 end
 
-fixationsRelativeContactEvents = [variables(:,1:2) variables(:,9) ...
-    (variables(:,10:11)-variables(:,5))./200 variables(:,12)...
-    (variables(:,13:14)-variables(:,8))./200];
-
+absolutePhaseStarts = variables(~isnan(variables(:,1)), :);
 cd(fullfile(pwd,'R\'))
-save('fixationsRelativeContactEvents', 'fixationsRelativeContactEvents')
+save('glmData_ball', 'glmData_ball')
+save('glmData_slot', 'glmData_slot')
 cd(analysisPath)
 
 %% separate data into conditions
