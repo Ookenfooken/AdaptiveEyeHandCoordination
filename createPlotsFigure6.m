@@ -214,10 +214,74 @@ line([0 1.5], [SP_TW1 SP_TW1], 'Color', blue, 'LineStyle', '--', 'LineWidth', 1.
 line([1.5 6.5], [SP_TW1 0], 'Color', blue, 'LineStyle', '--', 'LineWidth', 1.5)
 line([0 1.5], [SP_TW2 SP_TW2], 'Color', lightGrey, 'LineStyle', '--', 'LineWidth', 1.5)
 line([1.5 6.5], [SP_TW2 0], 'Color', lightGrey, 'LineStyle', '--', 'LineWidth', 1.5)
-%% ks test
-[p_TW, ks2statTW] = kstest(fixations_TW_detected(:,3));
-[p_PG, ks2statPG] = kstest(fixations_PG_detected(:,3));
+%% test distribution against expected distribution
+% generate mock distribution
+binWidth = .25;
+expectedDistribution = [];
+slope = SP_PG1/5;
+% landmark fixation
+for i = 0:binWidth:6.5+binWidth
+    if i <= 1.5
+        binCount = [floor(SP_PG1)*ones((1-SP_PG1+floor(SP_PG1))*10000,1); ...
+            ceil(SP_PG1)*ones((1-ceil(SP_PG1)+SP_PG1)*10000,1)];
+    else
+        binCount = [floor(SP_PG1-(i-1.5)*slope)*ones((1-SP_PG1+floor(SP_PG1-(i-1.5)*slope))*10000,1); ...
+            ceil(SP_PG1-(i-1.5)*slope)*ones((1-ceil(SP_PG1-(i-1.5)*slope)+SP_PG1)*10000,1)];
+    end
+    expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
+end
+% ks test landmark fixation
+[h_PG1, p_PG1, ks2statPG1] = kstest2(reaches_PG(reaches_PG(:,2) == 1, selectedColumn), expectedDistribution);
+clear expectedDistribution binCount slope
 
+expectedDistribution = [];
+slope = SP_PG2/5;
+for i = 0:binWidth:6.5+binWidth
+    if i <= 1.5
+        binCount = [floor(SP_PG2)*ones((1-SP_PG2+floor(SP_PG2))*10000,1); ...
+            ceil(SP_PG2)*ones((1-ceil(SP_PG2)+SP_PG2)*10000,1)];
+    else
+        binCount = [floor(SP_PG2-(i-1.5)*slope)*ones((1-SP_PG2+floor(SP_PG2-(i-1.5)*slope))*10000,1); ...
+            ceil(SP_PG2-(i-1.5)*slope)*ones((1-ceil(SP_PG2-(i-1.5)*slope)+SP_PG2)*10000,1)];
+    end
+    expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
+end
+% ks test all fixations
+[h_PG2, p_PG2, ks2statPG2] = kstest2(reaches_PG(:,selectedColumn), expectedDistribution);
+
+
+expectedDistribution = [];
+slope = SP_TW1/5;
+% landmark fixation
+for i = 0:binWidth:6.5+binWidth
+    if i <= 1.5
+        binCount = [floor(SP_TW1)*ones((1-SP_TW1+floor(SP_TW1))*10000,1); ...
+            ceil(SP_TW1)*ones((1-ceil(SP_TW1)+SP_TW1)*10000,1)];
+    else
+        binCount = [floor(SP_TW1-(i-1.5)*slope)*ones((1-SP_TW1+floor(SP_TW1-(i-1.5)*slope))*10000,1); ...
+            ceil(SP_TW1-(i-1.5)*slope)*ones((1-ceil(SP_TW1-(i-1.5)*slope)+SP_TW1)*10000,1)];
+    end
+    expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
+end
+% ks test landmark fixation
+[h_TW1, p_TW1, ks2statTW1] = kstest2(reaches_TW(reaches_TW(:,2) == 1, selectedColumn), expectedDistribution);
+clear expectedDistribution binCount slope
+
+expectedDistribution = [];
+slope = SP_TW2/5;
+for i = 0:binWidth:6.5
+    if i <= 1.5
+        binCount = [floor(SP_TW2)*ones((1-SP_TW2+floor(SP_TW2))*10000,1); ...
+            ceil(SP_TW2)*ones((1-ceil(SP_TW2)+SP_TW2)*10000,1)];
+    else
+        binCount = [floor(SP_TW2-(i-1.5)*slope)*ones((1-SP_TW2+floor(SP_TW2-(i-1.5)*slope))*10000,1); ...
+            ceil(SP_TW2-(i-1.5)*slope)*ones((1-ceil(SP_TW2-(i-1.5)*slope)+SP_TW2)*10000,1)];
+    end
+    expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binWidth))),1)];
+end
+% ks test all fixations
+[h_TW2, p_TW2, ks2statTW2] = kstest2(reaches_TW(:,selectedColumn), expectedDistribution);
+clear expectedDistribution binCount slope
 %% plot the response time (reach onset relative to go signal) vs. the time 
 % of the last detected letter change (relative to go) --> Panels C & D
 numParticipants = 11;
@@ -262,7 +326,7 @@ for j = 1:numParticipants % loop over subjects
                 end
             end
             % if the change happened before the go-signal good
-            if detectedChange < reach
+            if detectedChange < goTime%reach
                 letterChangeRelativeReach = reach - detectedChange;
             else % otherwise use the previous trial
                 clear detectedChanges detectedChange
