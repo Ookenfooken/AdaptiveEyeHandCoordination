@@ -54,37 +54,7 @@ for j = 1:numParticipants % loop over subjects
                 % check if letter change is before fixation onset
                 if currentLetterChange < fixBallOnset
                     letterChangeRelativeBallFix = fixBallOnset - currentLetterChange;
-                else % otherwise use the previous trial
-                    if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
-                        detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
-                        if numel(detectedChanges) > 0
-                            currentLetterChange = detectedChanges(end);
-                        else
-                            continue
-                        end
-                        letterChangeRelativeBallFix = fixBallOnset - currentLetterChange;
-                    else
-                        continue
-                    end
-                end
-                % check if letter change is before reach
-                if currentLetterChange < reach
                     letterChangeRelativeReach = reach - currentLetterChange;
-                else % otherwise use the previous trial
-                    if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
-                        detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
-                        if numel(detectedChanges) > 0
-                            currentLetterChange = detectedChanges(end);
-                        else
-                            continue
-                        end
-                        letterChangeRelativeReach = reach - currentLetterChange;
-                    else
-                        continue
-                    end
-                end
-                % check if letter change is ball contact
-                if currentLetterChange < ballGrasp
                     letterChangeRelativeGrasp = ballGrasp - currentLetterChange;
                 else % otherwise use the previous trial
                     if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
@@ -94,11 +64,45 @@ for j = 1:numParticipants % loop over subjects
                         else
                             continue
                         end
+                        letterChangeRelativeBallFix = fixBallOnset - currentLetterChange;
+                        letterChangeRelativeReach = reach - currentLetterChange;
                         letterChangeRelativeGrasp = ballGrasp - currentLetterChange;
                     else
                         continue
                     end
                 end
+%                 % check if letter change is before reach
+%                 if currentLetterChange < reach
+%                     letterChangeRelativeReach = reach - currentLetterChange;
+%                 else % otherwise use the previous trial
+%                     if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
+%                         detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
+%                         if numel(detectedChanges) > 0
+%                             currentLetterChange = detectedChanges(end);
+%                         else
+%                             continue
+%                         end
+%                         letterChangeRelativeReach = reach - currentLetterChange;
+%                     else
+%                         continue
+%                     end
+%                 end
+%                 % check if letter change is ball contact
+%                 if currentLetterChange < ballGrasp
+%                     letterChangeRelativeGrasp = ballGrasp - currentLetterChange;
+%                 else % otherwise use the previous trial
+%                     if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
+%                         detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
+%                         if numel(detectedChanges) > 0
+%                             currentLetterChange = detectedChanges(end);
+%                         else
+%                             continue
+%                         end
+%                         letterChangeRelativeGrasp = ballGrasp - currentLetterChange;
+%                     else
+%                         continue
+%                     end
+%                 end
             elseif n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(end))
                 detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
                 if numel(detectedChanges) > 0
@@ -196,37 +200,7 @@ for j = 1:numParticipants % loop over subjects
                 % check if letter change is before fixation onset
                 if currentLetterChange < fixSlotOnset
                     letterChangeRelativeSlotFix = fixSlotOnset - currentLetterChange;
-                else % otherwise use the previous trial
-                    if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
-                        detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
-                        if numel(detectedChanges) > 0
-                            currentLetterChange = detectedChanges(end);
-                        else
-                            continue
-                        end
-                        letterChangeRelativeSlotFix = fixSlotOnset - currentLetterChange;
-                    else
-                        continue
-                    end
-                end
-                % check if letter change is before transport onset
-                if currentLetterChange < transport
                     letterChangeRelativeTransport = transport - currentLetterChange;
-                else % otherwise use the previous trial
-                    if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
-                        detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
-                        if numel(detectedChanges) > 0
-                            currentLetterChange = detectedChanges(end);
-                        else
-                            continue
-                        end
-                        letterChangeRelativeTransport = transport - currentLetterChange;
-                    else
-                        continue
-                    end
-                end
-                % check if letter change is before slot entry
-                if currentLetterChange < slotEntry
                     letterChangeRelativeSlotEntry = slotEntry - currentLetterChange;
                 else % otherwise use the previous trial
                     if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
@@ -236,11 +210,45 @@ for j = 1:numParticipants % loop over subjects
                         else
                             continue
                         end
+                        letterChangeRelativeSlotFix = fixSlotOnset - currentLetterChange;
+                        letterChangeRelativeTransport = transport - currentLetterChange;
                         letterChangeRelativeSlotEntry = slotEntry - currentLetterChange;
                     else
                         continue
                     end
                 end
+%                 % check if letter change is before transport onset
+%                 if currentLetterChange < transport
+%                     letterChangeRelativeTransport = transport - currentLetterChange;
+%                 else % otherwise use the previous trial
+%                     if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
+%                         detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
+%                         if numel(detectedChanges) > 0
+%                             currentLetterChange = detectedChanges(end);
+%                         else
+%                             continue
+%                         end
+%                         letterChangeRelativeTransport = transport - currentLetterChange;
+%                     else
+%                         continue
+%                     end
+%                 end
+%                 % check if letter change is before slot entry
+%                 if currentLetterChange < slotEntry
+%                     letterChangeRelativeSlotEntry = slotEntry - currentLetterChange;
+%                 else % otherwise use the previous trial
+%                     if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
+%                         detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
+%                         if numel(detectedChanges) > 0
+%                             currentLetterChange = detectedChanges(end);
+%                         else
+%                             continue
+%                         end
+%                         letterChangeRelativeSlotEntry = slotEntry - currentLetterChange;
+%                     else
+%                         continue
+%                     end
+%                 end
             elseif n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(end))
                 detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
                 if numel(detectedChanges) > 0
