@@ -1127,21 +1127,21 @@ ballFix_PG = ballFixations_PG(ballFixations_PG(:,3) ~= selectedPattern,:);
 slotFix_PG = slotFixations_PG(slotFixations_PG(:,3) ~= selectedPattern,:);
 
 % make a scatter plot of fixation onset vs. kinematic phases
-subplot(2,2,1)
-set(gcf,'renderer','Painters')
-xlim([0 xymax])
-xlabel('ball fixation onset rel. to detected LC')
-ylim([0 xymax])
-ylabel('reach onset rel. to detected LC')
-axis('square')
-hold on
-plot(ballFix_PG(ballFix_PG(:,3) == 4,fixationOnsets), ballFix_PG(ballFix_PG(:,3) == 4,movementOnsets), ...
-    '.', 'Color', fixationPatternColors(5,:))
-plot(ballFix_PG(ballFix_PG(:,3) == 3,fixationOnsets), ballFix_PG(ballFix_PG(:,3) == 3,movementOnsets), ...
-    '.', 'Color', fixationPatternColors(4,:))
-line([0 xymax], [0 xymax], 'Color', 'k')
+% subplot(2,2,1)
+% set(gcf,'renderer','Painters')
+% xlim([0 xymax])
+% xlabel('ball fixation onset rel. to detected LC')
+% ylim([0 xymax])
+% ylabel('reach onset rel. to detected LC')
+% axis('square')
+% hold on
+% plot(ballFix_PG(ballFix_PG(:,3) == 4,fixationOnsets), ballFix_PG(ballFix_PG(:,3) == 4,movementOnsets), ...
+%     '.', 'Color', fixationPatternColors(5,:))
+% plot(ballFix_PG(ballFix_PG(:,3) == 3,fixationOnsets), ballFix_PG(ballFix_PG(:,3) == 3,movementOnsets), ...
+%     '.', 'Color', fixationPatternColors(4,:))
+% line([0 xymax], [0 xymax], 'Color', 'k')
 
-subplot(2,2,3)
+subplot(1,2,1)
 set(gcf,'renderer','Painters')
 xlim([0 xymax])
 xlabel('ball fixation onset rel. to detected LC')
@@ -1154,24 +1154,26 @@ plot(ballFix_PG(ballFix_PG(:,3) == 4,fixationOnsets), ballFix_PG(ballFix_PG(:,3)
 plot(ballFix_PG(ballFix_PG(:,3) == 3,fixationOnsets), ballFix_PG(ballFix_PG(:,3) == 3,manipulationOnsets), ...
     '.', 'Color', fixationPatternColors(4,:))
 line([0 xymax], [0 xymax], 'Color', 'k')
+s_grasp_PG = regstats(ballFix_PG(ballFix_PG(:,3) == 3 | ballFix_PG(:,3) == 4,manipulationOnsets),...
+    ballFix_PG(ballFix_PG(:,3) == 3 | ballFix_PG(:,3) == 4,fixationOnsets),'linear'); 
 
-subplot(2,2,2)
-set(gcf,'renderer','Painters')
-xlim([0 xymax])
-xlabel('slot fixation onset rel. to detected LC')
-ylim([0 xymax])
-ylabel('transport onset rel. to detected LC')
-axis('square')
-hold on
-plot(slotFix_PG(slotFix_PG(:,3) == 2,fixationOnsets), slotFix_PG(slotFix_PG(:,3) == 2,movementOnsets), ...
-    '.', 'Color', fixationPatternColors(3,:))
-plot(slotFix_PG(slotFix_PG(:,3) == 4,fixationOnsets), slotFix_PG(slotFix_PG(:,3) == 4,movementOnsets), ...
-    '.', 'Color', fixationPatternColors(5,:))
-plot(slotFix_PG(slotFix_PG(:,3) == 3,fixationOnsets), slotFix_PG(slotFix_PG(:,3) == 3,movementOnsets), ...
-    '.', 'Color', fixationPatternColors(4,:))
-line([0 xymax], [0 xymax], 'Color', 'k')
+% subplot(2,2,2)
+% set(gcf,'renderer','Painters')
+% xlim([0 xymax])
+% xlabel('slot fixation onset rel. to detected LC')
+% ylim([0 xymax])
+% ylabel('transport onset rel. to detected LC')
+% axis('square')
+% hold on
+% plot(slotFix_PG(slotFix_PG(:,3) == 2,fixationOnsets), slotFix_PG(slotFix_PG(:,3) == 2,movementOnsets), ...
+%     '.', 'Color', fixationPatternColors(3,:))
+% plot(slotFix_PG(slotFix_PG(:,3) == 4,fixationOnsets), slotFix_PG(slotFix_PG(:,3) == 4,movementOnsets), ...
+%     '.', 'Color', fixationPatternColors(5,:))
+% plot(slotFix_PG(slotFix_PG(:,3) == 3,fixationOnsets), slotFix_PG(slotFix_PG(:,3) == 3,movementOnsets), ...
+%     '.', 'Color', fixationPatternColors(4,:))
+% line([0 xymax], [0 xymax], 'Color', 'k')
 
-subplot(2,2,4)
+subplot(1,2,2)
 set(gcf,'renderer','Painters')
 xlim([0 xymax])
 xlabel('slot fixation onset rel. to detected LC')
@@ -1186,6 +1188,8 @@ plot(slotFix_PG(slotFix_PG(:,3) == 4,fixationOnsets), slotFix_PG(slotFix_PG(:,3)
 plot(slotFix_PG(slotFix_PG(:,3) == 3,fixationOnsets), slotFix_PG(slotFix_PG(:,3) == 3,manipulationOnsets), ...
     '.', 'Color', fixationPatternColors(4,:))
 line([0 xymax], [0 xymax], 'Color', 'k')
+s_slotEntry_PG = regstats(slotFix_PG(slotFix_PG(:,3) == 2 | slotFix_PG(:,3) == 4 | slotFix_PG(:,3) == 4,manipulationOnsets),...
+    slotFix_PG(slotFix_PG(:,3) == 2 | slotFix_PG(:,3) == 4 | slotFix_PG(:,3) == 4,fixationOnsets),'linear');
 
 %% correlational plots for tweezers
 figure(manipulationOnsets*10)
@@ -1197,21 +1201,21 @@ ballFix_TW = ballFixations_TW(ballFixations_TW(:,3) ~= selectedPattern,:);
 slotFix_TW = slotFixations_TW(slotFixations_TW(:,3) ~= selectedPattern,:);
 
 % make a scatter plot of fixation onset vs. kinematic phases
-subplot(2,2,1)
-set(gcf,'renderer','Painters')
-xlim([0 xymax])
-xlabel('ball fixation onset rel. to detected LC')
-ylim([0 xymax])
-ylabel('reach onset rel. to detected LC')
-axis('square')
-hold on
-plot(ballFix_TW(ballFix_TW(:,3) == 4,fixationOnsets), ballFix_TW(ballFix_TW(:,3) == 4,movementOnsets), ...
-    '.', 'Color', fixationPatternColors(5,:))
-plot(ballFix_TW(ballFix_TW(:,3) == 3,fixationOnsets), ballFix_TW(ballFix_TW(:,3) == 3,movementOnsets), ...
-    '.', 'Color', fixationPatternColors(4,:))
-line([0 xymax], [0 xymax], 'Color', 'k')
+% subplot(2,2,1)
+% set(gcf,'renderer','Painters')
+% xlim([0 xymax])
+% xlabel('ball fixation onset rel. to detected LC')
+% ylim([0 xymax])
+% ylabel('reach onset rel. to detected LC')
+% axis('square')
+% hold on
+% plot(ballFix_TW(ballFix_TW(:,3) == 4,fixationOnsets), ballFix_TW(ballFix_TW(:,3) == 4,movementOnsets), ...
+%     '.', 'Color', fixationPatternColors(5,:))
+% plot(ballFix_TW(ballFix_TW(:,3) == 3,fixationOnsets), ballFix_TW(ballFix_TW(:,3) == 3,movementOnsets), ...
+%     '.', 'Color', fixationPatternColors(4,:))
+% line([0 xymax], [0 xymax], 'Color', 'k')
 
-subplot(2,2,3)
+subplot(1,2,1)
 set(gcf,'renderer','Painters')
 xlim([0 xymax])
 xlabel('ball fixation onset rel. to detected LC')
@@ -1224,24 +1228,36 @@ plot(ballFix_TW(ballFix_TW(:,3) == 4,fixationOnsets), ballFix_TW(ballFix_TW(:,3)
 plot(ballFix_TW(ballFix_TW(:,3) == 3,fixationOnsets), ballFix_TW(ballFix_TW(:,3) == 3,manipulationOnsets), ...
     '.', 'Color', fixationPatternColors(4,:))
 line([0 xymax], [0 xymax], 'Color', 'k')
+% linear regression
+% reg_grasp_TW = polyfit(ballFix_TW(ballFix_TW(:,3) == 3 | ballFix_TW(:,3) == 4,fixationOnsets), ...
+%     ballFix_TW(ballFix_TW(:,3) == 3 | ballFix_TW(:,3) == 4,manipulationOnsets), 1);
+% yfit_grasp_TW = polyval(reg_grasp_TW, ballFix_TW(ballFix_TW(:,3) == 3 | ballFix_TW(:,3) == 4,fixationOnsets));
+% SSresid = sum((ballFix_TW(ballFix_TW(:,3) == 3 | ballFix_TW(:,3) == 4,manipulationOnsets)...
+%     - yfit_grasp_TW).^2);
+% SStotal = (length(ballFix_TW(ballFix_TW(:,3) == 3 | ballFix_TW(:,3) == 4,manipulationOnsets))-1)...
+%     * var(ballFix_TW(ballFix_TW(:,3) == 3 | ballFix_TW(:,3) == 4,manipulationOnsets));
+% rsq_grasp_TW = 1 - SSresid/SStotal;
+% clear SSresid SStotal
+s_grasp_TW = regstats(ballFix_TW(ballFix_TW(:,3) == 3 | ballFix_TW(:,3) == 4,manipulationOnsets),...
+    ballFix_TW(ballFix_TW(:,3) == 3 | ballFix_TW(:,3) == 4,fixationOnsets),'linear'); 
 
-subplot(2,2,2)
-set(gcf,'renderer','Painters')
-xlim([0 xymax])
-xlabel('slot fixation onset rel. to detected LC')
-ylim([0 xymax])
-ylabel('transport onset rel. to detected LC')
-axis('square')
-hold on
-plot(slotFix_TW(slotFix_TW(:,3) == 2,fixationOnsets), slotFix_TW(slotFix_TW(:,3) == 2,movementOnsets), ...
-    '.', 'Color', fixationPatternColors(3,:))
-plot(slotFix_TW(slotFix_TW(:,3) == 4,fixationOnsets), slotFix_TW(slotFix_TW(:,3) == 4,movementOnsets), ...
-    '.', 'Color', fixationPatternColors(5,:))
-plot(slotFix_TW(slotFix_TW(:,3) == 3,fixationOnsets), slotFix_TW(slotFix_TW(:,3) == 3,movementOnsets), ...
-    '.', 'Color', fixationPatternColors(4,:))
-line([0 xymax], [0 xymax], 'Color', 'k')
+% subplot(2,2,2)
+% set(gcf,'renderer','Painters')
+% xlim([0 xymax])
+% xlabel('slot fixation onset rel. to detected LC')
+% ylim([0 xymax])
+% ylabel('transport onset rel. to detected LC')
+% axis('square')
+% hold on
+% plot(slotFix_TW(slotFix_TW(:,3) == 2,fixationOnsets), slotFix_TW(slotFix_TW(:,3) == 2,movementOnsets), ...
+%     '.', 'Color', fixationPatternColors(3,:))
+% plot(slotFix_TW(slotFix_TW(:,3) == 4,fixationOnsets), slotFix_TW(slotFix_TW(:,3) == 4,movementOnsets), ...
+%     '.', 'Color', fixationPatternColors(5,:))
+% plot(slotFix_TW(slotFix_TW(:,3) == 3,fixationOnsets), slotFix_TW(slotFix_TW(:,3) == 3,movementOnsets), ...
+%     '.', 'Color', fixationPatternColors(4,:))
+% line([0 xymax], [0 xymax], 'Color', 'k')
 
-subplot(2,2,4)
+subplot(1,2,2)
 set(gcf,'renderer','Painters')
 xlim([0 xymax])
 xlabel('slot fixation onset rel. to detected LC')
@@ -1256,3 +1272,5 @@ plot(slotFix_TW(slotFix_TW(:,3) == 4,fixationOnsets), slotFix_TW(slotFix_TW(:,3)
 plot(slotFix_TW(slotFix_TW(:,3) == 3,fixationOnsets), slotFix_TW(slotFix_TW(:,3) == 3,manipulationOnsets), ...
     '.', 'Color', fixationPatternColors(4,:))
 line([0 xymax], [0 xymax], 'Color', 'k')
+s_slotEntry_TW = regstats(slotFix_TW(slotFix_TW(:,3) == 2 | slotFix_TW(:,3) == 4 | slotFix_TW(:,3) == 4,manipulationOnsets),...
+    slotFix_TW(slotFix_TW(:,3) == 2 | slotFix_TW(:,3) == 4 | slotFix_TW(:,3) == 4,fixationOnsets),'linear'); 
