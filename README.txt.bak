@@ -57,8 +57,10 @@ and tweezer (7B) trials. Also shows distributions of ball-related and slot fixat
 Distributions are tested against expected distributions using a ks-test. Panels 7E&F show correlations between time of detected letter 
 changes relative to ball or slot fixations and the respective contact event. 
 
-- createPlotsFigure7.m
-XXX.
+- createPlotsFigure6.m
+Generates matlab plots of the distribution of reach onsets relative to the last detected letter change (6A&B) and the response time
+to the cue relative to the time of reach following a detected letter change before the cue (6C&D).
+Saves 'letterDetectViewTime.mat' to analyze task performance in R (compareDetectionTask.R). 
 
 - analyzePhasesFixationPattern.m
 Reads out participant-wise phase lengths of each kinematic phase separated by the two most common fixation pattern for each grasp mode.

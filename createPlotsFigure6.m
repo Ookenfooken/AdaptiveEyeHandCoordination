@@ -19,6 +19,24 @@ for j = 1:numParticipants % loop over subjects
         currentVariable = NaN(numTrials,numMeasures);
         % open variable matrices that we want to pull
         stopTrial = min([numTrials 30]);
+        % first make a vector of all detected letter changes
+        currentLetterChanges = [];
+        detectedChanges = [];
+        for n = 1:stopTrial % loop over trials for current subject & block
+            if currentResult(n).info.dropped
+                stopTrial = min([stopTrial+1 numTrials]);
+                continue
+            end
+            if ~isnan(currentResult(n).dualTask.tLetterChanges(1))
+                currentLetterChanges = currentResult(n).dualTask.tLetterChanges(currentResult(n).dualTask.changeDetected);
+                if ~isempty(currentLetterChanges)
+                    detectedChanges = [detectedChanges; currentLetterChanges];
+                end
+            end
+        end
+        detectedChanges_ballFix = detectedChanges;
+        detectedChanges_reach = detectedChanges;
+        detectedChanges_grasp = detectedChanges;
         for n = 1:stopTrial % loop over trials for current subject & block
             if currentResult(n).info.dropped
                 stopTrial = min([stopTrial+1 numTrials]);
@@ -35,88 +53,47 @@ for j = 1:numParticipants % loop over subjects
             else
                 continue
             end
-            if ~isnan(currentResult(n).dualTask.tLetterChanges(1))
-                detectedChanges = currentResult(n).dualTask.tLetterChanges(currentResult(n).dualTask.changeDetected);
-                if numel(detectedChanges) > 0
-                    currentLetterChange = detectedChanges(1);
-                else
-                    if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
-                        detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
-                        if numel(detectedChanges) > 0
-                            currentLetterChange = detectedChanges(end);
-                        else
-                            continue
-                        end
-                    else
-                        continue
-                    end
-                end
-                % check if letter change is before fixation onset
-                if currentLetterChange < fixBallOnset
+            % find last letter change before current ball fixation onset
+            letterIdx = find(detectedChanges_ballFix <= fixBallOnset, 1, 'last');
+            if ~isempty(letterIdx)
+                currentLetterChange = detectedChanges_ballFix(letterIdx);
+                if (fixBallOnset - currentLetterChange) < 6.5
                     letterChangeRelativeBallFix = fixBallOnset - currentLetterChange;
-                    letterChangeRelativeReach = reach - currentLetterChange;
-                    letterChangeRelativeGrasp = ballGrasp - currentLetterChange;
-                else % otherwise use the previous trial
-                    if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
-                        detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
-                        if numel(detectedChanges) > 0
-                            currentLetterChange = detectedChanges(end);
-                        else
-                            continue
-                        end
-                        letterChangeRelativeBallFix = fixBallOnset - currentLetterChange;
-                        letterChangeRelativeReach = reach - currentLetterChange;
-                        letterChangeRelativeGrasp = ballGrasp - currentLetterChange;
-                    else
-                        continue
-                    end
-                end
-%                 % check if letter change is before reach
-%                 if currentLetterChange < reach
-%                     letterChangeRelativeReach = reach - currentLetterChange;
-%                 else % otherwise use the previous trial
-%                     if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
-%                         detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
-%                         if numel(detectedChanges) > 0
-%                             currentLetterChange = detectedChanges(end);
-%                         else
-%                             continue
-%                         end
-%                         letterChangeRelativeReach = reach - currentLetterChange;
-%                     else
-%                         continue
-%                     end
-%                 end
-%                 % check if letter change is ball contact
-%                 if currentLetterChange < ballGrasp
-%                     letterChangeRelativeGrasp = ballGrasp - currentLetterChange;
-%                 else % otherwise use the previous trial
-%                     if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
-%                         detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
-%                         if numel(detectedChanges) > 0
-%                             currentLetterChange = detectedChanges(end);
-%                         else
-%                             continue
-%                         end
-%                         letterChangeRelativeGrasp = ballGrasp - currentLetterChange;
-%                     else
-%                         continue
-%                     end
-%                 end
-            elseif n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(end))
-                detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
-                if numel(detectedChanges) > 0
-                    currentLetterChange = detectedChanges(end);
+                    %detectedChanges_ballFix(detectedChanges_ballFix < fixBallOnset) = [];
                 else
                     continue
                 end
-                letterChangeRelativeBallFix = fixBallOnset - currentLetterChange;
-                letterChangeRelativeReach = reach - currentLetterChange;
-                letterChangeRelativeGrasp = ballGrasp - currentLetterChange;
             else
                 continue
-            end      
-            % ball and slot fixations during reach and transport phase
+            end
+            % find last letter change before reach onset
+            letterIdx = find(detectedChanges_reach <= reach, 1, 'last');
+            if ~isempty(letterIdx)
+                currentLetterChange = detectedChanges_reach(letterIdx);
+                if (reach - currentLetterChange) < 6.5
+                    letterChangeRelativeReach = reach - currentLetterChange;
+                    %detectedChanges_reach(detectedChanges_reach < reach) = [];
+                else
+                    continue
+                end
+            else
+                continue
+            end
+            % find last letter change before grasp onset
+            letterIdx = find(detectedChanges_grasp <= ballGrasp, 1, 'last');
+            if ~isempty(letterIdx)
+                currentLetterChange = detectedChanges_grasp(letterIdx);
+                if (ballGrasp - currentLetterChange) < 6.5
+                    letterChangeRelativeGrasp = ballGrasp - currentLetterChange;
+                    %detectedChanges_grasp(detectedChanges_grasp < ballGrasp) = [];
+                else
+                    continue
+                end
+            else
+                continue
+            end
+                
+            % classify trial type
             if numel(currentResult(n).gaze.fixation.onsetsBall) > 1
                 % cannot classify trials in which the ball is fixated multiple times
                 fixationPattern = 99;
@@ -144,7 +121,7 @@ for j = 1:numParticipants % loop over subjects
         ballFixationReLetter = [ballFixationReLetter; currentVariable];
         clear fixationPattern letterChangeRelativeBallFix letterChangeRelativeGrasp letterChangeRelativeReach
         clear fixBallOnRelative fixBallOnset cutoff ballGrasp slotIdx slotOnset ballOffset currentLetterChange
-        clear currentVariable detectedChanges reach
+        clear currentVariable detectedChanges reach detectedChanges_ballFix detectedChanges_reach detectedChanges_grasp
     end
 end
 %% calculate slot fixation onsets relative to letter changes
@@ -160,6 +137,24 @@ for j = 1:numParticipants % loop over subjects
         currentVariable = NaN(numTrials,numMeasures);
         % open variable matrices that we want to pull
         stopTrial = min([numTrials 30]);
+        % first make a vector of all detected letter changes
+        currentLetterChanges = [];
+        detectedChanges = [];
+        for n = 1:stopTrial % loop over trials for current subject & block
+            if currentResult(n).info.dropped
+                stopTrial = min([stopTrial+1 numTrials]);
+                continue
+            end
+            if ~isnan(currentResult(n).dualTask.tLetterChanges(1))
+                currentLetterChanges = currentResult(n).dualTask.tLetterChanges(currentResult(n).dualTask.changeDetected);
+                if ~isempty(currentLetterChanges)
+                    detectedChanges = [detectedChanges; currentLetterChanges];
+                end
+            end
+        end
+        detectedChanges_slotFix = detectedChanges;
+        detectedChanges_transport = detectedChanges;
+        detectedChanges_slotEntry = detectedChanges;
         for n = 1:stopTrial % loop over trials for current subject & block
             if currentResult(n).info.dropped
                 stopTrial = min([stopTrial+1 numTrials]);
@@ -167,6 +162,7 @@ for j = 1:numParticipants % loop over subjects
             end
             % now consider ball and slot fixation onsets relative to
             % approach phases
+            reach = currentResult(n).info.timeStamp.reach;
             transport = currentResult(n).info.timeStamp.transport;
             slotEntry = currentResult(n).info.timeStamp.ballInSlot;
             % slot fixations
@@ -181,88 +177,47 @@ for j = 1:numParticipants % loop over subjects
             else
                 continue
             end
-            if ~isnan(currentResult(n).dualTask.tLetterChanges(1))
-                detectedChanges = currentResult(n).dualTask.tLetterChanges(currentResult(n).dualTask.changeDetected);
-                if numel(detectedChanges) > 0
-                    currentLetterChange = detectedChanges(1);
-                else
-                    if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
-                        detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
-                        if numel(detectedChanges) > 0
-                            currentLetterChange = detectedChanges(end);
-                        else
-                            continue
-                        end
-                    else
-                        continue
-                    end
-                end
-                % check if letter change is before fixation onset
-                if currentLetterChange < fixSlotOnset
+             % find last letter change before current slot fixation onset
+            letterIdx = find(detectedChanges_slotFix <= fixSlotOnset, 1, 'last');
+            if ~isempty(letterIdx)
+                currentLetterChange = detectedChanges_slotFix(letterIdx);
+                if (fixSlotOnset - currentLetterChange) < 6.5
                     letterChangeRelativeSlotFix = fixSlotOnset - currentLetterChange;
-                    letterChangeRelativeTransport = transport - currentLetterChange;
-                    letterChangeRelativeSlotEntry = slotEntry - currentLetterChange;
-                else % otherwise use the previous trial
-                    if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
-                        detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
-                        if numel(detectedChanges) > 0
-                            currentLetterChange = detectedChanges(end);
-                        else
-                            continue
-                        end
-                        letterChangeRelativeSlotFix = fixSlotOnset - currentLetterChange;
-                        letterChangeRelativeTransport = transport - currentLetterChange;
-                        letterChangeRelativeSlotEntry = slotEntry - currentLetterChange;
-                    else
-                        continue
-                    end
-                end
-%                 % check if letter change is before transport onset
-%                 if currentLetterChange < transport
-%                     letterChangeRelativeTransport = transport - currentLetterChange;
-%                 else % otherwise use the previous trial
-%                     if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
-%                         detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
-%                         if numel(detectedChanges) > 0
-%                             currentLetterChange = detectedChanges(end);
-%                         else
-%                             continue
-%                         end
-%                         letterChangeRelativeTransport = transport - currentLetterChange;
-%                     else
-%                         continue
-%                     end
-%                 end
-%                 % check if letter change is before slot entry
-%                 if currentLetterChange < slotEntry
-%                     letterChangeRelativeSlotEntry = slotEntry - currentLetterChange;
-%                 else % otherwise use the previous trial
-%                     if n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(1))
-%                         detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
-%                         if numel(detectedChanges) > 0
-%                             currentLetterChange = detectedChanges(end);
-%                         else
-%                             continue
-%                         end
-%                         letterChangeRelativeSlotEntry = slotEntry - currentLetterChange;
-%                     else
-%                         continue
-%                     end
-%                 end
-            elseif n > 1 && ~isnan(currentResult(n-1).dualTask.tLetterChanges(end))
-                detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
-                if numel(detectedChanges) > 0
-                    currentLetterChange = detectedChanges(end);
+                    %detectedChanges_slotFix(detectedChanges_slotFix < fixSlotOnset) = [];
                 else
                     continue
                 end
-                letterChangeRelativeSlotFix = fixSlotOnset - currentLetterChange;
-                letterChangeRelativeTransport = transport - currentLetterChange;
-                letterChangeRelativeSlotEntry = slotEntry - currentLetterChange;
             else
                 continue
             end
-            % ball and slot fixations during reach and transport phase
+             % find last letter change before transport onset
+            letterIdx = find(detectedChanges_transport <= transport, 1, 'last');
+            if ~isempty(letterIdx)
+                currentLetterChange = detectedChanges_transport(letterIdx);
+                if (transport - currentLetterChange) < 6.5
+                    letterChangeRelativeTransport = transport - currentLetterChange;
+                    %detectedChanges_transport(detectedChanges_transport < transport) = [];
+                else
+                    continue
+                end
+            else
+                continue
+            end
+             % find last letter change before slot entry onset
+            letterIdx = find(detectedChanges_slotEntry <= slotEntry, 1, 'last');
+            if ~isempty(letterIdx)
+                currentLetterChange = detectedChanges_slotEntry(letterIdx);
+                if (slotEntry - currentLetterChange) < 6.5
+                    letterChangeRelativeSlotEntry = slotEntry - currentLetterChange;
+                    %detectedChanges_slotEntry(detectedChanges_slotEntry < slotEntry) = [];
+                else
+                    continue
+                end
+            else
+                continue
+            end
+                
+            % classify trial type
             if numel(currentResult(n).gaze.fixation.onsetsBall) > 1
                 % cannot classify trials in which the ball is fixated multiple times
                 fixationPattern = 99;
@@ -291,7 +246,8 @@ for j = 1:numParticipants % loop over subjects
         slotFixationReLetter = [slotFixationReLetter; currentVariable];
         clear fixationPattern changeDetected letterChangeRelativeSlotFix letterChangeRelativeSlotEntry
         clear fixSlotOnRelative fixSlotOnset slotIdx slotOnset cutoff slotEntry letterChangeRelativeTransport
-        clear ballOffset currentLetterChange currentVariable clear transport
+        clear ballOffset currentLetterChange currentVariable clear transport detectedChanges_slotFix 
+        clear detectedChanges_transport detectedChanges_slotEntry
     end
 end
 
@@ -307,6 +263,7 @@ fixationOnsets = 4; % column with fixation onsets
 movementOnsets = 5; % column with reach / transport onsets
 manipulationOnsets = 6; % column with grasp / slot entry
 binWidth = .25;
+stepWidth = 0.01;
 
 %% plot ball fixation, reach, and grasp onsets for different patterns in precision grip trials
 figure(fixationOnsets)
@@ -317,12 +274,14 @@ fixations_PG = ballFixations_PG(ballFixations_PG(:,3) ~= selectedPattern,:);
 
 % plot ball fixation onsets
 subplot(3,1,1)
+xlabel('Time of ball fix onset re: last detected LC before ball fix (s)')
+ylabel('Frequency of trials')
 set(gcf,'renderer','Painters')
 xlim([0 upperBound])
 ylim([0 xymax])
 set(gca, 'Ytick', [0 5 10 15 20])
 hold on
-fixOnsets_PG = fixations_PG(fixations_PG(:,fixationOnsets) >= 0 & fixations_PG(:,fixationOnsets) < 6.5+binWidth,:);
+fixOnsets_PG = fixations_PG; %fixations_PG(fixations_PG(:,fixationOnsets) >= 0 & fixations_PG(:,fixationOnsets) < 6.5+binWidth,:);
 h.ball.PGback = histogram(fixOnsets_PG(fixOnsets_PG(:,3) == 4,fixationOnsets), 'BinWidth', binWidth,...
     'facecolor', fixationPatternColors(5,:), 'edgecolor', 'none');
 h.ball.PGtri = histogram(fixOnsets_PG(fixOnsets_PG(:,3) == 3,fixationOnsets), 'BinWidth', binWidth,...
@@ -339,7 +298,11 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution PG_back
 slope = SP_PG_back/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+% x_silent = stepWidth:stepWidth:1.5;
+% y_silent = SP_PG_back*ones(1, length(x_silent));
+% x_slope = 1.5:stepWidth:6.5;
+% y_slope = -slope*(x_slope-1.5) + SP_PG_back;
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_PG_back)*ones((1-SP_PG_back+floor(SP_PG_back))*10000,1); ...
             ceil(SP_PG_back)*ones((1-ceil(SP_PG_back)+SP_PG_back)*10000,1)];
@@ -355,7 +318,7 @@ clear expectedDistribution binCount slope SP_PG_back
 % create expected distribution PG_tri
 slope = SP_PG_tri/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_PG_tri)*ones((1-SP_PG_tri+floor(SP_PG_tri))*10000,1); ...
             ceil(SP_PG_tri)*ones((1-ceil(SP_PG_tri)+SP_PG_tri)*10000,1)];
@@ -371,12 +334,14 @@ clear expectedDistribution binCount slope SP_PG_tri
 
 % plot reach onsets
 subplot(3,1,2)
+xlabel('Time of reach onset re: last detected LC before reach (s)')
+ylabel('Frequency of trials')
 set(gcf,'renderer','Painters')
 xlim([0 upperBound])
 ylim([0 xymax])
 set(gca, 'Ytick', [0 5 10 15 20])
 hold on
-moveOnsets_PG = fixations_PG(fixations_PG(:,movementOnsets) >= 0 & fixations_PG(:,movementOnsets) < 6.5+binWidth,:);
+moveOnsets_PG = fixations_PG; %fixations_PG(fixations_PG(:,movementOnsets) >= 0 & fixations_PG(:,movementOnsets) < 6.5+binWidth,:);
 h.reach.PGback = histogram(moveOnsets_PG(moveOnsets_PG(:,3) == 4,movementOnsets), 'BinWidth', binWidth,...
     'facecolor', fixationPatternColors(5,:), 'edgecolor', 'none');
 h.reach.PGtri = histogram(moveOnsets_PG(moveOnsets_PG(:,3) == 3,movementOnsets), 'BinWidth', binWidth,...
@@ -393,7 +358,7 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution PG_back
 slope = SP_PG_back/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_PG_back)*ones((1-SP_PG_back+floor(SP_PG_back))*10000,1); ...
             ceil(SP_PG_back)*ones((1-ceil(SP_PG_back)+SP_PG_back)*10000,1)];
@@ -409,7 +374,7 @@ clear expectedDistribution binCount slope SP_PG_back
 % create expected distribution PG_tri
 slope = SP_PG_tri/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_PG_tri)*ones((1-SP_PG_tri+floor(SP_PG_tri))*10000,1); ...
             ceil(SP_PG_tri)*ones((1-ceil(SP_PG_tri)+SP_PG_tri)*10000,1)];
@@ -425,12 +390,14 @@ clear expectedDistribution binCount slope SP_PG_tri
 
 % plot ball grasp onsets
 subplot(3,1,3)
+xlabel('Time of ball grasp re: last detected LC before ball grasp (s)')
+ylabel('Frequency of trials')
 set(gcf,'renderer','Painters')
 xlim([0 upperBound])
 ylim([0 xymax])
 set(gca, 'Ytick', [0 5 10 15 20])
 hold on
-manipOnsets_PG = fixations_PG(fixations_PG(:,manipulationOnsets) >= 0 & fixations_PG(:,manipulationOnsets) < 6.5+binWidth,:);
+manipOnsets_PG = fixations_PG; %fixations_PG(fixations_PG(:,manipulationOnsets) >= 0 & fixations_PG(:,manipulationOnsets) < 6.5+binWidth,:);
 h.grasp.PGback = histogram(manipOnsets_PG(manipOnsets_PG(:,3) == 4,manipulationOnsets), 'BinWidth', binWidth,...
     'facecolor', fixationPatternColors(5,:), 'edgecolor', 'none');
 h.grasp.PGtri = histogram(manipOnsets_PG(manipOnsets_PG(:,3) == 3,manipulationOnsets), 'BinWidth', binWidth,...
@@ -447,7 +414,7 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution PG_back
 slope = SP_PG_back/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_PG_back)*ones((1-SP_PG_back+floor(SP_PG_back))*10000,1); ...
             ceil(SP_PG_back)*ones((1-ceil(SP_PG_back)+SP_PG_back)*10000,1)];
@@ -463,7 +430,7 @@ clear expectedDistribution binCount slope SP_PG_back
 % create expected distribution PG_tri
 slope = SP_PG_tri/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_PG_tri)*ones((1-SP_PG_tri+floor(SP_PG_tri))*10000,1); ...
             ceil(SP_PG_tri)*ones((1-ceil(SP_PG_tri)+SP_PG_tri)*10000,1)];
@@ -488,12 +455,15 @@ fixations_PG = slotFixations_PG(slotFixations_PG(:,3) ~= selectedPattern,:);
 
 % plot slot fixation onsets
 subplot(3,1,1)
+xlabel('Time of slot fix onset re: last detected LC before slot fix (s)')
+ylabel('Frequency of trials')
 set(gcf,'renderer','Painters')
 xlim([0 upperBound])
 ylim([0 xymax])
 set(gca, 'Ytick', [0 5 10 15 20])
 hold on
-fixOnsets_PG = fixations_PG(fixations_PG(:,fixationOnsets) >= 0 & fixations_PG(:,fixationOnsets) < 6.5+binWidth,:);
+%rangeIdx = fixations_PG(:,fixationOnsets) >= 0 & fixations_PG(:,fixationOnsets) < 6.5+binWidth;
+fixOnsets_PG = fixations_PG; %fixations_PG(rangeIdx,:);
 h.slot.PGslot = histogram(fixOnsets_PG(fixOnsets_PG(:,3) == 2,fixationOnsets), 'BinWidth', binWidth,...
     'facecolor', fixationPatternColors(3,:), 'edgecolor', 'none');
 h.slot.PGback = histogram(fixOnsets_PG(fixOnsets_PG(:,3) == 4,fixationOnsets), 'BinWidth', binWidth,...
@@ -515,7 +485,7 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution PG_slot
 slope = SP_PG_slot/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_PG_slot)*ones((1-SP_PG_slot+floor(SP_PG_slot))*10000,1); ...
             ceil(SP_PG_slot)*ones((1-ceil(SP_PG_slot)+SP_PG_slot)*10000,1)];
@@ -531,7 +501,7 @@ clear expectedDistribution binCount slope SP_PG_slot
 % create expected distribution PG_back
 slope = SP_PG_back/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_PG_back)*ones((1-SP_PG_back+floor(SP_PG_back))*10000,1); ...
             ceil(SP_PG_back)*ones((1-ceil(SP_PG_back)+SP_PG_back)*10000,1)];
@@ -547,7 +517,7 @@ clear expectedDistribution binCount slope SP_PG_back
 % create expected distribution PG_tri
 slope = SP_PG_tri/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_PG_tri)*ones((1-SP_PG_tri+floor(SP_PG_tri))*10000,1); ...
             ceil(SP_PG_tri)*ones((1-ceil(SP_PG_tri)+SP_PG_tri)*10000,1)];
@@ -563,12 +533,14 @@ clear expectedDistribution binCount slope SP_PG_tri
 
 % plot transport onsets
 subplot(3,1,2)
+xlabel('Time of transport onset re: last detected LC before transport (s)')
+ylabel('Frequency of trials')
 set(gcf,'renderer','Painters')
 xlim([0 upperBound])
 ylim([0 xymax])
 set(gca, 'Ytick', [0 5 10 15 20])
 hold on
-moveOnsets_PG = fixations_PG(fixations_PG(:,movementOnsets) >= 0 & fixations_PG(:,movementOnsets) < 6.5+binWidth,:);
+moveOnsets_PG = fixations_PG; %fixations_PG(fixations_PG(:,movementOnsets) >= 0 & fixations_PG(:,movementOnsets) < 6.5+binWidth,:);
 h.reach.PGslot = histogram(moveOnsets_PG(moveOnsets_PG(:,3) == 2,movementOnsets), 'BinWidth', binWidth,...
     'facecolor', fixationPatternColors(3,:), 'edgecolor', 'none');
 h.reach.PGback = histogram(moveOnsets_PG(moveOnsets_PG(:,3) == 4,movementOnsets), 'BinWidth', binWidth,...
@@ -590,7 +562,7 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution PG_slot
 slope = SP_PG_slot/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_PG_slot)*ones((1-SP_PG_slot+floor(SP_PG_slot))*10000,1); ...
             ceil(SP_PG_slot)*ones((1-ceil(SP_PG_slot)+SP_PG_slot)*10000,1)];
@@ -606,7 +578,7 @@ clear expectedDistribution binCount slope SP_PG_slot
 % create expected distribution PG_back
 slope = SP_PG_back/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_PG_back)*ones((1-SP_PG_back+floor(SP_PG_back))*10000,1); ...
             ceil(SP_PG_back)*ones((1-ceil(SP_PG_back)+SP_PG_back)*10000,1)];
@@ -622,7 +594,7 @@ clear expectedDistribution binCount slope SP_PG_back
 % create expected distribution PG_tri
 slope = SP_PG_tri/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_PG_tri)*ones((1-SP_PG_tri+floor(SP_PG_tri))*10000,1); ...
             ceil(SP_PG_tri)*ones((1-ceil(SP_PG_tri)+SP_PG_tri)*10000,1)];
@@ -638,12 +610,14 @@ clear expectedDistribution binCount slope SP_PG_tri
 
 % plot slot slot entry
 subplot(3,1,3)
+xlabel('Time of slot entry re: last detected LC before slot entry (s)')
+ylabel('Frequency of trials')
 set(gcf,'renderer','Painters')
 xlim([0 upperBound])
 ylim([0 xymax])
 set(gca, 'Ytick', [0 5 10 15 20])
 hold on
-manipOnsets_PG = fixations_PG(fixations_PG(:,manipulationOnsets) >= 0 & fixations_PG(:,manipulationOnsets) < 6.5+binWidth,:);
+manipOnsets_PG = fixations_PG; %fixations_PG(fixations_PG(:,manipulationOnsets) >= 0 & fixations_PG(:,manipulationOnsets) < 6.5+binWidth,:);
 h.grasp.PGslot = histogram(manipOnsets_PG(manipOnsets_PG(:,3) == 2,manipulationOnsets), 'BinWidth', binWidth,...
     'facecolor', fixationPatternColors(3,:), 'edgecolor', 'none');
 h.grasp.PGback = histogram(manipOnsets_PG(manipOnsets_PG(:,3) == 4,manipulationOnsets), 'BinWidth', binWidth,...
@@ -665,7 +639,7 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution PG_slot
 slope = SP_PG_slot/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_PG_slot)*ones((1-SP_PG_slot+floor(SP_PG_slot))*10000,1); ...
             ceil(SP_PG_slot)*ones((1-ceil(SP_PG_slot)+SP_PG_slot)*10000,1)];
@@ -681,7 +655,7 @@ clear expectedDistribution binCount slope SP_PG_slot
 % create expected distribution PG_back
 slope = SP_PG_back/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_PG_back)*ones((1-SP_PG_back+floor(SP_PG_back))*10000,1); ...
             ceil(SP_PG_back)*ones((1-ceil(SP_PG_back)+SP_PG_back)*10000,1)];
@@ -697,7 +671,7 @@ clear expectedDistribution binCount slope SP_PG_back
 % create expected distribution PG_tri
 slope = SP_PG_tri/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_PG_tri)*ones((1-SP_PG_tri+floor(SP_PG_tri))*10000,1); ...
             ceil(SP_PG_tri)*ones((1-ceil(SP_PG_tri)+SP_PG_tri)*10000,1)];
@@ -722,12 +696,14 @@ fixations_TW = ballFixations_TW(ballFixations_TW(:,3) ~= selectedPattern,:);
 
 % plot ball fixation onsets
 subplot(3,1,1)
+xlabel('Time of ball fix onset re: last detected LC before ball fix (s)')
+ylabel('Frequency of trials')
 set(gcf,'renderer','Painters')
 xlim([0 upperBound])
 ylim([0 xymax])
 set(gca, 'Ytick', [0 5 10 15 20])
 hold on
-fixOnsets_TW = fixations_TW(fixations_TW(:,fixationOnsets) >= 0 & fixations_TW(:,fixationOnsets) < 6.5+binWidth,:);
+fixOnsets_TW = fixations_TW; %fixations_TW(fixations_TW(:,fixationOnsets) >= 0 & fixations_TW(:,fixationOnsets) < 6.5+binWidth,:);
 h.ball.TWback = histogram(fixOnsets_TW(fixOnsets_TW(:,3) == 4,fixationOnsets), 'BinWidth', binWidth,...
     'facecolor', fixationPatternColors(5,:), 'edgecolor', 'none');
 h.ball.TWtri = histogram(fixOnsets_TW(fixOnsets_TW(:,3) == 3,fixationOnsets), 'BinWidth', binWidth,...
@@ -744,7 +720,7 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution TW_back
 slope = SP_TW_back/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_TW_back)*ones((1-SP_TW_back+floor(SP_TW_back))*10000,1); ...
             ceil(SP_TW_back)*ones((1-ceil(SP_TW_back)+SP_TW_back)*10000,1)];
@@ -760,7 +736,7 @@ clear expectedDistribution binCount slope SP_TW_back
 % create expected distribution TW_tri
 slope = SP_TW_tri/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_TW_tri)*ones((1-SP_TW_tri+floor(SP_TW_tri))*10000,1); ...
             ceil(SP_TW_tri)*ones((1-ceil(SP_TW_tri)+SP_TW_tri)*10000,1)];
@@ -776,12 +752,14 @@ clear expectedDistribution binCount slope SP_TW_tri
 
 % plot reach onsets
 subplot(3,1,2)
+xlabel('Time of reach onset re: last detected LC before reach (s)')
+ylabel('Frequency of trials')
 set(gcf,'renderer','Painters')
 xlim([0 upperBound])
 ylim([0 xymax])
 set(gca, 'Ytick', [0 5 10 15 20])
 hold on
-moveOnsets_TW = fixations_TW(fixations_TW(:,movementOnsets) >= 0 & fixations_TW(:,movementOnsets) < 6.5+binWidth,:);
+moveOnsets_TW = fixations_TW; %fixations_TW(fixations_TW(:,movementOnsets) >= 0 & fixations_TW(:,movementOnsets) < 6.5+binWidth,:);
 h.reach.TWback = histogram(moveOnsets_TW(moveOnsets_TW(:,3) == 4,movementOnsets), 'BinWidth', binWidth,...
     'facecolor', fixationPatternColors(5,:), 'edgecolor', 'none');
 h.reach.TWtri = histogram(moveOnsets_TW(moveOnsets_TW(:,3) == 3,movementOnsets), 'BinWidth', binWidth,...
@@ -798,7 +776,7 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution TW_back
 slope = SP_TW_back/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_TW_back)*ones((1-SP_TW_back+floor(SP_TW_back))*10000,1); ...
             ceil(SP_TW_back)*ones((1-ceil(SP_TW_back)+SP_TW_back)*10000,1)];
@@ -814,7 +792,7 @@ clear expectedDistribution binCount slope SP_TW_back
 % create expected distribution TW_tri
 slope = SP_TW_tri/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_TW_tri)*ones((1-SP_TW_tri+floor(SP_TW_tri))*10000,1); ...
             ceil(SP_TW_tri)*ones((1-ceil(SP_TW_tri)+SP_TW_tri)*10000,1)];
@@ -830,12 +808,14 @@ clear expectedDistribution binCount slope SP_TW_tri
 
 % plot ball grasp onsets
 subplot(3,1,3)
+xlabel('Time of ball grasp re: last detected LC before ball grasp (s)')
+ylabel('Frequency of trials')
 set(gcf,'renderer','Painters')
 xlim([0 upperBound])
 ylim([0 xymax])
 set(gca, 'Ytick', [0 5 10 15 20])
 hold on
-manipOnsets_TW = fixations_TW(fixations_TW(:,manipulationOnsets) >= 0 & fixations_TW(:,manipulationOnsets) < 6.5+binWidth,:);
+manipOnsets_TW = fixations_TW; %fixations_TW(fixations_TW(:,manipulationOnsets) >= 0 & fixations_TW(:,manipulationOnsets) < 6.5+binWidth,:);
 h.grasp.TWback = histogram(manipOnsets_TW(manipOnsets_TW(:,3) == 4,manipulationOnsets), 'BinWidth', binWidth,...
     'facecolor', fixationPatternColors(5,:), 'edgecolor', 'none');
 h.grasp.TWtri = histogram(manipOnsets_TW(manipOnsets_TW(:,3) == 3,manipulationOnsets), 'BinWidth', binWidth,...
@@ -852,7 +832,7 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution TW_back
 slope = SP_TW_back/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_TW_back)*ones((1-SP_TW_back+floor(SP_TW_back))*10000,1); ...
             ceil(SP_TW_back)*ones((1-ceil(SP_TW_back)+SP_TW_back)*10000,1)];
@@ -868,7 +848,7 @@ clear expectedDistribution binCount slope SP_TW_back
 % create expected distribution TW_tri
 slope = SP_TW_tri/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_TW_tri)*ones((1-SP_TW_tri+floor(SP_TW_tri))*10000,1); ...
             ceil(SP_TW_tri)*ones((1-ceil(SP_TW_tri)+SP_TW_tri)*10000,1)];
@@ -892,12 +872,14 @@ fixations_TW = slotFixations_TW(slotFixations_TW(:,3) ~= selectedPattern,:);
 
 % plot slot fixation onsets
 subplot(3,1,1)
+xlabel('Time of slot fix onset re: last detected LC before slot fix (s)')
+ylabel('Frequency of trials')
 set(gcf,'renderer','Painters')
 xlim([0 upperBound])
 ylim([0 xymax])
 set(gca, 'Ytick', [0 5 10 15 20])
 hold on
-fixOnsets_TW = fixations_TW(fixations_TW(:,fixationOnsets) >= 0 & fixations_TW(:,fixationOnsets) < 6.5+binWidth,:);
+fixOnsets_TW = fixations_TW; %fixations_TW(fixations_TW(:,fixationOnsets) >= 0 & fixations_TW(:,fixationOnsets) < 6.5+binWidth,:);
 h.slot.TWslot = histogram(fixOnsets_TW(fixOnsets_TW(:,3) == 2,fixationOnsets), 'BinWidth', binWidth,...
     'facecolor', fixationPatternColors(3,:), 'edgecolor', 'none');
 h.slot.TWback = histogram(fixOnsets_TW(fixOnsets_TW(:,3) == 4,fixationOnsets), 'BinWidth', binWidth,...
@@ -919,7 +901,7 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution TW_slot
 slope = SP_TW_slot/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_TW_slot)*ones((1-SP_TW_slot+floor(SP_TW_slot))*10000,1); ...
             ceil(SP_TW_slot)*ones((1-ceil(SP_TW_slot)+SP_TW_slot)*10000,1)];
@@ -935,7 +917,7 @@ clear expectedDistribution binCount slope SP_TW_slot
 % create expected distribution TW_back
 slope = SP_TW_back/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_TW_back)*ones((1-SP_TW_back+floor(SP_TW_back))*10000,1); ...
             ceil(SP_TW_back)*ones((1-ceil(SP_TW_back)+SP_TW_back)*10000,1)];
@@ -951,7 +933,7 @@ clear expectedDistribution binCount slope SP_TW_back
 % create expected distribution TW_tri
 slope = SP_TW_tri/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_TW_tri)*ones((1-SP_TW_tri+floor(SP_TW_tri))*10000,1); ...
             ceil(SP_TW_tri)*ones((1-ceil(SP_TW_tri)+SP_TW_tri)*10000,1)];
@@ -967,12 +949,14 @@ clear expectedDistribution binCount slope SP_TW_tri
 
 % plot transport onsets
 subplot(3,1,2)
+xlabel('Time of transport onset re: last detected LC before transport (s)')
+ylabel('Frequency of trials')
 set(gcf,'renderer','Painters')
 xlim([0 upperBound])
 ylim([0 xymax])
 set(gca, 'Ytick', [0 5 10 15 20])
 hold on
-moveOnsets_TW = fixations_TW(fixations_TW(:,movementOnsets) >= 0 & fixations_TW(:,movementOnsets) < 6.5+binWidth,:);
+moveOnsets_TW = fixations_TW; %fixations_TW(fixations_TW(:,movementOnsets) >= 0 & fixations_TW(:,movementOnsets) < 6.5+binWidth,:);
 h.reach.TWslot = histogram(moveOnsets_TW(moveOnsets_TW(:,3) == 2,movementOnsets), 'BinWidth', binWidth,...
     'facecolor', fixationPatternColors(3,:), 'edgecolor', 'none');
 h.reach.TWback = histogram(moveOnsets_TW(moveOnsets_TW(:,3) == 4,movementOnsets), 'BinWidth', binWidth,...
@@ -994,7 +978,7 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution TW_slot
 slope = SP_TW_slot/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_TW_slot)*ones((1-SP_TW_slot+floor(SP_TW_slot))*10000,1); ...
             ceil(SP_TW_slot)*ones((1-ceil(SP_TW_slot)+SP_TW_slot)*10000,1)];
@@ -1010,7 +994,7 @@ clear expectedDistribution binCount slope SP_TW_slot
 % create expected distribution TW_back
 slope = SP_TW_back/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_TW_back)*ones((1-SP_TW_back+floor(SP_TW_back))*10000,1); ...
             ceil(SP_TW_back)*ones((1-ceil(SP_TW_back)+SP_TW_back)*10000,1)];
@@ -1026,7 +1010,7 @@ clear expectedDistribution binCount slope SP_TW_back
 % create expected distribution TW_tri
 slope = SP_TW_tri/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_TW_tri)*ones((1-SP_TW_tri+floor(SP_TW_tri))*10000,1); ...
             ceil(SP_TW_tri)*ones((1-ceil(SP_TW_tri)+SP_TW_tri)*10000,1)];
@@ -1042,12 +1026,14 @@ clear expectedDistribution binCount slope SP_TW_tri
 
 % plot slot entry
 subplot(3,1,3)
+xlabel('Time of slot entry re: last detected LC before slot entry (s)')
+ylabel('Frequency of trials')
 set(gcf,'renderer','Painters')
 xlim([0 upperBound])
 ylim([0 xymax])
 set(gca, 'Ytick', [0 5 10 15 20])
 hold on
-manipOnsets_TW = fixations_TW(fixations_TW(:,manipulationOnsets) >= 0 & fixations_TW(:,manipulationOnsets) < 6.5+binWidth,:);
+manipOnsets_TW = fixations_TW; %fixations_TW(fixations_TW(:,manipulationOnsets) >= 0 & fixations_TW(:,manipulationOnsets) < 6.5+binWidth,:);
 h.grasp.TWslot = histogram(manipOnsets_TW(manipOnsets_TW(:,3) == 2,manipulationOnsets), 'BinWidth', binWidth,...
     'facecolor', fixationPatternColors(3,:), 'edgecolor', 'none');
 h.grasp.TWback = histogram(manipOnsets_TW(manipOnsets_TW(:,3) == 4,manipulationOnsets), 'BinWidth', binWidth,...
@@ -1069,7 +1055,7 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution TW_slot
 slope = SP_TW_slot/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_TW_slot)*ones((1-SP_TW_slot+floor(SP_TW_slot))*10000,1); ...
             ceil(SP_TW_slot)*ones((1-ceil(SP_TW_slot)+SP_TW_slot)*10000,1)];
@@ -1085,7 +1071,7 @@ clear expectedDistribution binCount slope SP_TW_slot
 % create expected distribution TW_back
 slope = SP_TW_back/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_TW_back)*ones((1-SP_TW_back+floor(SP_TW_back))*10000,1); ...
             ceil(SP_TW_back)*ones((1-ceil(SP_TW_back)+SP_TW_back)*10000,1)];
@@ -1101,7 +1087,7 @@ clear expectedDistribution binCount slope SP_TW_back
 % create expected distribution TW_tri
 slope = SP_TW_tri/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i <= 1.5
         binCount = [floor(SP_TW_tri)*ones((1-SP_TW_tri+floor(SP_TW_tri))*10000,1); ...
             ceil(SP_TW_tri)*ones((1-ceil(SP_TW_tri)+SP_TW_tri)*10000,1)];

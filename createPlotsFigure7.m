@@ -280,13 +280,14 @@ for i = 0:binWidth:6.5
     expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binWidth))),1)];
 end
 % ks test all fixations
-[h_TW2, p_TW2, ks2statTW2] = kstest2(reaches_TW(:,selectedColumn), expectedDistribution);
+%[h_TW2, p_TW2, ks2statTW2] = kstest2(reaches_TW(:,selectedColumn), expectedDistribution);
 clear expectedDistribution binCount slope
+
 %% plot the response time (reach onset relative to go signal) vs. the time 
-% of the last detected letter change (relative to go) --> Panels A & B
-numParticipants = 11;
+% of the last detected letter change (relative to go) --> Panels C & D
 numVariables = 5;
 speedRelativeLetterChange = [];
+rangeLC = 4;
 
 for j = 1:numParticipants % loop over subjects
     for blockID = 3:4 % loop over dual task conditions
@@ -296,53 +297,67 @@ for j = 1:numParticipants % loop over subjects
         % open variable matrices that we want to pull
         currentVariable = NaN(numTrials,numVariables);
         stopTrial = min([numTrials 30]);
+        % first make a vector of all detected letter changes
+        currentLetterChanges = [];
+        detectedChanges = [];
         for n = 1:stopTrial % loop over trials for current subject & block
             if currentResult(n).info.dropped
                 stopTrial = min([stopTrial+1 numTrials]);
                 continue
             end
-
+            if ~isnan(currentResult(n).dualTask.tLetterChanges(1))
+                currentLetterChanges = currentResult(n).dualTask.tLetterChanges(currentResult(n).dualTask.changeDetected);
+                if ~isempty(currentLetterChanges)
+                    detectedChanges = [detectedChanges; currentLetterChanges];
+                end
+            end
+        end
+        for n = 1:stopTrial % loop over trials for current subject & block
+            if currentResult(n).info.dropped
+                stopTrial = min([stopTrial+1 numTrials]);
+                continue
+            end
+            cueInterval = 0.5; %start looking 0.5 s before cue
             goTime = currentResult(n).info.timeStamp.go;
             reach = currentResult(n).info.timeStamp.reach;
+            goToReach = reach-goTime;
             if isempty(currentResult(n).gaze.fixation.onsetsBall) && isempty(currentResult(n).gaze.fixation.onsetsSlot)
                 landmarkFixation = 0;
             else
                 landmarkFixation = 1;
             end
-            if reach-goTime > 1
-                x = 2;
-            end
-            % check whether a letter change was detected in the current
-            % trial
-            if sum(currentResult(n).dualTask.changeDetected) > 0
-                detectedChanges = currentResult(n).dualTask.tLetterChanges(currentResult(n).dualTask.changeDetected);
-                detectedChange = detectedChanges(1);                
-            else % otherwise use the previous trial
-                if n > 1 && sum(currentResult(n-1).dualTask.changeDetected) > 0
-                    detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
-                    detectedChange = detectedChanges(end);
+            % find last letter change before current slot fixation onset
+            LCbefore = find(detectedChanges <= goTime-cueInterval, 1, 'last');
+            LCafter = find(detectedChanges > goTime-cueInterval, 1, 'first');
+            if ~isempty(LCbefore) && ~isempty(LCafter) 
+                % check which one is closer 
+                currentLC_early = goTime-cueInterval - detectedChanges(LCbefore);
+                currentLC_late = goTime-cueInterval - detectedChanges(LCafter);
+                if abs(currentLC_early) <= abs(currentLC_late) && abs(currentLC_early) < rangeLC
+                    letterChangeRelativeGo = currentLC_early;
+                elseif abs(currentLC_late) < abs(currentLC_early) && abs(currentLC_late) < rangeLC
+                    letterChangeRelativeGo = currentLC_late;
                 else
                     continue
                 end
-            end
-            % if the change happened before the go-signal good
-            if detectedChange < goTime%reach
-                letterChangeRelativeReach = reach - detectedChange;
-            else % otherwise use the previous trial
-                clear detectedChanges detectedChange
-                if n > 1 && sum(currentResult(n-1).dualTask.changeDetected) > 0
-                    detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
-                    letterChangeRelativeReach = reach - detectedChanges(end);
+            elseif ~isempty(LCbefore) && isempty(LCafter) 
+                if abs(currentLC_early) < rangeLC
+                    letterChangeRelativeGo = currentLC_early;
                 else
                     continue
                 end
+            elseif isempty(LCbefore) && ~isempty(LCafter) 
+                if abs(currentLC_late) < rangeLC
+                    letterChangeRelativeGo = currentLC_late;
+                else
+                    continue
+                end
+            else
+                continue
             end
-            goToReach = reach-goTime;
 
             currentVariable(n,:) = [currentParticipant blockID landmarkFixation...
-                letterChangeRelativeReach goToReach];
-
-            clear detectedChange goTime reach detectedChanges
+                letterChangeRelativeGo goToReach];
         end
 
         speedRelativeLetterChange = [speedRelativeLetterChange; currentVariable];
@@ -353,8 +368,8 @@ end
 relativeChanges_PG = speedRelativeLetterChange(speedRelativeLetterChange(:,2) == 3,:);
 % plot time of last detected letter change (before reach onset) relative to
 % go signal
-lowerLimit = 0;
-upperLimit = 5;
+lowerLimit = -4;
+upperLimit = 4;
 binWidth = .25;
 figure(33)
 set(gcf,'renderer','Painters', 'Position', [50 100 436 364])
@@ -391,3 +406,4 @@ for i = lowerLimit+binWidth:binWidth:upperLimit+binWidth
     line([i-binWidth i], [reactBin reactBin], 'Color', 'k')
 end
 
+%% plot the response time (reach onset relative to go signal) vs. time of LC relative to cue

@@ -21,10 +21,10 @@ ballFix.FT.onset <- lmer(fixationOnset ~ reachOnset + ballApproach + ballGrasp +
                        slotApproach + slotEntry + (1|participant), data = ballFixations_FT)
 ballFix.TW.onset <- lmer(fixationOnset ~  reachOnset + ballApproach + ballGrasp + transport +
                        slotApproach + slotEntry + (1|participant), data = ballFixations_TW)
-ballFix.FT.offset <- lmer(fixationOffset ~ reachOnset + reachPeakVel + ballApproach + ballGrasp + transport +
-                           transportPeakVel + slotApproach + slotEntry + (1|participant), data = ballFixations_FT)
-ballFix.TW.offset <- lmer(fixationOffset ~  reachOnset + reachPeakVel + ballApproach + ballGrasp + transport +
-                           transportPeakVel + slotApproach + slotEntry + (1|participant), data = ballFixations_TW)
+ballFix.FT.offset <- lmer(fixationOffset ~ reachOnset + ballApproach + ballGrasp + transport +
+                           slotApproach + slotEntry + (1|participant), data = ballFixations_FT)
+ballFix.TW.offset <- lmer(fixationOffset ~  reachOnset + ballApproach + ballGrasp + transport +
+                           slotApproach + slotEntry + (1|participant), data = ballFixations_TW)
 
 slotFixData = data.frame(readMat("glmData_slot.mat"))
 colnames(slotFixData) <- c("participant", "testID", "slotFix", "reachOnset", 
@@ -41,9 +41,9 @@ slotFix.FT.onset <- lmer(fixationOnset ~ reachOnset + ballApproach + ballGrasp +
                          slotApproach + slotEntry + (1|participant), data = slotFixations_FT)
 slotFix.TW.onset <- lmer(fixationOnset ~ reachOnset + ballApproach + ballGrasp + transport +
                          slotApproach + slotEntry + (1|participant), data = slotFixations_TW)
-slotFix.FT.offset <- lmer(fixationOffset ~ reachOnset + reachPeakVel + ballApproach + ballGrasp + transport +
-                           transportPeakVel + slotApproach + slotEntry + (1|participant), data = slotFixations_FT)
-slotFix.TW.offset <- lmer(fixationOffset ~ reachOnset + reachPeakVel + ballApproach + ballGrasp + transport +
-                           transportPeakVel + slotApproach + slotEntry + (1|participant), data = slotFixations_TW)
+slotFix.FT.offset <- lmer(fixationOffset ~ reachOnset + ballApproach + ballGrasp + transport +
+                           slotApproach + slotEntry + (1|participant), data = slotFixations_FT)
+slotFix.TW.offset <- lmer(fixationOffset ~ reachOnset + ballApproach + ballGrasp + transport +
+                           slotApproach + slotEntry + (1|participant), data = slotFixations_TW)
                           
 

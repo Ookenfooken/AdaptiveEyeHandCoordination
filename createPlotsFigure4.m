@@ -254,3 +254,127 @@ for j = 1:numParticipants % loop over subjects
     
 end
 
+%% add cumulative districutions (panels E&F)
+
+shift = 300;
+vectorLength= 600;
+for blockID = 3:4
+    ballFixOnsets = [];
+    ballFixOffsets = [];
+    slotFixOnsets = [];
+    slotFixOffsets = [];
+    for i = 1:numParticipants % loop over subjects
+        currentResult = pulledData{i,blockID};
+        currentParticipant = currentResult(1).info.subject;
+        numTrials = length(currentResult);
+        stopTrial = min([numTrials 30]);
+        % open variable matrices that we want to pull
+        cumulativeOnsetBall = NaN(numTrials,vectorLength);
+        cumulativeOffsetBall = NaN(numTrials,vectorLength);
+        cumulativeOnsetSlot = NaN(numTrials,vectorLength);
+        cumulativeOffsetSlot = NaN(numTrials,vectorLength);
+        for n = 1:stopTrial % loop over trials for current subject & block
+            if currentResult(n).info.dropped
+                stopTrial = min([stopTrial+1 numTrials]);
+                continue
+            end
+            if isempty(currentResult(n).gaze.fixation.onsetsBall)
+                continue
+            end
+            onsetFixBall = currentResult(n).gaze.fixation.onsetsBall(1);
+            offsetFixBall = currentResult(n).gaze.fixation.offsetsBall(1);
+                        
+            onsetPhase = currentResult(n).info.phaseStart.ballGrasp - currentResult(n).info.trialStart+1;
+            phaseOffset = onsetPhase - shift;
+            fixOn = onsetFixBall - phaseOffset;
+            if fixOn > vectorLength-1
+                fixOn = vectorLength;
+            elseif fixOn < 1
+                fixOn = 1;
+            end
+            cumulativeOnsetBall(n,:) = [zeros(1,fixOn) ones(1,vectorLength-fixOn)];
+            fixOff = offsetFixBall - phaseOffset;
+            if fixOff > vectorLength-1
+                fixOff = vectorLength;
+            elseif fixOff < 1
+                fixOff = 1;
+            end
+            cumulativeOffsetBall(n,:) = [zeros(1,fixOff) ones(1,vectorLength-fixOff)];            
+        end
+        currentOnsetBall = nansum(cumulativeOnsetBall);
+        ballFixOnsets = [ballFixOnsets; currentOnsetBall];
+        currentOffsetBall = nansum(cumulativeOffsetBall);
+        ballFixOffsets = [ballFixOffsets; currentOffsetBall];
+        % slot fixations
+        for n = 1:stopTrial % loop over trials for current subject & block
+            if currentResult(n).info.dropped
+                stopTrial = min([stopTrial+1 numTrials]);
+                continue
+            end
+            if isempty(currentResult(n).gaze.fixation.onsetsSlot)
+                continue
+            end
+            onsetFixSlot = currentResult(n).gaze.fixation.onsetsSlot(1);
+            offsetFixSlot = currentResult(n).gaze.fixation.offsetsSlot(1);
+                                    
+            onsetPhase = currentResult(n).info.phaseStart.ballInSlot - currentResult(n).info.trialStart+1;
+            phaseOffset = onsetPhase - shift;
+            fixOn = onsetFixSlot - phaseOffset;
+            if fixOn > vectorLength-1
+                fixOn = vectorLength;
+            elseif fixOn < 1
+                fixOn = 1;
+            end
+            cumulativeOnsetSlot(n,:) = [zeros(1,fixOn) ones(1,vectorLength-fixOn)];
+            fixOff = offsetFixSlot - phaseOffset;
+            if fixOff > vectorLength-1
+                fixOff = vectorLength;
+            elseif fixOff < 1
+                fixOff = 1;
+            end
+            cumulativeOffsetSlot(n,:) = [zeros(1,fixOff) ones(1,vectorLength-fixOff)];        
+        end
+        currentOnsetSlot = nansum(cumulativeOnsetSlot);
+        slotFixOnsets = [slotFixOnsets; currentOnsetSlot];
+        currentOffsetSlot = nansum(cumulativeOffsetSlot);
+        slotFixOffsets = [slotFixOffsets; currentOffsetSlot];
+        
+        clear currentOnsetBall currentOffsetBall currentOnsetSlot currentOffsetSlot
+        clear fixOn fixOff onsetPhase onsetFixBall offsetFixBall phaseOffset
+        clear onsetFixSlot offsetFixSlot
+    end
+    
+    % plot
+    if blockID < 4
+        figure(12)
+        hold on
+        plot(nansum(ballFixOnsets)/max(nansum(ballFixOnsets)), 'Color', orange, 'LineWidth', 2)
+        plot(nansum(ballFixOffsets)/max(nansum(ballFixOffsets)), '--', 'Color', orange, 'LineWidth',2)
+        plot(nansum(slotFixOnsets)/max(nansum(slotFixOnsets)), 'Color', green, 'LineWidth', 2)
+        plot(nansum(slotFixOffsets)/max(nansum(slotFixOffsets)), '--', 'Color', green, 'LineWidth',2)
+        line([shift shift], [0 1], 'Color', gray)
+        line([0 vectorLength], [.5 .5], 'Color', gray)
+        xlim([0 vectorLength])
+        xlabel('relative to contact event fingertips')
+        set(gca, 'Xtick', [0 100 200 300 400 500 600], 'XtickLabel', [-1.5 -1 -.5 0 .5 1 1.5])
+        ylim([0 1])
+        set(gca, 'Ytick', [0 .25 .5 .75 1])
+    else
+        figure(13)
+        hold on
+        plot(nansum(ballFixOnsets)/max(nansum(ballFixOnsets)), 'Color', orange, 'LineWidth', 2)
+        plot(nansum(ballFixOffsets)/max(nansum(ballFixOffsets)), '--', 'Color', orange, 'LineWidth',2)
+        plot(nansum(slotFixOnsets)/max(nansum(slotFixOnsets)), 'Color', green, 'LineWidth', 2)
+        plot(nansum(slotFixOffsets)/max(nansum(slotFixOffsets)), '--', 'Color', green, 'LineWidth',2)
+        line([shift shift], [0 1], 'Color', gray)
+        line([0 vectorLength], [.5 .5], 'Color', gray)
+        xlim([0 vectorLength])
+        xlabel('relative to contact event tweezers')
+        set(gca, 'Xtick', [0 100 200 300 400 500 600], 'XtickLabel', [-1.5 -1 -.5 0 .5 1 1.5])
+        ylim([0 1])
+        set(gca, 'Ytick', [0 .25 .5 .75 1])
+    end
+    
+    clear ballFixOnsetsReach ballFixOffsetsReach ballFixOnsetsApproach ballFixOffsetsApproach
+    clear ballFixOnsets ballFixOffsets ballFixOnsetsTransport ballFixOffsetsTransport
+end
