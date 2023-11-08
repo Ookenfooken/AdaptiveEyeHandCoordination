@@ -10,6 +10,8 @@ cd(analysisPath);
 ballFixationReLetter = [];
 numParticipants = 11;
 eyeShift = 20;
+sameCount = 0;
+diffCount = 0;
 for j = 1:numParticipants % loop over subjects
     for blockID = 3:4 % loop over dual task conditions
         currentResult = pulledData{j,blockID};
@@ -50,22 +52,23 @@ for j = 1:numParticipants % loop over subjects
             if ~isempty(currentResult(n).gaze.fixation.onsetsBall)
                 fixBallOnRelative = currentResult(n).gaze.fixation.onsetsBall(1)/200;
                 fixBallOnset = currentResult(n).info.timeStamp.go + fixBallOnRelative;
-            else
-                continue
-            end
-            % find last letter change before current ball fixation onset
-            letterIdx = find(detectedChanges_ballFix <= fixBallOnset, 1, 'last');
-            if ~isempty(letterIdx)
-                currentLetterChange = detectedChanges_ballFix(letterIdx);
-                if (fixBallOnset - currentLetterChange) < 6.5
-                    letterChangeRelativeBallFix = fixBallOnset - currentLetterChange;
-                    %detectedChanges_ballFix(detectedChanges_ballFix < fixBallOnset) = [];
+                % find last letter change before current ball fixation onset
+                letterIdxB = find(detectedChanges_ballFix <= fixBallOnset, 1, 'last');
+                if ~isempty(letterIdxB)
+                    currentLetterChange = detectedChanges_ballFix(letterIdxB);
+                    if (fixBallOnset - currentLetterChange) < 6.5
+                        letterChangeRelativeBallFix = fixBallOnset - currentLetterChange;
+                        %detectedChanges_ballFix(detectedChanges_ballFix < fixBallOnset) = [];
+                    else
+                        letterChangeRelativeBallFix = NaN;
+                    end
                 else
-                    continue
+                    letterChangeRelativeBallFix = NaN;
                 end
             else
-                continue
+                letterChangeRelativeBallFix = NaN;
             end
+            
             % find last letter change before reach onset
             letterIdx = find(detectedChanges_reach <= reach, 1, 'last');
             if ~isempty(letterIdx)
@@ -74,25 +77,29 @@ for j = 1:numParticipants % loop over subjects
                     letterChangeRelativeReach = reach - currentLetterChange;
                     %detectedChanges_reach(detectedChanges_reach < reach) = [];
                 else
-                    continue
+                    letterChangeRelativeReach = NaN;
                 end
             else
-                continue
+                letterChangeRelativeReach = NaN;
             end
             % find last letter change before grasp onset
-            letterIdx = find(detectedChanges_grasp <= ballGrasp, 1, 'last');
-            if ~isempty(letterIdx)
-                currentLetterChange = detectedChanges_grasp(letterIdx);
+            letterIdxC = find(detectedChanges_grasp <= ballGrasp, 1, 'last');
+            if ~isempty(letterIdxC)
+                currentLetterChange = detectedChanges_grasp(letterIdxC);
                 if (ballGrasp - currentLetterChange) < 6.5
                     letterChangeRelativeGrasp = ballGrasp - currentLetterChange;
                     %detectedChanges_grasp(detectedChanges_grasp < ballGrasp) = [];
                 else
-                    continue
+                    letterChangeRelativeGrasp = NaN;
                 end
             else
-                continue
+                letterChangeRelativeGrasp = NaN;
             end
-                
+            if letterIdxB == letterIdxC
+                sameCount = sameCount + 1;
+            else
+                diffCount = diffCount + 1;
+            end
             % classify trial type
             if numel(currentResult(n).gaze.fixation.onsetsBall) > 1
                 % cannot classify trials in which the ball is fixated multiple times
@@ -346,6 +353,8 @@ h.reach.PGback = histogram(moveOnsets_PG(moveOnsets_PG(:,3) == 4,movementOnsets)
     'facecolor', fixationPatternColors(5,:), 'edgecolor', 'none');
 h.reach.PGtri = histogram(moveOnsets_PG(moveOnsets_PG(:,3) == 3,movementOnsets), 'BinWidth', binWidth,...
     'facecolor', fixationPatternColors(4,:), 'edgecolor', 'none');
+h.reach.PGslot = histogram(moveOnsets_PG(moveOnsets_PG(:,3) == 2,movementOnsets), 'BinWidth', binWidth,...
+    'facecolor', fixationPatternColors(3,:), 'edgecolor', 'none');
 % calculate expected distribution
 SP_PG_back = sum(h.reach.PGback.Values)*h.reach.PGback.BinWidth / 4;
 line([0 1.5], [SP_PG_back SP_PG_back], 'Color', fixationPatternColors(5,:), 'LineStyle', '--', 'LineWidth', 1.5)
@@ -353,6 +362,9 @@ line([1.5 6.5], [SP_PG_back 0], 'Color', fixationPatternColors(5,:), 'LineStyle'
 SP_PG_tri = sum(h.reach.PGtri.Values)*h.reach.PGtri.BinWidth / 4;
 line([0 1.5], [SP_PG_tri SP_PG_tri], 'Color', fixationPatternColors(4,:), 'LineStyle', '--', 'LineWidth', 1.5)
 line([1.5 6.5], [SP_PG_tri 0], 'Color', fixationPatternColors(4,:), 'LineStyle', '--', 'LineWidth', 1.5)
+SP_PG_slot = sum(h.reach.PGslot.Values)*h.reach.PGslot.BinWidth / 4;
+line([0 1.5], [SP_PG_slot SP_PG_slot], 'Color', fixationPatternColors(3,:), 'LineStyle', '--', 'LineWidth', 1.5)
+line([1.5 6.5], [SP_PG_slot 0], 'Color', fixationPatternColors(3,:), 'LineStyle', '--', 'LineWidth', 1.5)
 % add line indicating 1.5 = silent period
 line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution PG_back
@@ -387,6 +399,22 @@ end
 % ks test 
 [h_PG_tri_reach, p_PG_tri_reach, ks2statPG_tri_reach] = kstest2(moveOnsets_PG(moveOnsets_PG(:,3) == 3,movementOnsets), expectedDistribution);
 clear expectedDistribution binCount slope SP_PG_tri
+% create expected distribution PG_slot
+slope = SP_PG_slot/5;
+expectedDistribution = [];
+for i = binWidth:binWidth:6.5+binWidth
+    if i <= 1.5
+        binCount = [floor(SP_PG_slot)*ones((1-SP_PG_slot+floor(SP_PG_slot))*10000,1); ...
+            ceil(SP_PG_slot)*ones((1-ceil(SP_PG_slot)+SP_PG_slot)*10000,1)];
+    else
+        binCount = [floor(SP_PG_slot-(i-1.5)*slope)*ones((1-SP_PG_slot+floor(SP_PG_slot-(i-1.5)*slope))*10000,1); ...
+            ceil(SP_PG_slot-(i-1.5)*slope)*ones((1-ceil(SP_PG_slot-(i-1.5)*slope)+SP_PG_slot)*10000,1)];
+    end
+    expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
+end
+% ks test 
+[h_PG_slot_reach, p_PG_slot_reach, ks2statPG_slot_reach] = kstest2(moveOnsets_PG(moveOnsets_PG(:,3) == 2,movementOnsets), expectedDistribution);
+clear expectedDistribution binCount slope SP_PG_slot
 
 % plot ball grasp onsets
 subplot(3,1,3)
@@ -402,6 +430,8 @@ h.grasp.PGback = histogram(manipOnsets_PG(manipOnsets_PG(:,3) == 4,manipulationO
     'facecolor', fixationPatternColors(5,:), 'edgecolor', 'none');
 h.grasp.PGtri = histogram(manipOnsets_PG(manipOnsets_PG(:,3) == 3,manipulationOnsets), 'BinWidth', binWidth,...
     'facecolor', fixationPatternColors(4,:), 'edgecolor', 'none');
+h.grasp.PGslot = histogram(manipOnsets_PG(manipOnsets_PG(:,3) == 2,manipulationOnsets), 'BinWidth', binWidth,...
+    'facecolor', fixationPatternColors(3,:), 'edgecolor', 'none');
 % calculate expected distribution
 SP_PG_back = sum(h.grasp.PGback.Values)*h.grasp.PGback.BinWidth / 4;
 line([0 1.5], [SP_PG_back SP_PG_back], 'Color', fixationPatternColors(5,:), 'LineStyle', '--', 'LineWidth', 1.5)
@@ -409,6 +439,9 @@ line([1.5 6.5], [SP_PG_back 0], 'Color', fixationPatternColors(5,:), 'LineStyle'
 SP_PG_tri = sum(h.grasp.PGtri.Values)*h.grasp.PGtri.BinWidth / 4;
 line([0 1.5], [SP_PG_tri SP_PG_tri], 'Color', fixationPatternColors(4,:), 'LineStyle', '--', 'LineWidth', 1.5)
 line([1.5 6.5], [SP_PG_tri 0], 'Color', fixationPatternColors(4,:), 'LineStyle', '--', 'LineWidth', 1.5)
+SP_PG_slot = sum(h.grasp.PGslot.Values)*h.grasp.PGslot.BinWidth / 4;
+line([0 1.5], [SP_PG_slot SP_PG_slot], 'Color', fixationPatternColors(3,:), 'LineStyle', '--', 'LineWidth', 1.5)
+line([1.5 6.5], [SP_PG_slot 0], 'Color', fixationPatternColors(3,:), 'LineStyle', '--', 'LineWidth', 1.5)
 % add line indicating 1.5 = silent period
 line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution PG_back
@@ -443,6 +476,22 @@ end
 % ks test 
 [h_PG_tri_grasp, p_PG_tri_grasp, ks2statPG_tri_grasp] = kstest2(manipOnsets_PG(manipOnsets_PG(:,3) == 3,manipulationOnsets), expectedDistribution);
 clear expectedDistribution binCount slope SP_PG_tri
+% create expected distribution PG_slot
+slope = SP_PG_slot/5;
+expectedDistribution = [];
+for i = binWidth:binWidth:6.5+binWidth
+    if i <= 1.5
+        binCount = [floor(SP_PG_slot)*ones((1-SP_PG_slot+floor(SP_PG_slot))*10000,1); ...
+            ceil(SP_PG_slot)*ones((1-ceil(SP_PG_slot)+SP_PG_slot)*10000,1)];
+    else
+        binCount = [floor(SP_PG_slot-(i-1.5)*slope)*ones((1-SP_PG_slot+floor(SP_PG_slot-(i-1.5)*slope))*10000,1); ...
+            ceil(SP_PG_slot-(i-1.5)*slope)*ones((1-ceil(SP_PG_slot-(i-1.5)*slope)+SP_PG_slot)*10000,1)];
+    end
+    expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
+end
+% ks test 
+[h_PG_slot_grasp, p_PG_slot_grasp, ks2statPG_slot_grasp] = kstest2(manipOnsets_PG(manipOnsets_PG(:,3) == 2,manipulationOnsets), expectedDistribution);
+clear expectedDistribution binCount slope SP_PG_slot
 
 clear ballFixations_PG fixations_PG fixOnsets_PG moveOnsets_PG manipOnsets_PG
 
@@ -764,6 +813,8 @@ h.reach.TWback = histogram(moveOnsets_TW(moveOnsets_TW(:,3) == 4,movementOnsets)
     'facecolor', fixationPatternColors(5,:), 'edgecolor', 'none');
 h.reach.TWtri = histogram(moveOnsets_TW(moveOnsets_TW(:,3) == 3,movementOnsets), 'BinWidth', binWidth,...
     'facecolor', fixationPatternColors(4,:), 'edgecolor', 'none');
+h.reach.TWslot = histogram(moveOnsets_TW(moveOnsets_TW(:,3) == 2,movementOnsets), 'BinWidth', binWidth,...
+    'facecolor', fixationPatternColors(3,:), 'edgecolor', 'none');
 % calculate expected distribution
 SP_TW_back = sum(h.reach.TWback.Values)*h.reach.TWback.BinWidth / 4;
 line([0 1.5], [SP_TW_back SP_TW_back], 'Color', fixationPatternColors(5,:), 'LineStyle', '--', 'LineWidth', 1.5)
@@ -771,6 +822,9 @@ line([1.5 6.5], [SP_TW_back 0], 'Color', fixationPatternColors(5,:), 'LineStyle'
 SP_TW_tri = sum(h.reach.TWtri.Values)*h.reach.TWtri.BinWidth / 4;
 line([0 1.5], [SP_TW_tri SP_TW_tri], 'Color', fixationPatternColors(4,:), 'LineStyle', '--', 'LineWidth', 1.5)
 line([1.5 6.5], [SP_TW_tri 0], 'Color', fixationPatternColors(4,:), 'LineStyle', '--', 'LineWidth', 1.5)
+SP_TW_slot = sum(h.reach.TWslot.Values)*h.reach.TWslot.BinWidth / 4;
+line([0 1.5], [SP_TW_slot SP_TW_slot], 'Color', fixationPatternColors(3,:), 'LineStyle', '--', 'LineWidth', 1.5)
+line([1.5 6.5], [SP_TW_slot 0], 'Color', fixationPatternColors(3,:), 'LineStyle', '--', 'LineWidth', 1.5)
 % add line indicating 1.5 = silent period
 line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution TW_back
@@ -805,6 +859,22 @@ end
 % ks test 
 [h_TW_tri_reach, p_TW_tri_reach, ks2statTW_tri_reach] = kstest2(moveOnsets_TW(moveOnsets_TW(:,3) == 3,movementOnsets), expectedDistribution);
 clear expectedDistribution binCount slope SP_TW_tri
+% create expected distribution TW_slot
+slope = SP_TW_slot/5;
+expectedDistribution = [];
+for i = binWidth:binWidth:6.5+binWidth
+    if i <= 1.5
+        binCount = [floor(SP_TW_slot)*ones((1-SP_TW_slot+floor(SP_TW_slot))*10000,1); ...
+            ceil(SP_TW_slot)*ones((1-ceil(SP_TW_slot)+SP_TW_slot)*10000,1)];
+    else
+        binCount = [floor(SP_TW_slot-(i-1.5)*slope)*ones((1-SP_TW_slot+floor(SP_TW_slot-(i-1.5)*slope))*10000,1); ...
+            ceil(SP_TW_slot-(i-1.5)*slope)*ones((1-ceil(SP_TW_slot-(i-1.5)*slope)+SP_TW_slot)*10000,1)];
+    end
+    expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
+end
+% ks test 
+[h_TW_slot_reach, p_TW_slot_reach, ks2statTW_slot_reach] = kstest2(moveOnsets_TW(moveOnsets_TW(:,3) == 2,movementOnsets), expectedDistribution);
+clear expectedDistribution binCount slope SP_TW_slot
 
 % plot ball grasp onsets
 subplot(3,1,3)
@@ -820,6 +890,8 @@ h.grasp.TWback = histogram(manipOnsets_TW(manipOnsets_TW(:,3) == 4,manipulationO
     'facecolor', fixationPatternColors(5,:), 'edgecolor', 'none');
 h.grasp.TWtri = histogram(manipOnsets_TW(manipOnsets_TW(:,3) == 3,manipulationOnsets), 'BinWidth', binWidth,...
     'facecolor', fixationPatternColors(4,:), 'edgecolor', 'none');
+h.grasp.TWslot = histogram(manipOnsets_TW(manipOnsets_TW(:,3) == 2,manipulationOnsets), 'BinWidth', binWidth,...
+    'facecolor', fixationPatternColors(3,:), 'edgecolor', 'none');
 % calculate expected distribution
 SP_TW_back = sum(h.grasp.TWback.Values)*h.grasp.TWback.BinWidth / 4;
 line([0 1.5], [SP_TW_back SP_TW_back], 'Color', fixationPatternColors(5,:), 'LineStyle', '--', 'LineWidth', 1.5)
@@ -827,6 +899,9 @@ line([1.5 6.5], [SP_TW_back 0], 'Color', fixationPatternColors(5,:), 'LineStyle'
 SP_TW_tri = sum(h.grasp.TWtri.Values)*h.grasp.TWtri.BinWidth / 4;
 line([0 1.5], [SP_TW_tri SP_TW_tri], 'Color', fixationPatternColors(4,:), 'LineStyle', '--', 'LineWidth', 1.5)
 line([1.5 6.5], [SP_TW_tri 0], 'Color', fixationPatternColors(4,:), 'LineStyle', '--', 'LineWidth', 1.5)
+SP_TW_slot = sum(h.grasp.TWslot.Values)*h.grasp.TWslot.BinWidth / 4;
+line([0 1.5], [SP_TW_slot SP_TW_slot], 'Color', fixationPatternColors(4,:), 'LineStyle', '--', 'LineWidth', 1.5)
+line([1.5 6.5], [SP_TW_slot 0], 'Color', fixationPatternColors(4,:), 'LineStyle', '--', 'LineWidth', 1.5)
 % add line indicating 1.5 = silent period
 line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution TW_back
@@ -861,6 +936,22 @@ end
 % ks test 
 [h_TW_tri_grasp, p_TW_tri_grasp, ks2statTW_tri_grasp] = kstest2(manipOnsets_TW(manipOnsets_TW(:,3) == 3,manipulationOnsets), expectedDistribution);
 clear expectedDistribution binCount slope SP_TW_tri
+% create expected distribution TW_slot
+slope = SP_TW_slot/5;
+expectedDistribution = [];
+for i = binWidth:binWidth:6.5+binWidth
+    if i <= 1.5
+        binCount = [floor(SP_TW_slot)*ones((1-SP_TW_slot+floor(SP_TW_slot))*10000,1); ...
+            ceil(SP_TW_slot)*ones((1-ceil(SP_TW_slot)+SP_TW_slot)*10000,1)];
+    else
+        binCount = [floor(SP_TW_slot-(i-1.5)*slope)*ones((1-SP_TW_slot+floor(SP_TW_slot-(i-1.5)*slope))*10000,1); ...
+            ceil(SP_TW_slot-(i-1.5)*slope)*ones((1-ceil(SP_TW_slot-(i-1.5)*slope)+SP_TW_slot)*10000,1)];
+    end
+    expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
+end
+% ks test 
+[h_TW_slot_grasp, p_TW_slot_grasp, ks2statTW_slot_grasp] = kstest2(manipOnsets_TW(manipOnsets_TW(:,3) == 2,manipulationOnsets), expectedDistribution);
+clear expectedDistribution binCount slope SP_TW_slot
 
 clear ballFixations_TW fixations_TW fixOnsets_TW moveOnsets_TW manipOnsets_TW
 %% plot slot fixation, transport, and slot entry for different patterns in tweezer trials

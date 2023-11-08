@@ -111,61 +111,166 @@ cd(analysisPath)
 clear selectedData
 %% Histograms in Panel C & D
 reachRelativeLetter = [];
+detectedChanges = [];
 numParticipants = 11;
+eyeShift = 20;
 
 for j = 1:numParticipants % loop over subjects
     for blockID = 3:4 % loop over dual task conditions
         currentResult = pulledData{j,blockID};
         currentParticipant = currentResult(1).info.subject;
         numTrials = length(currentResult);
+        numMeasures = 5;
+        currentVariable = NaN(numTrials,numMeasures);
         % open variable matrices that we want to pull
         stopTrial = min([numTrials 30]);
-        letterChangeRelativeReach = NaN(numTrials,1);
-        landmarkFixation = NaN(numTrials,1);
         for n = 1:stopTrial % loop over trials for current subject & block
             if currentResult(n).info.dropped
                 stopTrial = min([stopTrial+1 numTrials]);
                 continue
             end
+            if ~isnan(currentResult(n).dualTask.tLetterChanges(1))
+                currentLetterChanges = currentResult(n).dualTask.tLetterChanges(currentResult(n).dualTask.changeDetected);
+                if ~isempty(currentLetterChanges)
+                    detectedChanges = [detectedChanges; currentLetterChanges];
+                end
+            end
+        end
+        for n = 1:stopTrial % loop over trials for current subject & block
+            if currentResult(n).info.dropped
+                stopTrial = min([stopTrial+1 numTrials]);
+                continue
+            end
+            % now consider ball and slot fixation onsets relative to
+            % approach phases
             reach = currentResult(n).info.timeStamp.reach;
             if isempty(currentResult(n).gaze.fixation.onsetsBall) && isempty(currentResult(n).gaze.fixation.onsetsSlot)
-                landmarkFixation(n) = 0;
+                landmarkFixation = 0;
             else
-                landmarkFixation(n) = 1;
-            end
-            if sum(currentResult(n).dualTask.changeDetected) > 0
-                detectedChanges = currentResult(n).dualTask.tLetterChanges(currentResult(n).dualTask.changeDetected);
-                detectedChange = detectedChanges(1);
-            else % otherwise use the previous trial
-                if n > 1 && sum(currentResult(n-1).dualTask.changeDetected) > 0
-                    detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
-                    detectedChange = detectedChanges(end);
+                landmarkFixation = 1;
+            end        
+            % find last letter change before reach onset
+            letterIdx = find(detectedChanges <= reach, 1, 'last');
+            if ~isempty(letterIdx)
+                currentLetterChange = detectedChanges(letterIdx);
+                if (reach - currentLetterChange) < 6.5
+                    letterChangeRelativeReach = reach - currentLetterChange;
+                    %detectedChanges_reach(detectedChanges_reach < reach) = [];
                 else
-                    continue
+                    letterChangeRelativeReach = NaN;
                 end
+            else
+                letterChangeRelativeReach = NaN;
             end
-
-            % if the change happened before the reach good
-            if detectedChange <= reach
-                letterChangeRelativeReach(n) = reach - detectedChange ;
-            else % otherwise use the previous trial
-                if n > 1 && sum(currentResult(n-1).dualTask.changeDetected) > 0
-                    detectedChanges = currentResult(n-1).dualTask.tLetterChanges(currentResult(n-1).dualTask.changeDetected);
-                    letterChangeRelativeReach(n) = reach - detectedChanges(end);
+            % classify trial type
+            if numel(currentResult(n).gaze.fixation.onsetsBall) > 1
+                % cannot classify trials in which the ball is fixated multiple times
+                fixationPattern = 99;
+            elseif isempty(currentResult(n).gaze.fixation.onsetsBall) && isempty(currentResult(n).gaze.fixation.onsetsSlot)
+                fixationPattern = 0;
+            elseif isempty(currentResult(n).gaze.fixation.onsetsBall) && ~isempty(currentResult(n).gaze.fixation.onsetsSlot)
+                fixationPattern = 2;
+            elseif ~isempty(currentResult(n).gaze.fixation.onsetsBall) && isempty(currentResult(n).gaze.fixation.onsetsSlot)
+                fixationPattern = 1;
+            else
+                ballOffset = currentResult(n).gaze.fixation.offsetsBall(1);
+                slotIdx = find(currentResult(n).gaze.fixation.onsetsSlot > ballOffset, 1, 'first');
+                slotOnset = currentResult(n).gaze.fixation.onsetsSlot(slotIdx);
+                if slotOnset-ballOffset < eyeShift
+                    fixationPattern = 3;
                 else
-                    continue
+                    fixationPattern = 4;
                 end
-            end            
+            end 
+            
+        currentVariable(n,:) = [currentParticipant blockID fixationPattern landmarkFixation... 
+             letterChangeRelativeReach];
         end
-
-        currentVariable = [blockID*ones(numTrials,1) landmarkFixation ...
-            letterChangeRelativeReach];
-
+        currentVariable = currentVariable(~isnan(currentVariable(:,1)),:);
         reachRelativeLetter = [reachRelativeLetter; currentVariable];
+
+        clear fixationPattern landmarkFixation  letterChangeRelativeReach
+        clear reach slotIdx slotOnset ballOffset currentLetterChange
     end
 end
-
-clear blockID landmarkFixation letterChangeRelativeReach
+%%
+fixationPatternColors = [[55,126,184]./255;
+    [255,127,0]./255;
+    [77,175,74]./255
+    [158,154,200]./255
+    [77,0,75]./255];
+lightGrey = [189,189,189]./255;
+upperBound = 6.5;
+xymax = 20;
+binWidth = .25;
+%% new plot all fixation patterns
+reachData_PG = reachRelativeLetter(reachRelativeLetter(:,2) == 3, :);
+selectedPattern = 1; % exclude ball-only
+selectedColumn = 5;
+reaches_PG = reachData_PG(reachData_PG(:,3) ~= selectedPattern,:);
+figure(8377)
+xlabel('Time of reach onset re: last detected LC before reach (s)')
+ylabel('Frequency of trials')
+set(gcf,'renderer','Painters')
+xlim([0 upperBound])
+ylim([0 xymax])
+set(gca, 'Ytick', [0 5 10 15 20])
+hold on
+h.reach.PGback = histogram(reaches_PG(reaches_PG(:,3) == 4,selectedColumn), 'BinWidth', binWidth,...
+    'facecolor', fixationPatternColors(5,:), 'edgecolor', 'none');
+h.reach.PGtri = histogram(reaches_PG(reaches_PG(:,3) == 3,selectedColumn), 'BinWidth', binWidth,...
+    'facecolor', fixationPatternColors(4,:), 'edgecolor', 'none');
+h.reach.PGslot = histogram(reaches_PG(reaches_PG(:,3) == 2,selectedColumn), 'BinWidth', binWidth,...
+    'facecolor', fixationPatternColors(3,:), 'edgecolor', 'none');
+h.reach.PGdisp = histogram(reaches_PG(reaches_PG(:,3) == 0,selectedColumn), 'BinWidth', binWidth,...
+    'facecolor', fixationPatternColors(1,:), 'edgecolor', 'none');
+% calculate expected distribution
+SP_PG_back = sum(h.reach.PGback.Values)*h.reach.PGback.BinWidth / 4;
+line([0 1.5], [SP_PG_back SP_PG_back], 'Color', fixationPatternColors(5,:), 'LineStyle', '--', 'LineWidth', 1.5)
+line([1.5 6.5], [SP_PG_back 0], 'Color', fixationPatternColors(5,:), 'LineStyle', '--', 'LineWidth', 1.5)
+SP_PG_tri = sum(h.reach.PGtri.Values)*h.reach.PGtri.BinWidth / 4;
+line([0 1.5], [SP_PG_tri SP_PG_tri], 'Color', fixationPatternColors(4,:), 'LineStyle', '--', 'LineWidth', 1.5)
+line([1.5 6.5], [SP_PG_tri 0], 'Color', fixationPatternColors(4,:), 'LineStyle', '--', 'LineWidth', 1.5)
+SP_PG_slot = sum(h.reach.PGslot.Values)*h.reach.PGslot.BinWidth / 4;
+line([0 1.5], [SP_PG_slot SP_PG_slot], 'Color', fixationPatternColors(3,:), 'LineStyle', '--', 'LineWidth', 1.5)
+line([1.5 6.5], [SP_PG_slot 0], 'Color', fixationPatternColors(3,:), 'LineStyle', '--', 'LineWidth', 1.5)
+SP_PG_disp = sum(h.reach.PGdisp.Values)*h.reach.PGdisp.BinWidth / 4;
+line([0 1.5], [SP_PG_disp SP_PG_disp], 'Color', fixationPatternColors(1,:), 'LineStyle', '--', 'LineWidth', 1.5)
+line([1.5 6.5], [SP_PG_disp 0], 'Color', fixationPatternColors(1,:), 'LineStyle', '--', 'LineWidth', 1.5)
+%%
+reachData_TW = reachRelativeLetter(reachRelativeLetter(:,2) == 4, :);
+selectedPattern = 1; % exclude ball-only
+selectedColumn = 5;
+reaches_TW = reachData_TW(reachData_TW(:,3) ~= selectedPattern,:);
+figure(8477)
+xlabel('Time of reach onset re: last detected LC before reach (s)')
+ylabel('Frequency of trials')
+set(gcf,'renderer','Painters')
+xlim([0 upperBound])
+ylim([0 xymax])
+set(gca, 'Ytick', [0 5 10 15 20])
+hold on
+h.reach.TWback = histogram(reaches_TW(reaches_TW(:,3) == 4,selectedColumn), 'BinWidth', binWidth,...
+    'facecolor', fixationPatternColors(5,:), 'edgecolor', 'none');
+h.reach.TWtri = histogram(reaches_TW(reaches_TW(:,3) == 3,selectedColumn), 'BinWidth', binWidth,...
+    'facecolor', fixationPatternColors(4,:), 'edgecolor', 'none');
+h.reach.TWslot = histogram(reaches_TW(reaches_TW(:,3) == 2,selectedColumn), 'BinWidth', binWidth,...
+    'facecolor', fixationPatternColors(3,:), 'edgecolor', 'none');
+h.reach.TWdisp = histogram(reaches_TW(reaches_TW(:,3) == 0,selectedColumn), 'BinWidth', binWidth,...
+    'facecolor', fixationPatternColors(1,:), 'edgecolor', 'none');
+% calculate expected distribution
+SP_TW_back = sum(h.reach.TWback.Values)*h.reach.TWback.BinWidth / 4;
+line([0 1.5], [SP_TW_back SP_TW_back], 'Color', fixationPatternColors(5,:), 'LineStyle', '--', 'LineWidth', 1.5)
+line([1.5 6.5], [SP_TW_back 0], 'Color', fixationPatternColors(5,:), 'LineStyle', '--', 'LineWidth', 1.5)
+SP_TW_tri = sum(h.reach.TWtri.Values)*h.reach.TWtri.BinWidth / 4;
+line([0 1.5], [SP_TW_tri SP_TW_tri], 'Color', fixationPatternColors(4,:), 'LineStyle', '--', 'LineWidth', 1.5)
+line([1.5 6.5], [SP_TW_tri 0], 'Color', fixationPatternColors(4,:), 'LineStyle', '--', 'LineWidth', 1.5)
+SP_TW_slot = sum(h.reach.TWslot.Values)*h.reach.TWslot.BinWidth / 4;
+line([0 1.5], [SP_TW_slot SP_TW_slot], 'Color', fixationPatternColors(3,:), 'LineStyle', '--', 'LineWidth', 1.5)
+line([1.5 6.5], [SP_TW_slot 0], 'Color', fixationPatternColors(3,:), 'LineStyle', '--', 'LineWidth', 1.5)
+SP_TW_disp = sum(h.reach.TWdisp.Values)*h.reach.TWdisp.BinWidth / 4;
+line([0 1.5], [SP_TW_disp SP_TW_disp], 'Color', fixationPatternColors(1,:), 'LineStyle', '--', 'LineWidth', 1.5)
+line([1.5 6.5], [SP_TW_disp 0], 'Color', fixationPatternColors(1,:), 'LineStyle', '--', 'LineWidth', 1.5)
 %% plot reach onset relative to letter change for PG and TW
 lightGrey = [189,189,189]./255;
 blue = [55,126,184]./255; % display only
@@ -313,6 +418,8 @@ for j = 1:numParticipants % loop over subjects
             end
         end
         for n = 1:stopTrial % loop over trials for current subject & block
+            currentLC_early = NaN;
+            currentLC_late = NaN;
             if currentResult(n).info.dropped
                 stopTrial = min([stopTrial+1 numTrials]);
                 continue
@@ -358,6 +465,7 @@ for j = 1:numParticipants % loop over subjects
 
             currentVariable(n,:) = [currentParticipant blockID landmarkFixation...
                 letterChangeRelativeGo goToReach];
+            clear currentLC_early currentLC_late 
         end
 
         speedRelativeLetterChange = [speedRelativeLetterChange; currentVariable];
@@ -375,16 +483,25 @@ figure(33)
 set(gcf,'renderer','Painters', 'Position', [50 100 436 364])
 hold on
 xlim([lowerLimit upperLimit])
+set(gca, 'Xtick', [cueInterval-4 cueInterval-2 cueInterval cueInterval+2], 'XTickLabel', [-4 -2 0 2])
 line([lowerLimit upperLimit],[0 0], 'Color', lightGrey)
+line([cueInterval cueInterval], [-1 1.5], 'Color', lightGrey)
 ylim([-1 1.5])
-line([1.5 1.5],[-1 2], 'Color', lightGrey)
-line([0 5],[0 0], 'Color', lightGrey)
-plot(relativeChanges_PG(relativeChanges_PG(:,3) == 0, 4), relativeChanges_PG(relativeChanges_PG(:,3) == 0,5), '.', 'Color', lightGrey)
+line([-cueInterval -cueInterval],[-1 2], 'Color', 'k', 'LineStyle', '--')
+plot(relativeChanges_PG(relativeChanges_PG(:,3) == 0, 4), relativeChanges_PG(relativeChanges_PG(:,3) == 0,5), '.', 'Color', 'k')
 plot(relativeChanges_PG(relativeChanges_PG(:,3) == 1, 4), relativeChanges_PG(relativeChanges_PG(:,3) == 1,5), '.', 'Color', blue)
 
-for i = lowerLimit+binWidth:binWidth:upperLimit+binWidth
-    reactBin = median(relativeChanges_PG(relativeChanges_PG(:,4) < i & relativeChanges_PG(:,4) > i-0.5, 5));
-    line([i-binWidth i], [reactBin reactBin], 'Color', 'k')
+%% compare within and outside "hot region"
+participantReachStartPG = NaN(numParticipants*2,5);
+patCount = 1;
+for act = 0:1
+    currentAction = relativeChanges_PG(relativeChanges_PG(:,3) == act, :);
+    for pat = 1:numParticipants
+        inZone = currentAction(currentAction(:,4) >= -cueInterval & currentAction(:,4) <= cueInterval, :);
+        outZone = currentAction(currentAction(:,4) < -cueInterval | currentAction(:,4) > cueInterval, :);
+        participantReachStartPG(patCount,:) = [pat 3 act mean(inZone(inZone(:,1) == pat, 5)) mean(outZone(outZone(:,1) == pat, 5))];
+        patCount = patCount + 1;
+    end
 end
 %%
 relativeChanges_TW = speedRelativeLetterChange(speedRelativeLetterChange(:,2) == 4,:);
@@ -394,16 +511,30 @@ figure(44)
 set(gcf,'renderer','Painters', 'Position', [50 100 436 364])
 hold on
 xlim([lowerLimit upperLimit])
+set(gca, 'Xtick', [cueInterval-4 cueInterval-2 cueInterval cueInterval+2], 'XTickLabel', [-4 -2 0 2])
 line([lowerLimit upperLimit],[0 0], 'Color', lightGrey)
+line([cueInterval cueInterval], [-1 1.5], 'Color', lightGrey)
 ylim([-1 1.5])
-line([1.5 1.5],[-1 2], 'Color', lightGrey)
-line([0 5],[0 0], 'Color', lightGrey)
+line([-cueInterval -cueInterval],[-1 2], 'Color', 'k', 'LineStyle', '--')
 plot(relativeChanges_TW(relativeChanges_TW(:,3) == 0, 4), relativeChanges_TW(relativeChanges_TW(:,3) == 0,5), '.', 'Color', lightGrey)
 plot(relativeChanges_TW(relativeChanges_TW(:,3) == 1, 4), relativeChanges_TW(relativeChanges_TW(:,3) == 1,5), '.', 'Color', blue)
 
-for i = lowerLimit+binWidth:binWidth:upperLimit+binWidth
-    reactBin = median(relativeChanges_TW(relativeChanges_TW(:,4) < i & relativeChanges_TW(:,4) > i-0.5, 5));
-    line([i-binWidth i], [reactBin reactBin], 'Color', 'k')
+%% compare within and outside "hot region"
+participantReachStartTW = NaN(numParticipants*2,5);
+patCount = 1;
+for act = 0:1
+    currentAction = relativeChanges_TW(relativeChanges_TW(:,3) == act, :);
+    for pat = 1:numParticipants
+        inZone = currentAction(currentAction(:,4) >= -cueInterval & currentAction(:,4) <= cueInterval, :);
+        outZone = currentAction(currentAction(:,4) < -cueInterval | currentAction(:,4) > cueInterval, :);
+        participantReachStartTW(patCount,:) = [pat 4 act mean(inZone(inZone(:,1) == pat, 5)) mean(outZone(outZone(:,1) == pat, 5))];
+        patCount = patCount + 1;
+    end
 end
 
-%% plot the response time (reach onset relative to go signal) vs. time of LC relative to cue
+%% combine data and save
+participantReachStart = [participantReachStartPG; participantReachStartTW];
+
+cd(savePath)
+save('participantReachStart','participantReachStart')
+cd(analysisPath)
