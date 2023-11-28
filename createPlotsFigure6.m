@@ -231,8 +231,8 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution PG_back
 slope = SP_PG_back/5;
 expectedDistribution = [];
-for i = binWidth:binWidth:6.5+binWidth
-    if i <= 1.5
+for i = 0:binWidth:6.5+binWidth
+    if i < 1.5
         binCount = [floor(SP_PG_back)*ones((1-SP_PG_back+floor(SP_PG_back))*10000,1); ...
             ceil(SP_PG_back)*ones((1-ceil(SP_PG_back)+SP_PG_back)*10000,1)];
     else
@@ -247,8 +247,8 @@ clear expectedDistribution binCount slope SP_PG_back
 % create expected distribution PG_tri
 slope = SP_PG_tri/5;
 expectedDistribution = [];
-for i = binWidth:binWidth:6.5+binWidth
-    if i <= 1.5
+for i = 0:binWidth:6.5+binWidth
+    if i < 1.5
         binCount = [floor(SP_PG_tri)*ones((1-SP_PG_tri+floor(SP_PG_tri))*10000,1); ...
             ceil(SP_PG_tri)*ones((1-ceil(SP_PG_tri)+SP_PG_tri)*10000,1)];
     else
@@ -296,8 +296,8 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution PG_slot
 slope = SP_PG_slot/5;
 expectedDistribution = [];
-for i = binWidth:binWidth:6.5+binWidth
-    if i <= 1.5
+for i = 0:binWidth:6.5+binWidth
+    if i < 1.5
         binCount = [floor(SP_PG_slot)*ones((1-SP_PG_slot+floor(SP_PG_slot))*10000,1); ...
             ceil(SP_PG_slot)*ones((1-ceil(SP_PG_slot)+SP_PG_slot)*10000,1)];
     else
@@ -312,8 +312,8 @@ clear expectedDistribution binCount slope SP_PG_slot
 % create expected distribution PG_back
 slope = SP_PG_back/5;
 expectedDistribution = [];
-for i = binWidth:binWidth:6.5+binWidth
-    if i <= 1.5
+for i = 0:binWidth:6.5+binWidth
+    if i < 1.5
         binCount = [floor(SP_PG_back)*ones((1-SP_PG_back+floor(SP_PG_back))*10000,1); ...
             ceil(SP_PG_back)*ones((1-ceil(SP_PG_back)+SP_PG_back)*10000,1)];
     else
@@ -328,8 +328,8 @@ clear expectedDistribution binCount slope SP_PG_back
 % create expected distribution PG_tri
 slope = SP_PG_tri/5;
 expectedDistribution = [];
-for i = binWidth:binWidth:6.5+binWidth
-    if i <= 1.5
+for i = 0:binWidth:6.5+binWidth
+    if i < 1.5
         binCount = [floor(SP_PG_tri)*ones((1-SP_PG_tri+floor(SP_PG_tri))*10000,1); ...
             ceil(SP_PG_tri)*ones((1-ceil(SP_PG_tri)+SP_PG_tri)*10000,1)];
     else
@@ -372,8 +372,8 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution TW_back
 slope = SP_TW_back/5;
 expectedDistribution = [];
-for i = binWidth:binWidth:6.5+binWidth
-    if i <= 1.5
+for i = 0:binWidth:6.5+binWidth
+    if i < 1.5
         binCount = [floor(SP_TW_back)*ones((1-SP_TW_back+floor(SP_TW_back))*10000,1); ...
             ceil(SP_TW_back)*ones((1-ceil(SP_TW_back)+SP_TW_back)*10000,1)];
     else
@@ -388,8 +388,8 @@ clear expectedDistribution binCount slope SP_TW_back
 % create expected distribution TW_tri
 slope = SP_TW_tri/5;
 expectedDistribution = [];
-for i = binWidth:binWidth:6.5+binWidth
-    if i <= 1.5
+for i = 0:binWidth:6.5+binWidth
+    if i < 1.5
         binCount = [floor(SP_TW_tri)*ones((1-SP_TW_tri+floor(SP_TW_tri))*10000,1); ...
             ceil(SP_TW_tri)*ones((1-ceil(SP_TW_tri)+SP_TW_tri)*10000,1)];
     else
@@ -437,8 +437,8 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution TW_slot
 slope = SP_TW_slot/5;
 expectedDistribution = [];
-for i = binWidth:binWidth:6.5+binWidth
-    if i <= 1.5
+for i = 0:binWidth:6.5+binWidth
+    if i < 1.5
         binCount = [floor(SP_TW_slot)*ones((1-SP_TW_slot+floor(SP_TW_slot))*10000,1); ...
             ceil(SP_TW_slot)*ones((1-ceil(SP_TW_slot)+SP_TW_slot)*10000,1)];
     else
@@ -453,8 +453,8 @@ clear expectedDistribution binCount slope SP_TW_slot
 % create expected distribution TW_back
 slope = SP_TW_back/5;
 expectedDistribution = [];
-for i = binWidth:binWidth:6.5+binWidth
-    if i <= 1.5
+for i = 0:binWidth:6.5+binWidth
+    if i < 1.5
         binCount = [floor(SP_TW_back)*ones((1-SP_TW_back+floor(SP_TW_back))*10000,1); ...
             ceil(SP_TW_back)*ones((1-ceil(SP_TW_back)+SP_TW_back)*10000,1)];
     else
@@ -469,8 +469,8 @@ clear expectedDistribution binCount slope SP_TW_back
 % create expected distribution TW_tri
 slope = SP_TW_tri/5;
 expectedDistribution = [];
-for i = binWidth:binWidth:6.5+binWidth
-    if i <= 1.5
+for i = 0:binWidth:6.5+binWidth
+    if i < 1.5
         binCount = [floor(SP_TW_tri)*ones((1-SP_TW_tri+floor(SP_TW_tri))*10000,1); ...
             ceil(SP_TW_tri)*ones((1-ceil(SP_TW_tri)+SP_TW_tri)*10000,1)];
     else
@@ -670,8 +670,8 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution PG_back
 slope = SP_PG_back/5;
 expectedDistribution = [];
-for i = binWidth:binWidth:6.5+binWidth
-    if i <= 1.5
+for i = 0:binWidth:6.5+binWidth
+    if i < 1.5
         binCount = [floor(SP_PG_back)*ones((1-SP_PG_back+floor(SP_PG_back))*10000,1); ...
             ceil(SP_PG_back)*ones((1-ceil(SP_PG_back)+SP_PG_back)*10000,1)];
     else
@@ -702,8 +702,8 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution PG_tri
 slope = SP_PG_tri/5;
 expectedDistribution = [];
-for i = binWidth:binWidth:6.5+binWidth
-    if i <= 1.5
+for i = 0:binWidth:6.5+binWidth
+    if i < 1.5
         binCount = [floor(SP_PG_tri)*ones((1-SP_PG_tri+floor(SP_PG_tri))*10000,1); ...
             ceil(SP_PG_tri)*ones((1-ceil(SP_PG_tri)+SP_PG_tri)*10000,1)];
     else
@@ -735,8 +735,8 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution PG_back
 slope = SP_PG_slot/5;
 expectedDistribution = [];
-for i = binWidth:binWidth:6.5+binWidth
-    if i <= 1.5
+for i = 0:binWidth:6.5+binWidth
+    if i < 1.5
         binCount = [floor(SP_PG_slot)*ones((1-SP_PG_slot+floor(SP_PG_slot))*10000,1); ...
             ceil(SP_PG_slot)*ones((1-ceil(SP_PG_slot)+SP_PG_slot)*10000,1)];
     else
@@ -767,8 +767,8 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution PG_tri
 slope = SP_PG_disp/5;
 expectedDistribution = [];
-for i = binWidth:binWidth:6.5+binWidth
-    if i <= 1.5
+for i = 0:binWidth:6.5+binWidth
+    if i < 1.5
         binCount = [floor(SP_PG_disp)*ones((1-SP_PG_disp+floor(SP_PG_disp))*10000,1); ...
             ceil(SP_PG_disp)*ones((1-ceil(SP_PG_disp)+SP_PG_disp)*10000,1)];
     else
@@ -805,8 +805,8 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution TW_back
 slope = SP_TW_back/5;
 expectedDistribution = [];
-for i = binWidth:binWidth:6.5+binWidth
-    if i <= 1.5
+for i = 0:binWidth:6.5+binWidth
+    if i < 1.5
         binCount = [floor(SP_TW_back)*ones((1-SP_TW_back+floor(SP_TW_back))*10000,1); ...
             ceil(SP_TW_back)*ones((1-ceil(SP_TW_back)+SP_TW_back)*10000,1)];
     else
@@ -837,8 +837,8 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution TW_tri
 slope = SP_TW_tri/5;
 expectedDistribution = [];
-for i = binWidth:binWidth:6.5+binWidth
-    if i <= 1.5
+for i = 0:binWidth:6.5+binWidth
+    if i < 1.5
         binCount = [floor(SP_TW_tri)*ones((1-SP_TW_tri+floor(SP_TW_tri))*10000,1); ...
             ceil(SP_TW_tri)*ones((1-ceil(SP_TW_tri)+SP_TW_tri)*10000,1)];
     else
@@ -870,8 +870,8 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution TW_back
 slope = SP_TW_slot/5;
 expectedDistribution = [];
-for i = binWidth:binWidth:6.5+binWidth
-    if i <= 1.5
+for i = 0:binWidth:6.5+binWidth
+    if i < 1.5
         binCount = [floor(SP_TW_slot)*ones((1-SP_TW_slot+floor(SP_TW_slot))*10000,1); ...
             ceil(SP_TW_slot)*ones((1-ceil(SP_TW_slot)+SP_TW_slot)*10000,1)];
     else
@@ -902,8 +902,8 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution TW_tri
 slope = SP_TW_disp/5;
 expectedDistribution = [];
-for i = binWidth:binWidth:6.5+binWidth
-    if i <= 1.5
+for i = 0:binWidth:6.5+binWidth
+    if i < 1.5
         binCount = [floor(SP_TW_disp)*ones((1-SP_TW_disp+floor(SP_TW_disp))*10000,1); ...
             ceil(SP_TW_disp)*ones((1-ceil(SP_TW_disp)+SP_TW_disp)*10000,1)];
     else
@@ -1027,7 +1027,7 @@ relativeChanges_PG = speedRelativeLetterChange(speedRelativeLetterChange(:,2) ==
 lowerLimit = -4;
 upperLimit = 4;
 binWidth = .25;
-subplot(1,2,1)
+subplot(1,3,1)
 axis('square')
 set(gcf,'renderer','Painters', 'Position', [50 100 436 364])
 hold on
@@ -1037,33 +1037,27 @@ line([lowerLimit upperLimit],[0 0], 'Color', lightGrey)
 line([cueInterval cueInterval], [-1 1.5], 'Color', lightGrey)
 ylim([-1 1.5])
 line([-cueInterval -cueInterval],[-1 2], 'Color', 'k', 'LineStyle', '--')
-plot(relativeChanges_PG(relativeChanges_PG(:,3) == 0, 4), ...
-    relativeChanges_PG(relativeChanges_PG(:,3) == 0,5), '.', 'Color', 'k')
-plot(relativeChanges_PG(relativeChanges_PG(:,3) == 2, 4), ...
-    relativeChanges_PG(relativeChanges_PG(:,3) == 2,5), '.', 'Color', fixationPatternColors(3,:))
-plot(relativeChanges_PG(relativeChanges_PG(:,3) > 2, 4), ...
-    relativeChanges_PG(relativeChanges_PG(:,3) > 2,5), '.', 'Color', blue)
-%% compare within and outside "hot region"
-participantReachStartPG = NaN(numParticipants*3,5);
-patCount = 1;
-for fixType = 0:2
-    if fixType == 0
-        currentAction = relativeChanges_PG(relativeChanges_PG(:,3) == 0, :);
-    elseif fixType == 1
-        currentAction = relativeChanges_PG(relativeChanges_PG(:,3) == 2, :);
-    elseif fixType == 2
-        currentAction = relativeChanges_PG(relativeChanges_PG(:,3) > 2, :);
-    end
-    for pat = 1:numParticipants
-        inZone = currentAction(currentAction(:,4) >= -cueInterval & currentAction(:,4) <= cueInterval, :);
-        outZone = currentAction(currentAction(:,4) < -cueInterval | currentAction(:,4) > cueInterval, :);
-        participantReachStartPG(patCount,:) = [pat 3 fixType mean(inZone(inZone(:,1) == pat, 5)) mean(outZone(outZone(:,1) == pat, 5))];
-        patCount = patCount + 1;
-    end
+plot(relativeChanges_PG(relativeChanges_PG(:,3) == 3, 4), ...
+    relativeChanges_PG(relativeChanges_PG(:,3) == 3,5), '.', 'Color', fixationPatternColors(5,:))
+plot(relativeChanges_PG(relativeChanges_PG(:,3) == 4, 4), ...
+    relativeChanges_PG(relativeChanges_PG(:,3) == 4,5), '.', 'Color', fixationPatternColors(5,:))
+% plot(relativeChanges_PG(relativeChanges_PG(:,3) > 2, 4), ...
+%     relativeChanges_PG(relativeChanges_PG(:,3) > 2,5), '.', 'Color', blue)
+%% split up into in and outside region
+reachStartsInZone_PG = [];
+reachStartsOutZone_PG = [];
+for fixType = 3:4
+    currentAction = relativeChanges_PG(relativeChanges_PG(:,3) == fixType, :);
+    inZone = currentAction(currentAction(:,4) >= -cueInterval & currentAction(:,4) <= cueInterval, 5);
+    outZone = currentAction(currentAction(:,4) < -cueInterval | currentAction(:,4) > cueInterval, 5);
+    currentInZone = [3*ones(numel(inZone),1) fixType*ones(numel(inZone),1) ones(numel(inZone),1) inZone];
+    currentOutZone = [3*ones(numel(outZone),1) fixType*ones(numel(outZone),1) zeros(numel(outZone),1) outZone];
+    reachStartsInZone_PG = [reachStartsInZone_PG; currentInZone];
+    reachStartsOutZone_PG = [reachStartsOutZone_PG; currentOutZone];
 end
 %%
 relativeChanges_TW = speedRelativeLetterChange(speedRelativeLetterChange(:,2) == 4,:);
-subplot(1,2,2)
+subplot(1,3,2)
 axis('square')
 set(gcf,'renderer','Painters', 'Position', [50 100 436 364])
 hold on
@@ -1078,22 +1072,32 @@ plot(relativeChanges_TW(relativeChanges_TW(:,3) == 3, 4), ...
 plot(relativeChanges_TW(relativeChanges_TW(:,3) == 4, 4), ...
     relativeChanges_TW(relativeChanges_TW(:,3) == 4,5), '.', 'Color', fixationPatternColors(5,:))
 %% compare within and outside "hot region"
-participantReachStartTW = NaN(numParticipants*2,5);
-patCount = 1;
-%fixType = 4;
-%for fixType = 3:4
-    currentAction = relativeChanges_TW(relativeChanges_TW(:,3) > 2, :);
-    for pat = 1:numParticipants
-        inZone = currentAction(currentAction(:,4) >= -cueInterval & currentAction(:,4) <= cueInterval, :);
-        outZone = currentAction(currentAction(:,4) < -cueInterval | currentAction(:,4) > cueInterval, :);
-        participantReachStartTW(patCount,:) = [pat 4 fixType mean(inZone(inZone(:,1) == pat, 5)) mean(outZone(outZone(:,1) == pat, 5))];
-        patCount = patCount + 1;
-    end
-%end
+reachStartsInZone_TW = [];
+reachStartsOutZone_TW = [];
+for fixType = 3:4
+    currentAction = relativeChanges_TW(relativeChanges_TW(:,3) == fixType, :);
+    inZone = currentAction(currentAction(:,4) >= -cueInterval & currentAction(:,4) <= cueInterval, 5);
+    outZone = currentAction(currentAction(:,4) < -cueInterval | currentAction(:,4) > cueInterval, 5);
+    currentInZone = [4*ones(numel(inZone),1) fixType*ones(numel(inZone),1) ones(numel(inZone),1) inZone];
+    currentOutZone = [4*ones(numel(outZone),1) fixType*ones(numel(outZone),1) zeros(numel(outZone),1) outZone];
+    reachStartsInZone_TW = [reachStartsInZone_TW; currentInZone];
+    reachStartsOutZone_TW = [reachStartsOutZone_TW; currentOutZone];
+end
 
-%% combine data and save
-participantReachStart = [participantReachStartPG; participantReachStartTW];
+%% make histograms
+inZoneData = [reachStartsInZone_PG; reachStartsInZone_TW];
+outZoneData = [reachStartsOutZone_PG; reachStartsOutZone_TW];
+subplot(1,3,3)
+hold on
+histogram(inZoneData(inZoneData(:,2) == 3,end), 'BinWidth', binWidth,...
+    'facecolor', fixationPatternColors(4,:), 'edgecolor', 'none');
+histogram(outZoneData(outZoneData(:,2) == 3,end), 'BinWidth', binWidth,...
+    'facecolor', 'w', 'edgecolor', fixationPatternColors(4,:));
+histogram(inZoneData(inZoneData(:,2) == 4,end), 'BinWidth', binWidth,...
+    'facecolor', fixationPatternColors(5,:), 'edgecolor', 'none');
+histogram(outZoneData(outZoneData(:,2) == 4,end), 'BinWidth', binWidth,...
+    'facecolor', 'w', 'edgecolor', fixationPatternColors(5,:));
 
-cd(savePath)
-save('participantReachStart','participantReachStart')
-cd(analysisPath)
+% ks test 
+[h_RT.tri, p_RT.tri, ks2stat_RT.tri] = kstest2(inZoneData(inZoneData(:,2) == 3,end), outZoneData(outZoneData(:,2) == 3,end));
+[h_RT.back, p_RT.back, ks2stat_RT.back] = kstest2(inZoneData(inZoneData(:,2) == 4,end), outZoneData(outZoneData(:,2) == 4,end));
