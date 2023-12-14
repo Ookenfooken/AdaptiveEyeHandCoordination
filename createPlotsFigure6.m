@@ -231,7 +231,7 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution PG_back
 slope = SP_PG_back/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i < 1.5
         binCount = [floor(SP_PG_back)*ones((1-SP_PG_back+floor(SP_PG_back))*10000,1); ...
             ceil(SP_PG_back)*ones((1-ceil(SP_PG_back)+SP_PG_back)*10000,1)];
@@ -242,12 +242,13 @@ for i = 0:binWidth:6.5+binWidth
     expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
 end
 % ks test 
-[h_PG.back_ballFix, p_PG.back_ballFix, ks2statPG.back_ballFix] = kstest2(fixations_PG(fixations_PG(:,3) == 4,fixationOnsets), expectedDistribution);
-clear expectedDistribution binCount slope SP_PG_back
+backPattern = fixations_PG(fixations_PG(:,3) == 4,fixationOnsets);
+[h_PG.back_ballFix, p_PG.back_ballFix, ks2statPG.back_ballFix] = kstest2(backPattern(backPattern >= binWidth), expectedDistribution);
+clear expectedDistribution binCount slope SP_PG_back backPattern
 % create expected distribution PG_tri
 slope = SP_PG_tri/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i < 1.5
         binCount = [floor(SP_PG_tri)*ones((1-SP_PG_tri+floor(SP_PG_tri))*10000,1); ...
             ceil(SP_PG_tri)*ones((1-ceil(SP_PG_tri)+SP_PG_tri)*10000,1)];
@@ -258,8 +259,9 @@ for i = 0:binWidth:6.5+binWidth
     expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
 end
 % ks test 
-[h_PG.tri_ballFix, p_PG.tri_ballFix, ks2statPG.tri_ballFix] = kstest2(fixations_PG(fixations_PG(:,3) == 3,fixationOnsets), expectedDistribution);
-clear expectedDistribution binCount slope SP_PG_tri
+triPattern = fixations_PG(fixations_PG(:,3) == 3,fixationOnsets);
+[h_PG.tri_ballFix, p_PG.tri_ballFix, ks2statPG.tri_ballFix] = kstest2(triPattern(triPattern >= binWidth), expectedDistribution);
+clear expectedDistribution binCount slope SP_PG_tri triPattern
 %% plot slot fixation, transport, and slot etnry for different patterns in precision grip trials
 subplot(2,2,2)
 xymax = 20;
@@ -296,7 +298,7 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution PG_slot
 slope = SP_PG_slot/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i < 1.5
         binCount = [floor(SP_PG_slot)*ones((1-SP_PG_slot+floor(SP_PG_slot))*10000,1); ...
             ceil(SP_PG_slot)*ones((1-ceil(SP_PG_slot)+SP_PG_slot)*10000,1)];
@@ -307,12 +309,13 @@ for i = 0:binWidth:6.5+binWidth
     expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
 end
 % ks test 
-[h_PG.slot_slotFix, p_PG.slot_slotFix, ks2statPG.slot_slotFix] = kstest2(fixations_PG(fixations_PG(:,3) == 2,fixationOnsets), expectedDistribution);
-clear expectedDistribution binCount slope SP_PG_slot
+slotPattern = fixations_PG(fixations_PG(:,3) == 2,fixationOnsets);
+[h_PG.slot_slotFix, p_PG.slot_slotFix, ks2statPG.slot_slotFix] = kstest2(slotPattern(slotPattern >= binWidth), expectedDistribution);
+clear expectedDistribution binCount slope SP_PG_slot slotPattern
 % create expected distribution PG_back
 slope = SP_PG_back/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i < 1.5
         binCount = [floor(SP_PG_back)*ones((1-SP_PG_back+floor(SP_PG_back))*10000,1); ...
             ceil(SP_PG_back)*ones((1-ceil(SP_PG_back)+SP_PG_back)*10000,1)];
@@ -323,12 +326,13 @@ for i = 0:binWidth:6.5+binWidth
     expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
 end
 % ks test 
-[h_PG.back_slotFix, p_PG.back_slotFix, ks2statPG.back_slotFix] = kstest2(fixations_PG(fixations_PG(:,3) == 4,fixationOnsets), expectedDistribution);
-clear expectedDistribution binCount slope SP_PG_back
+backPattern = fixations_PG(fixations_PG(:,3) == 4,fixationOnsets);
+[h_PG.back_slotFix, p_PG.back_slotFix, ks2statPG.back_slotFix] = kstest2(backPattern(backPattern >= binWidth), expectedDistribution);
+clear expectedDistribution binCount slope SP_PG_back backPattern
 % create expected distribution PG_tri
 slope = SP_PG_tri/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i < 1.5
         binCount = [floor(SP_PG_tri)*ones((1-SP_PG_tri+floor(SP_PG_tri))*10000,1); ...
             ceil(SP_PG_tri)*ones((1-ceil(SP_PG_tri)+SP_PG_tri)*10000,1)];
@@ -339,8 +343,9 @@ for i = 0:binWidth:6.5+binWidth
     expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
 end
 % ks test 
-[h_PG.tri_slotFix, p_PG.tri_slotFix, ks2statPG.tri_slotFix] = kstest2(fixations_PG(fixations_PG(:,3) == 3,fixationOnsets), expectedDistribution);
-clear expectedDistribution binCount slope SP_PG_tri
+triPattern = fixations_PG(fixations_PG(:,3) == 3,fixationOnsets);
+[h_PG.tri_slotFix, p_PG.tri_slotFix, ks2statPG.tri_slotFix] = kstest2(triPattern(triPattern >= binWidth), expectedDistribution);
+clear expectedDistribution binCount slope SP_PG_tri triPattern
 %% plot ball fixation, reach, and grasp onsets for different patterns in tweezer trials
 subplot(2,2,3)
 xymax = 20;
@@ -372,7 +377,7 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution TW_back
 slope = SP_TW_back/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i < 1.5
         binCount = [floor(SP_TW_back)*ones((1-SP_TW_back+floor(SP_TW_back))*10000,1); ...
             ceil(SP_TW_back)*ones((1-ceil(SP_TW_back)+SP_TW_back)*10000,1)];
@@ -383,12 +388,13 @@ for i = 0:binWidth:6.5+binWidth
     expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
 end
 % ks test 
-[h_TW.back_ballFix, p_TW.back_ballFix, ks2statTW.back_ballFix] = kstest2(fixations_TW(fixations_TW(:,3) == 4,fixationOnsets), expectedDistribution);
-clear expectedDistribution binCount slope SP_TW_back
+backPattern = fixations_TW(fixations_TW(:,3) == 4,fixationOnsets);
+[h_TW.back_ballFix, p_TW.back_ballFix, ks2statTW.back_ballFix] = kstest2(backPattern(backPattern >= binWidth), expectedDistribution);
+clear expectedDistribution binCount slope SP_TW_back backPattern
 % create expected distribution TW_tri
 slope = SP_TW_tri/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i < 1.5
         binCount = [floor(SP_TW_tri)*ones((1-SP_TW_tri+floor(SP_TW_tri))*10000,1); ...
             ceil(SP_TW_tri)*ones((1-ceil(SP_TW_tri)+SP_TW_tri)*10000,1)];
@@ -399,8 +405,9 @@ for i = 0:binWidth:6.5+binWidth
     expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
 end
 % ks test 
-[h_TW.tri_ballFix, p_TW.tri_ballFix, ks2statTW.tri_ballFix] = kstest2(fixations_TW(fixations_TW(:,3) == 3,fixationOnsets), expectedDistribution);
-clear expectedDistribution binCount slope SP_TW_tri
+triPattern = fixations_TW(fixations_TW(:,3) == 3,fixationOnsets);
+[h_TW.tri_ballFix, p_TW.tri_ballFix, ks2statTW.tri_ballFix] = kstest2(triPattern(triPattern >= binWidth), expectedDistribution);
+clear expectedDistribution binCount slope SP_TW_tri triPattern
 %% plot slot fixation, transport, and slot entry for different patterns in tweezer trials
 subplot(2,2,4)
 xymax = 20;
@@ -437,7 +444,7 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution TW_slot
 slope = SP_TW_slot/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i < 1.5
         binCount = [floor(SP_TW_slot)*ones((1-SP_TW_slot+floor(SP_TW_slot))*10000,1); ...
             ceil(SP_TW_slot)*ones((1-ceil(SP_TW_slot)+SP_TW_slot)*10000,1)];
@@ -448,12 +455,13 @@ for i = 0:binWidth:6.5+binWidth
     expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
 end
 % ks test 
-[h_TW.slot_slotFix, p_TW.slot_slotFix, ks2statTW.slot_slotFix] = kstest2(fixations_TW(fixations_TW(:,3) == 2,fixationOnsets), expectedDistribution);
-clear expectedDistribution binCount slope SP_TW_slot
+slotPattern = fixations_TW(fixations_TW(:,3) == 2,fixationOnsets);
+[h_TW.slot_slotFix, p_TW.slot_slotFix, ks2statTW.slot_slotFix] = kstest2(slotPattern(slotPattern >= binWidth), expectedDistribution);
+clear expectedDistribution binCount slope SP_TW_slot slotPattern
 % create expected distribution TW_back
 slope = SP_TW_back/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i < 1.5
         binCount = [floor(SP_TW_back)*ones((1-SP_TW_back+floor(SP_TW_back))*10000,1); ...
             ceil(SP_TW_back)*ones((1-ceil(SP_TW_back)+SP_TW_back)*10000,1)];
@@ -464,12 +472,13 @@ for i = 0:binWidth:6.5+binWidth
     expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
 end
 % ks test 
-[h_TW.back_slotFix, p_TW.back_slotFix, ks2statTW.back_slotFix] = kstest2(fixations_TW(fixations_TW(:,3) == 4,fixationOnsets), expectedDistribution);
-clear expectedDistribution binCount slope SP_TW_back
+backPattern = fixations_TW(fixations_TW(:,3) == 4,fixationOnsets);
+[h_TW.back_slotFix, p_TW.back_slotFix, ks2statTW.back_slotFix] = kstest2(backPattern(backPattern >= binWidth), expectedDistribution);
+clear expectedDistribution binCount slope SP_TW_back backPattern
 % create expected distribution TW_tri
 slope = SP_TW_tri/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i < 1.5
         binCount = [floor(SP_TW_tri)*ones((1-SP_TW_tri+floor(SP_TW_tri))*10000,1); ...
             ceil(SP_TW_tri)*ones((1-ceil(SP_TW_tri)+SP_TW_tri)*10000,1)];
@@ -480,8 +489,9 @@ for i = 0:binWidth:6.5+binWidth
     expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
 end
 % ks test 
-[h_TW.tri_slotFix, p_TW.tri_slotFix, ks2statTW.tri_slotFix] = kstest2(fixations_TW(fixations_TW(:,3) == 3,fixationOnsets), expectedDistribution);
-clear expectedDistribution binCount slope SP_TW_tri
+slotPattern = fixations_TW(fixations_TW(:,3) == 3,fixationOnsets);
+[h_TW.tri_slotFix, p_TW.tri_slotFix, ks2statTW.tri_slotFix] = kstest2(slotPattern(slotPattern >= binWidth), expectedDistribution);
+clear expectedDistribution binCount slope SP_TW_tri slotPattern
 %% correlational plots for fingertips (panel C)
 figure(87)
 xymax = 5;
@@ -670,7 +680,7 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution PG_back
 slope = SP_PG_back/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i < 1.5
         binCount = [floor(SP_PG_back)*ones((1-SP_PG_back+floor(SP_PG_back))*10000,1); ...
             ceil(SP_PG_back)*ones((1-ceil(SP_PG_back)+SP_PG_back)*10000,1)];
@@ -681,8 +691,9 @@ for i = 0:binWidth:6.5+binWidth
     expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
 end
 % ks test 
-[h_PG.back_reach, p_PG.back_reach, ks2statPG.back_reach] = kstest2(reaches_PG(reaches_PG(:,3) == 4,end), expectedDistribution);
-clear expectedDistribution binCount slope SP_PG_back
+backPattern = reaches_PG(reaches_PG(:,3) == 4,end);
+[h_PG.back_reach, p_PG.back_reach, ks2statPG.back_reach] = kstest2(backPattern(backPattern >= binWidth), expectedDistribution);
+clear expectedDistribution binCount slope SP_PG_back backPattern
 
 subplot(4,2,3)
 xlabel('Time of reach onset re: last detected LC before reach (s)')
@@ -702,7 +713,7 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution PG_tri
 slope = SP_PG_tri/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i < 1.5
         binCount = [floor(SP_PG_tri)*ones((1-SP_PG_tri+floor(SP_PG_tri))*10000,1); ...
             ceil(SP_PG_tri)*ones((1-ceil(SP_PG_tri)+SP_PG_tri)*10000,1)];
@@ -713,8 +724,9 @@ for i = 0:binWidth:6.5+binWidth
     expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
 end
 % ks test 
-[h_PG.tri_reach, p_PG.tri_reach, ks2statPG.tri_reach] = kstest2(reaches_PG(reaches_PG(:,3) == 3,end), expectedDistribution);
-clear expectedDistribution binCount slope SP_PG_tri
+triPattern = reaches_PG(reaches_PG(:,3) == 3,end);
+[h_PG.tri_reach, p_PG.tri_reach, ks2statPG.tri_reach] = kstest2(triPattern(triPattern >= binWidth), expectedDistribution);
+clear expectedDistribution binCount slope SP_PG_tri triPattern
 
 subplot(4,2,5)
 xlabel('Time of reach onset re: last detected LC before reach (s)')
@@ -735,7 +747,7 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution PG_back
 slope = SP_PG_slot/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i < 1.5
         binCount = [floor(SP_PG_slot)*ones((1-SP_PG_slot+floor(SP_PG_slot))*10000,1); ...
             ceil(SP_PG_slot)*ones((1-ceil(SP_PG_slot)+SP_PG_slot)*10000,1)];
@@ -746,8 +758,9 @@ for i = 0:binWidth:6.5+binWidth
     expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
 end
 % ks test 
-[h_PG.slot_reach, p_PG.slot_reach, ks2statPG.slot_reach] = kstest2(reaches_PG(reaches_PG(:,3) == 2,end), expectedDistribution);
-clear expectedDistribution binCount slope SP_PG_slot
+slotPattern = reaches_PG(reaches_PG(:,3) == 2,end);
+[h_PG.slot_reach, p_PG.slot_reach, ks2statPG.slot_reach] = kstest2(slotPattern(slotPattern >= binWidth), expectedDistribution);
+clear expectedDistribution binCount slope SP_PG_slot slotPattern
 
 subplot(4,2,7)
 xlabel('Time of reach onset re: last detected LC before reach (s)')
@@ -767,7 +780,7 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution PG_tri
 slope = SP_PG_disp/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i < 1.5
         binCount = [floor(SP_PG_disp)*ones((1-SP_PG_disp+floor(SP_PG_disp))*10000,1); ...
             ceil(SP_PG_disp)*ones((1-ceil(SP_PG_disp)+SP_PG_disp)*10000,1)];
@@ -778,8 +791,51 @@ for i = 0:binWidth:6.5+binWidth
     expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
 end
 % ks test 
-[h_PG.disp_reach, p_PG.disp_reach, ks2statPG.disp_reach] = kstest2(reaches_PG(reaches_PG(:,3) == 0,end), expectedDistribution);
-clear expectedDistribution binCount slope SP_PG_disp
+dispPattern = reaches_PG(reaches_PG(:,3) == 0,end);
+[h_PG.disp_reach, p_PG.disp_reach, ks2statPG.disp_reach] = kstest2(dispPattern(dispPattern >= binWidth), expectedDistribution);
+clear expectedDistribution binCount slope SP_PG_disp dispPattern
+%% all reaches in ball trails
+figure(15) 
+xymax = 40;
+allReaches_PG = reachRelativeLetter(reachRelativeLetter(:,2) == 3, :);
+selectedPattern = 1; % exclude ball-only
+reaches_PG = allReaches_PG(allReaches_PG(:,3) ~= selectedPattern,:);
+
+% plot reach onsets
+subplot(1,2,1)
+xlabel('Time of reach onset re: last detected LC before reach (s)')
+ylabel('Frequency of trials')
+set(gcf,'renderer','Painters')
+xlim([0 upperBound])
+ylim([0 xymax])
+set(gca, 'Ytick', [0 5 10 15 20 25 30 35 40])
+hold on
+h.reach.PGballTrials = histogram(reaches_PG(reaches_PG(:,3) > 2,end), 'BinWidth', binWidth,...
+    'facecolor', fixationPatternColors(1,:), 'edgecolor', 'none');
+% calculate expected distribution
+SP_PG = sum(h.reach.PGballTrials.Values)*h.reach.PGballTrials.BinWidth / 4;
+line([0 1.5], [SP_PG SP_PG], 'Color', fixationPatternColors(1,:), 'LineStyle', '--', 'LineWidth', 1.5)
+line([1.5 6.5], [SP_PG 0], 'Color', fixationPatternColors(1,:), 'LineStyle', '--', 'LineWidth', 1.5)
+% add line indicating 1.5 = silent period
+line([1.5 1.5], [0 xymax], 'Color', lightGrey)
+% create expected distribution PG_back
+slope = SP_PG/5;
+expectedDistribution = [];
+for i = binWidth:binWidth:6.5+binWidth
+    if i < 1.5
+        binCount = [floor(SP_PG)*ones((1-SP_PG+floor(SP_PG))*10000,1); ...
+            ceil(SP_PG)*ones((1-ceil(SP_PG)+SP_PG)*10000,1)];
+    else
+        binCount = [floor(SP_PG-(i-1.5)*slope)*ones((1-SP_PG+floor(SP_PG-(i-1.5)*slope))*10000,1); ...
+            ceil(SP_PG-(i-1.5)*slope)*ones((1-ceil(SP_PG-(i-1.5)*slope)+SP_PG)*10000,1)];
+    end
+    expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
+end
+% ks test 
+ballPatterns = reaches_PG(reaches_PG(:,3) == 4,end);
+[h_PG.ballPattern_reach, p_PG.ballPattern_reach, ks2statPG.ballPattern_reach] = kstest2(ballPatterns(ballPatterns >= binWidth), expectedDistribution);
+clear expectedDistribution binCount slope SP_PG ballPatterns
+
 %% tweezers
 allReaches_TW = reachRelativeLetter(reachRelativeLetter(:,2) == 4, :);
 selectedPattern = 1; % exclude ball-only
@@ -805,7 +861,7 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution TW_back
 slope = SP_TW_back/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i < 1.5
         binCount = [floor(SP_TW_back)*ones((1-SP_TW_back+floor(SP_TW_back))*10000,1); ...
             ceil(SP_TW_back)*ones((1-ceil(SP_TW_back)+SP_TW_back)*10000,1)];
@@ -816,8 +872,9 @@ for i = 0:binWidth:6.5+binWidth
     expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
 end
 % ks test 
-[h_TW.back_reach, p_TW.back_reach, ks2statTW.back_reach] = kstest2(reaches_TW(reaches_TW(:,3) == 4,end), expectedDistribution);
-clear expectedDistribution binCount slope SP_TW_back
+backPattern = reaches_TW(reaches_TW(:,3) == 4,end);
+[h_TW.back_reach, p_TW.back_reach, ks2statTW.back_reach] = kstest2(backPattern(backPattern >= binWidth), expectedDistribution);
+clear expectedDistribution binCount slope SP_TW_back backPattern
 
 subplot(4,2,4)
 xlabel('Time of reach onset re: last detected LC before reach (s)')
@@ -837,7 +894,7 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution TW_tri
 slope = SP_TW_tri/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i < 1.5
         binCount = [floor(SP_TW_tri)*ones((1-SP_TW_tri+floor(SP_TW_tri))*10000,1); ...
             ceil(SP_TW_tri)*ones((1-ceil(SP_TW_tri)+SP_TW_tri)*10000,1)];
@@ -848,8 +905,9 @@ for i = 0:binWidth:6.5+binWidth
     expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
 end
 % ks test 
-[h_TW.tri_reach, p_TW.tri_reach, ks2statTW.tri_reach] = kstest2(reaches_TW(reaches_TW(:,3) == 3,end), expectedDistribution);
-clear expectedDistribution binCount slope SP_TW_tri
+triPattern = reaches_TW(reaches_TW(:,3) == 3,end);
+[h_TW.tri_reach, p_TW.tri_reach, ks2statTW.tri_reach] = kstest2(triPattern(triPattern >= binWidth), expectedDistribution);
+clear expectedDistribution binCount slope SP_TW_tri triPattern
 
 subplot(4,2,6)
 xlabel('Time of reach onset re: last detected LC before reach (s)')
@@ -870,7 +928,7 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution TW_back
 slope = SP_TW_slot/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i < 1.5
         binCount = [floor(SP_TW_slot)*ones((1-SP_TW_slot+floor(SP_TW_slot))*10000,1); ...
             ceil(SP_TW_slot)*ones((1-ceil(SP_TW_slot)+SP_TW_slot)*10000,1)];
@@ -881,8 +939,9 @@ for i = 0:binWidth:6.5+binWidth
     expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
 end
 % ks test 
-[h_TW.slot_reach, p_TW.slot_reach, ks2statTW.slot_reach] = kstest2(reaches_TW(reaches_TW(:,3) == 2,end), expectedDistribution);
-clear expectedDistribution binCount slope SP_TW_slot
+slotPattern = reaches_TW(reaches_TW(:,3) == 2,end);
+[h_TW.slot_reach, p_TW.slot_reach, ks2statTW.slot_reach] = kstest2(slotPattern(slotPattern >= binWidth), expectedDistribution);
+clear expectedDistribution binCount slope SP_TW_slot slotPattern
 
 subplot(4,2,8)
 xlabel('Time of reach onset re: last detected LC before reach (s)')
@@ -902,10 +961,10 @@ line([1.5 1.5], [0 xymax], 'Color', lightGrey)
 % create expected distribution TW_tri
 slope = SP_TW_disp/5;
 expectedDistribution = [];
-for i = 0:binWidth:6.5+binWidth
+for i = binWidth:binWidth:6.5+binWidth
     if i < 1.5
         binCount = [floor(SP_TW_disp)*ones((1-SP_TW_disp+floor(SP_TW_disp))*10000,1); ...
-            ceil(SP_TW_disp)*ones((1-ceil(SP_TW_disp)+SP_TW_disp)*10000,1)];
+            ceil(SP_TW_disp )*ones((1-ceil(SP_TW_disp)+SP_TW_disp)*10000,1)];
     else
         binCount = [floor(SP_TW_disp-(i-1.5)*slope)*ones((1-SP_TW_disp+floor(SP_TW_disp-(i-1.5)*slope))*10000,1); ...
             ceil(SP_TW_disp-(i-1.5)*slope)*ones((1-ceil(SP_TW_disp-(i-1.5)*slope)+SP_TW_disp)*10000,1)];
@@ -913,8 +972,9 @@ for i = 0:binWidth:6.5+binWidth
     expectedDistribution = [expectedDistribution; i*ones(binCount(randi(numel(binCount))),1)];
 end
 % ks test 
-[h_TW.disp_reach, p_TW.disp_reach, ks2statTW.disp_reach] = kstest2(reaches_TW(reaches_TW(:,3) == 0,end), expectedDistribution);
-clear expectedDistribution binCount slope SP_TW_disp
+dispPattern = reaches_TW(reaches_TW(:,3) == 0,end);
+[h_TW.disp_reach, p_TW.disp_reach, ks2statTW.disp_reach] = kstest2(dispPattern(dispPattern >= binWidth), expectedDistribution);
+clear expectedDistribution binCount slope SP_TW_disp dispPattern
 
 %% plot the response time (reach onset relative to go signal) vs. the time 
 % of the last detected letter change (relative to go) --> Panel D
