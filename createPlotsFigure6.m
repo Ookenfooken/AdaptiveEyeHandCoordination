@@ -494,7 +494,7 @@ slotPattern = fixations_TW(fixations_TW(:,3) == 3,fixationOnsets);
 clear expectedDistribution binCount slope SP_TW_tri slotPattern
 %% correlational plots for fingertips (panel C)
 figure(87)
-xymax = 5;
+%xymax = 5;
 ballFixations_PG = ballFixationReLetter(ballFixationReLetter(:,2) == 3, :);
 slotFixations_PG = slotFixationReLetter(slotFixationReLetter(:,2) == 3, :);
 selectedPattern = 1; % exclude ball-only
@@ -574,6 +574,8 @@ plot(slotFix_TW(slotFix_TW(:,3) == 3,fixationOnsets), slotFix_TW(slotFix_TW(:,3)
 line([0 xymax], [0 xymax], 'Color', 'k')
 s_slotEntry_TW = regstats(slotFix_TW(slotFix_TW(:,3) == 2 | slotFix_TW(:,3) == 4 | slotFix_TW(:,3) == 4,manipulationOnsets),...
     slotFix_TW(slotFix_TW(:,3) == 2 | slotFix_TW(:,3) == 4 | slotFix_TW(:,3) == 4,fixationOnsets),'linear'); 
+
+
 %% reach distributions relative to detected LCs (panel B
 reachRelativeLetter = [];
 detectedChanges = [];
