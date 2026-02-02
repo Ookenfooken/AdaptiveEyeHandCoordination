@@ -19,6 +19,7 @@ for j = 1:numSubjects % loop over subjects
         participant = currentParticipant*ones(numTrials, 1);
         testID = i*ones(numTrials,1);
         dual = zeros(numTrials,1);
+        isLate = zeros(numTrials,1);
         gazeShiftToSlot = NaN(numTrials,1);
         ballFixationDuration = NaN(numTrials,1);
         slotFixationDuration = NaN(numTrials,1);
@@ -26,11 +27,14 @@ for j = 1:numSubjects % loop over subjects
             tool = zeros(numTrials,1); % no tool in fingertip condition
         elseif testID(1) == 2 || testID(1) == 4
             tool = ones(numTrials,1); %tweezers
-        end        
+        end  
         for n = 1:numTrials % loop over trials for current subject & block
             if currentResult(n).info.dropped
                 stopTrial = min([stopTrial+1 numTrials]);
                 continue
+            end
+            if n > 15
+                isLate(n) = 1;
             end
             if i < 3 % single task condition
                 ballGrasp = currentResult(n).info.phaseStart.ballGrasp - currentResult(n).info.trialStart;
@@ -63,7 +67,7 @@ for j = 1:numSubjects % loop over subjects
             end
         end
         % add two empty columns to have consitent size with dual task
-        currentVariable = [participant testID tool dual ...
+        currentVariable = [participant testID tool dual isLate ...
             gazeShiftToSlot ballFixationDuration slotFixationDuration];
         
         spatiotemporalCoordination = [spatiotemporalCoordination; currentVariable];
